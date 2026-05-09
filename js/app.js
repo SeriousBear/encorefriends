@@ -2407,7 +2407,17 @@ function App() {
   if (!session) return <LoginPage />;
 
   const curUser = users[0];
-  const toast = (m, e) => { = (cid, uid) => {
+  const toast = (m, e) => {
+    if (e) {
+      setErrMsg(m);
+      setTimeout(() => setErrMsg(null), 6000);
+    } else {
+      setNotif(m);
+      setTimeout(() => setNotif(null), 3500);
+    }
+  };
+
+  const toggleAttendee = (cid, uid) => {
     const u2 = users.find((u) => u.id === uid);
     const c = liveConcerts.find((c) => c.id === cid);
     const adding = !(c.attendees || []).includes(uid);
