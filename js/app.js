@@ -649,9 +649,6 @@ async function doScan(setSt, setPr, userId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
@@ -2667,11 +2664,11 @@ function App() {
   };
 
   const scanGmail = async () => {
-    if (
-      ANTHROPIC_API_KEY === "YOUR_ANTHROPIC_API_KEY_HERE" ||
-      GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE"
-    ) {
-      toast("Set API keys — see setup guide at bottom of file.", true);
+    if (GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE") {
+      toast(
+        "Add your Google Client ID to app.js to enable Gmail scanning.",
+        true,
+      );
       return;
     }
     setScanning(true);
