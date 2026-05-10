@@ -6,7 +6,7 @@
 const { useState, useEffect } = React;
 const enc = encodeURIComponent;
 
-// ── CONFIG ──────────────────────────────────────────────────────────────────
+// ── CONFIGg ──────────────────────────────────────────────────────────────────
 const ANTHROPIC_API_KEY = "YOUR_ANTHROPIC_API_KEY_HERE";
 const GOOGLE_CLIENT_ID =
   "534883382276-a4n9v88cgj5ob8i989hgukucpkkdka53.apps.googleusercontent.com";
