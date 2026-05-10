@@ -7,8 +7,7 @@ const { useState, useEffect } = React;
 const enc = encodeURIComponent;
 
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const ANTHROPIC_API_KEY =
-  "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";
+const ANTHROPIC_API_KEY = "YOUR_ANTHROPIC_API_KEY_HERE";
 const GOOGLE_CLIENT_ID =
   "534883382276-a4n9v88cgj5ob8i989hgukucpkkdka53.apps.googleusercontent.com";
 const SUPABASE_URL = "https://zfcehcqklrrfncihjwkk.supabase.co";
@@ -638,7 +637,7 @@ async function doScan(setSt, setPr, userId) {
   setPr(78);
   setSt("Parsing " + bodies.length + " emails with AI…");
 
-  const ai = await fetch("https://api.anthropic.com/v1/messages", {
+  const ai = await fetch("/.netlify/functions/claude", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
