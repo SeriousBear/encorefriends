@@ -667,19 +667,35 @@ async function doScan(setSt, setPr, userId) {
     body: JSON.stringify({
       model: "claude-sonnet-4-5",
       max_tokens: 8000,
-      system: `You are an expert concert ticket email parser. Extract every concert/show/festival/event from these emails.
-Be thorough — parse ticket confirmations from ANY ticketing platform, venue, or promoter.
-Look for: artist/performer name, venue, city, date, and which service the ticket was from.
-Return ONLY a valid JSON array. Each object must have exactly:
-{"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "source": string, "ticket_url": ""}
-- artist: the performer/band/DJ name
-- venue: the venue or festival name
-- city: "City, State" format
-- date: exact date in YYYY-MM-DD format — skip if you cannot determine a specific date
-- source: the ticketing platform (Ticketmaster, SeatGeek, Eventbrite, AXS, DICE, StubHub, Direct, etc.)
-- ticket_url: leave as empty string ""
-Deduplicate — if you see the same show twice, include it once.
-Return [] if no concert events found.`,
+      system: `You are an expert MUSIC concert ticket email parser. Your job is to extract ONLY confirmed ticket PURCHASES for MUSIC events.
+
+STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
+
+1. CONFIRMED PURCHASES ONLY — the user must have actually bought a ticket. Look for phrases like:
+   ✓ "Your order", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Order #", "Payment plan", "Installment payment"
+   ✗ DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Don't miss", "Just announced", "Save the date", advertisements, presale invites, refund/cancel notices, waitlist emails, "we thought you'd like"
+
+2. MUSIC EVENTS ONLY:
+   ✓ Concerts, DJ sets, festivals, club nights, raves, after-parties, music tours
+   ✗ DO NOT INCLUDE: comedy shows, sports events, theater, conferences, sporting events, podcasts, talks, speaking events, museum tickets, movies, food events
+
+3. MULTI-DAY FESTIVALS — return BOTH start_date and end_date. For single-day events, end_date equals start_date.
+
+4. PAYMENT PLAN DEDUPLICATION — if multiple payment confirmation emails reference the same event/order, include the EVENT only ONCE.
+
+Return ONLY a valid JSON array. Each object:
+{"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": "", "is_festival": boolean}
+
+- artist: performer/band/DJ name. For festivals, use the festival name (e.g. "Movement Festival")
+- venue: venue or festival site
+- city: "City, State"
+- date: start date — REQUIRED
+- end_date: end date — for single-day shows equals date
+- source: ticketing platform (Ticketmaster, SeatGeek, RA, See Tickets, etc.)
+- ticket_url: ""
+- is_festival: true if multi-day festival
+
+Deduplicate aggressively. Return [] if no qualifying purchases found.`,
       messages: [{ role: "user", content: bodies.join("\n\n---EMAIL---\n\n") }],
     }),
   });
@@ -716,8 +732,10 @@ Return [] if no concert events found.`,
             venue: c.venue || "",
             city: c.city || "",
             date: c.date,
+            end_date: c.end_date || c.date,
             source: c.source || "Unknown",
             ticket_url: c.ticket_url || "",
+            is_festival: c.is_festival || false,
             genres: [],
           })
           .select()
