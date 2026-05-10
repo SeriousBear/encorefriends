@@ -724,6 +724,16 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
   if (userId) {
     for (const c of parsed) {
       try {
+        // Check if this concert already exists (artist+date for this user)
+        const { data: existing } = await supabase
+          .from("concerts")
+          .select("id")
+          .eq("owner_id", userId)
+          .eq("artist", c.artist)
+          .eq("date", c.date)
+          .maybeSingle();
+        if (existing) continue; // skip duplicate from payment plan emails
+
         const { data, error } = await supabase
           .from("concerts")
           .insert({
@@ -737,11 +747,11 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
             ticket_url: c.ticket_url || "",
             is_festival: c.is_festival || false,
             genres: [],
+            scanned_at: new Date().toISOString(),
           })
           .select()
           .single();
         if (data) {
-          // Also add as attendee
           await supabase.from("concert_attendees").insert({
             concert_id: data.id,
             user_id: userId,
@@ -749,7 +759,7 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
           saved.push({ ...data, attendees: [userId] });
         }
       } catch (e) {
-        /* skip duplicates */
+        /* skip errors */
       }
     }
     return saved;
@@ -760,16 +770,105 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
 }
 
 // ── CONCERT CARD ─────────────────────────────────────────────────────────────
-function CCard({ c, users, curUser, onOpen, onToggleGoing, onViewProfile }) {
+function CCard({
+  c,
+  users,
+  curUser,
+  onOpen,
+  onToggleGoing,
+  onViewProfile,
+  onDelete,
+}) {
   const d = fmt(c.date),
     u = getUrgency(c.date),
     dy = daysUntil(c.date);
   const cc = u === "urgent" ? "card-u" : u === "soon" ? "card-s" : "card-n";
   const going = c.attendees?.includes(curUser.id);
+
+  // Recently scanned within the last 24 hours?
+  const isNew =
+    c.scanned_at &&
+    Date.now() - new Date(c.scanned_at).getTime() < 24 * 60 * 60 * 1000;
+
+  // Multi-day festival
+  const isMultiDay = c.is_festival && c.end_date && c.end_date !== c.date;
+  const dateDisplay = isMultiDay
+    ? fmt(c.date).mo + " " + fmt(c.date).day + "–" + fmt(c.end_date).day
+    : null;
+
   return (
     <div className={"card " + cc} onClick={() => onOpen(c)}>
       <div className="cbar" style={{ background: uColor(u) }} />
       <div className="cbody">
+        <div
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            display: "flex",
+            gap: 5,
+            zIndex: 2,
+          }}
+        >
+          {isNew && (
+            <div
+              style={{
+                padding: "2px 7px",
+                background: "rgba(245,166,35,.15)",
+                border: "1px solid rgba(245,166,35,.4)",
+                borderRadius: 3,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 8,
+                fontWeight: 700,
+                letterSpacing: 1,
+                color: "#F5A623",
+                textTransform: "uppercase",
+              }}
+            >
+              NEW
+            </div>
+          )}
+          {c.is_festival && (
+            <div
+              style={{
+                padding: "2px 7px",
+                background: "rgba(155,107,245,.12)",
+                border: "1px solid rgba(155,107,245,.35)",
+                borderRadius: 3,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 8,
+                fontWeight: 700,
+                letterSpacing: 1,
+                color: "#9B6BF5",
+                textTransform: "uppercase",
+              }}
+            >
+              FEST
+            </div>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(c.id);
+              }}
+              style={{
+                padding: "2px 7px",
+                background: "transparent",
+                border: "1px solid #2a2a2a",
+                borderRadius: 3,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 9,
+                color: "#444",
+                cursor: "pointer",
+                lineHeight: 1,
+              }}
+              title="Remove this show"
+            >
+              ×
+            </button>
+          )}
+        </div>
         {u === "urgent" && (
           <div className="upill pill-u">
             <div className="pdot" style={{ background: "#FF5050" }} />
@@ -786,7 +885,9 @@ function CCard({ c, users, curUser, onOpen, onToggleGoing, onViewProfile }) {
           <div className="dbdg">
             <div className="dmo">{d.mo}</div>
             <div className="ddy">{d.day}</div>
-            <div className="ddw">{d.dow}</div>
+            <div className="ddw">
+              {isMultiDay ? "→ " + fmt(c.end_date).day : d.dow}
+            </div>
           </div>
           <div className="dart">{c.artist}</div>
         </div>
@@ -2513,6 +2614,7 @@ function App() {
               attendees: (c.concert_attendees || []).map((a) => a.user_id),
             })),
           );
+        setConcertsLoaded(true);
       });
   }, [session]);
 
@@ -2547,13 +2649,14 @@ function App() {
   const [notif, setNotif] = useState(null);
   const [errMsg, setErrMsg] = useState(null);
   const [pastShows] = useState(PAST_SHOWS);
-  const [liveConcerts, setLiveConcerts] = useState(seededConcerts);
+  const [liveConcerts, setLiveConcerts] = useState([]);
+  const [concertsLoaded, setConcertsLoaded] = useState(false);
 
-  // Merge real DB concerts in when they load
+  // Replace with real DB concerts when they load (could be empty for new users)
   useEffect(() => {
-    if (dbConcerts.length === 0) return;
+    if (!concertsLoaded) return;
     setLiveConcerts(dbConcerts);
-  }, [dbConcerts]);
+  }, [dbConcerts, concertsLoaded]);
 
   // ── EARLY AUTH RETURNS (after all hooks) ──
   if (authLoading)
@@ -2612,6 +2715,21 @@ function App() {
       setNotif(m);
       setTimeout(() => setNotif(null), 3500);
     }
+  };
+
+  const deleteConcert = async (cid) => {
+    if (!confirm("Remove this show from your account? This can't be undone."))
+      return;
+    if (session?.user?.id) {
+      await supabase.from("concert_attendees").delete().eq("concert_id", cid);
+      await supabase
+        .from("concerts")
+        .delete()
+        .eq("id", cid)
+        .eq("owner_id", session.user.id);
+    }
+    setLiveConcerts((p) => p.filter((c) => c.id !== cid));
+    toast("Show removed.");
   };
 
   const toggleAttendee = (cid, uid) => {
@@ -3157,6 +3275,7 @@ function App() {
                           onOpen={setDetail}
                           onToggleGoing={toggleGoing}
                           onViewProfile={viewProfile}
+                          onDelete={deleteConcert}
                         />
                       ))}
                     </div>
