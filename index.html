@@ -1,758 +1,387 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <!-- ── PRIMARY SEO ── -->
-        <title>Encore — Never Miss a Show | Concert Tracker & Social App</title>
-        <meta
-            name="description"
-            content="Encore scans your Gmail for concert tickets, shows what your friends are going to, and alerts you before shows sell out. The social concert tracker built for people who actually go to shows."
-        />
-        <meta
-            name="keywords"
-            content="concert tracker, concert social app, ticket scanner, show tracker, music events, find concerts, friends concerts, EDM shows, live music app, concert notifications"
-        />
-        <meta name="author" content="Encore" />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://encorefriends.com/" />
+  <!-- ── PRIMARY SEO ── -->
+  <title>Encore — Never Miss a Show | Concert Tracker & Social App</title>
+  <meta name="description" content="Encore scans your Gmail for concert tickets, shows what your friends are going to, and alerts you before shows sell out. The social concert tracker built for people who actually go to shows."/>
+  <meta name="keywords" content="concert tracker, concert social app, ticket scanner, show tracker, music events, find concerts, friends concerts, EDM shows, live music app, concert notifications"/>
+  <meta name="author" content="Encore"/>
+  <meta name="robots" content="index, follow"/>
+  <link rel="canonical" href="https://encorefriends.com/"/>
+  <link rel="privacy-policy" href="https://encorefriends.com/privacy.html"/>
 
-        <!-- ── OPEN GRAPH (Facebook, iMessage, LinkedIn previews) ── -->
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://encorefriends.com/" />
-        <meta property="og:title" content="Encore — Never Miss a Show" />
-        <meta
-            property="og:description"
-            content="Scan your tickets, follow your friends' show lists, and stop finding out Monday that everyone went without you Friday night."
-        />
-        <meta
-            property="og:image"
-            content="https://encorefriends.com/og-image.jpg"
-        />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:site_name" content="Encore" />
-        <meta property="og:locale" content="en_US" />
+  <!-- ── OPEN GRAPH (Facebook, iMessage, LinkedIn previews) ── -->
+  <meta property="og:type"        content="website"/>
+  <meta property="og:url"         content="https://encorefriends.com/"/>
+  <meta property="og:title"       content="Encore — Never Miss a Show"/>
+  <meta property="og:description" content="Scan your tickets, follow your friends' show lists, and stop finding out Monday that everyone went without you Friday night."/>
+  <meta property="og:image"       content="https://encorefriends.com/og-image.jpg"/>
+  <meta property="og:image:width"  content="1200"/>
+  <meta property="og:image:height" content="630"/>
+  <meta property="og:site_name"   content="Encore"/>
+  <meta property="og:locale"      content="en_US"/>
 
-        <!-- ── TWITTER / X CARD ── -->
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://encorefriends.com/" />
-        <meta name="twitter:title" content="Encore — Never Miss a Show" />
-        <meta
-            name="twitter:description"
-            content="Scan your tickets, follow your friends, catch every show."
-        />
-        <meta
-            name="twitter:image"
-            content="https://encorefriends.com/og-image.jpg"
-        />
+  <!-- ── TWITTER / X CARD ── -->
+  <meta name="twitter:card"        content="summary_large_image"/>
+  <meta name="twitter:url"         content="https://encorefriends.com/"/>
+  <meta name="twitter:title"       content="Encore — Never Miss a Show"/>
+  <meta name="twitter:description" content="Scan your tickets, follow your friends, catch every show."/>
+  <meta name="twitter:image"       content="https://encorefriends.com/og-image.jpg"/>
 
-        <!-- ── STRUCTURED DATA (Google rich results) ── -->
-        <script type="application/ld+json">
-            {
-                "@context": "https://schema.org",
-                "@type": "WebApplication",
-                "name": "Encore",
-                "url": "https://encorefriends.com",
-                "description": "Concert tracker and social app. Scan Gmail for tickets, follow friends, get urgency alerts, and find tickets on 9 platforms.",
-                "applicationCategory": "EntertainmentApplication",
-                "operatingSystem": "Web, iOS, Android",
-                "offers": {
-                    "@type": "Offer",
-                    "price": "0",
-                    "priceCurrency": "USD"
-                },
-                "featureList": [
-                    "Gmail ticket scanning",
-                    "Friend activity feed",
-                    "Concert urgency alerts",
-                    "ticket marketplace links",
-                    "8 streaming service links",
-                    "Genre discovery",
-                    "Artist bucket lists",
-                    "Concert history tracking"
-                ]
-            }
-        </script>
+  <!-- ── STRUCTURED DATA (Google rich results) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Encore",
+    "url": "https://encorefriends.com",
+    "description": "Concert tracker and social app. Scan Gmail for tickets, follow friends, get urgency alerts, and find tickets on 9 platforms.",
+    "applicationCategory": "EntertainmentApplication",
+    "operatingSystem": "Web, iOS, Android",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Gmail ticket scanning",
+      "Friend activity feed",
+      "Concert urgency alerts",
+      "9 ticket marketplace links",
+      "8 streaming service links",
+      "Genre discovery",
+      "Artist bucket lists",
+      "Concert history tracking"
+    ]
+  }
+  </script>
 
-        <!-- ── FONTS ── -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap"
-            rel="stylesheet"
-        />
+  <!-- ── FONTS ── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 
-        <!-- ── STYLESHEET ── -->
-        <link rel="stylesheet" href="css/style.css" />
+  <!-- ── STYLESHEET ── -->
+  <link rel="stylesheet" href="css/style.css"/>
 
-        <!-- ── CRITICAL NAV STYLES (inline fallback) ── -->
-        <style>
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                background: #070707;
-                color: #f0ede8;
-                font-family: "Syne", sans-serif;
-                overflow-x: hidden;
-            }
-            nav#nav {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 100;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 20px 40px;
-                padding-top: max(20px, calc(20px + env(safe-area-inset-top)));
-                background: rgba(7, 7, 7, 0);
-                backdrop-filter: blur(0);
-                transition:
-                    background 0.4s,
-                    backdrop-filter 0.4s;
-            }
-            nav#nav.scrolled {
-                background: rgba(7, 7, 7, 0.92);
-                backdrop-filter: blur(16px);
-            }
-            .nav-logo {
-                font-family: "Bebas Neue", sans-serif;
-                font-size: 26px;
-                letter-spacing: 5px;
-                color: #f5a623;
-                text-decoration: none;
-            }
-            .nav-logo span {
-                color: #f0ede8;
-                opacity: 0.3;
-            }
-            .nav-links {
-                display: flex;
-                align-items: center;
-                gap: 32px;
-            }
-            .nav-links a {
-                font-size: 12px;
-                font-weight: 600;
-                letter-spacing: 1.5px;
-                text-transform: uppercase;
-                color: #888;
-                text-decoration: none;
-                transition: color 0.2s;
-                white-space: nowrap;
-            }
-            .nav-links a:hover {
-                color: #f0ede8;
-            }
-            .nav-cta {
-                padding: 9px 22px;
-                background: #f5a623;
-                color: #000;
-                font-family: "Syne", sans-serif;
-                font-size: 11px;
-                font-weight: 700;
-                letter-spacing: 1px;
-                text-transform: uppercase;
-                text-decoration: none;
-                border: none;
-                cursor: pointer;
-                transition: background 0.15s;
-                clip-path: polygon(
-                    8px 0%,
-                    100% 0%,
-                    calc(100% - 8px) 100%,
-                    0% 100%
-                );
-                white-space: nowrap;
-            }
-            .nav-cta:hover {
-                background: #ffbb44;
-            }
-            @media (max-width: 600px) {
-                .nav-links {
-                    display: none;
-                }
-                nav#nav {
-                    padding: 16px 20px;
-                    padding-top: max(
-                        16px,
-                        calc(16px + env(safe-area-inset-top))
-                    );
-                }
-            }
-        </style>
+  <!-- ── CRITICAL NAV STYLES (inline fallback) ── -->
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#070707;color:#F0EDE8;font-family:'Syne',sans-serif;overflow-x:hidden}
+    nav#nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 40px;padding-top:max(20px,calc(20px + env(safe-area-inset-top)));background:rgba(7,7,7,0);backdrop-filter:blur(0);transition:background .4s,backdrop-filter .4s}
+    nav#nav.scrolled{background:rgba(7,7,7,.92);backdrop-filter:blur(16px)}
+    .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:5px;color:#F5A623;text-decoration:none}
+    .nav-logo span{color:#F0EDE8;opacity:.3}
+    .nav-links{display:flex;align-items:center;gap:32px}
+    .nav-links a{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#888;text-decoration:none;transition:color .2s;white-space:nowrap}
+    .nav-links a:hover{color:#F0EDE8}
+    .nav-cta{padding:9px 22px;background:#F5A623;color:#000;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:background .15s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);white-space:nowrap}
+    .nav-cta:hover{background:#ffbb44}
+    @media(max-width:600px){.nav-links{display:none}nav#nav{padding:16px 20px;padding-top:max(16px,calc(16px + env(safe-area-inset-top)))}}
+  </style>
 
-        <!-- ── FAVICON (replace with your own) ── -->
-        <link
-            rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>"
-        />
-    </head>
-    <body>
-        <!-- ══════════════════════════════════════════
+  <!-- ── FAVICON (replace with your own) ── -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>"/>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
      NAVIGATION
 ══════════════════════════════════════════ -->
-        <nav id="nav" role="navigation" aria-label="Main navigation">
-            <a href="index.html" class="nav-logo" aria-label="Encore home"
-                >ENCORE<span>.</span></a
-            >
-            <div class="nav-links">
-                <a href="index.html#features">Features</a>
-                <a href="index.html#how">How it works</a>
-                <a href="index.html#demo">Try Demo</a>
-            </div>
-            <a href="app.html" class="nav-cta">Open App</a>
-        </nav>
+<nav id="nav" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="nav-logo" aria-label="Encore home">ENCORE<span>.</span></a>
+  <div class="nav-links">
+    <a href="index.html#features">Features</a>
+    <a href="index.html#how">How it works</a>
+    <a href="index.html#demo">Try Demo</a>
+  </div>
+  <a href="app.html" class="nav-cta">Open App</a>
+</nav>
 
-        <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      HERO
 ══════════════════════════════════════════ -->
-        <main>
-            <section class="hero" id="hero" aria-label="Hero">
-                <div class="hero-overlay" aria-hidden="true"></div>
-                <div class="hero-content">
-                    <p class="hero-label">Your concert life, connected</p>
-                    <h1 class="hero-hed">
-                        <span class="hero-hed-line">
-                            <span class="reveal-wrap"
-                                ><span class="reveal-text" id="rt0"
-                                    >NEVER</span
-                                ></span
-                            >
-                        </span>
-                        <span class="hero-hed-line">
-                            <span class="reveal-wrap"
-                                ><span class="reveal-text" id="rt1"
-                                    >MISS A</span
-                                ></span
-                            >
-                        </span>
-                        <span class="hero-hed-line gold">
-                            <span class="reveal-wrap"
-                                ><span class="reveal-text" id="rt2"
-                                    >SHOW.</span
-                                ></span
-                            >
-                        </span>
-                    </h1>
-                    <div class="hero-divider" aria-hidden="true"></div>
-                    <p class="hero-sub fade-up" id="heroSub">
-                        Encore scans your tickets, tracks what your friends are
-                        seeing, and makes sure you never find out too late that
-                        everyone went without you.
-                    </p>
-                    <div class="hero-actions fade-up" id="heroActions">
-                        <a href="index.html#demo" class="btn-hero-primary"
-                            >Try the Demo</a
-                        >
-                        <a href="index.html#features" class="btn-hero-ghost"
-                            >See How It Works</a
-                        >
-                    </div>
-                </div>
-                <div
-                    class="hero-stats fade-up"
-                    id="heroStats"
-                    aria-label="App statistics"
-                >
-                    <div class="hero-stat">
-                        <div class="hero-stat-n">9</div>
-                        <div class="hero-stat-l">Ticket Platforms</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-n">8</div>
-                        <div class="hero-stat-l">Streaming Services</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-n">∞</div>
-                        <div class="hero-stat-l">Shows Tracked</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-n">0</div>
-                        <div class="hero-stat-l">Setup Required</div>
-                    </div>
-                </div>
-                <div class="hero-scroll" aria-hidden="true">
-                    <div class="scroll-line"></div>
-                    <span>Scroll</span>
-                </div>
-            </section>
+<main>
+<section class="hero" id="hero" aria-label="Hero">
+  <div class="hero-overlay" aria-hidden="true"></div>
+  <div class="hero-content">
+    <p class="hero-label">Your concert life, connected</p>
+    <h1 class="hero-hed">
+      <span class="hero-hed-line">
+        <span class="reveal-wrap"><span class="reveal-text" id="rt0">NEVER</span></span>
+      </span>
+      <span class="hero-hed-line">
+        <span class="reveal-wrap"><span class="reveal-text" id="rt1">MISS A</span></span>
+      </span>
+      <span class="hero-hed-line gold">
+        <span class="reveal-wrap"><span class="reveal-text" id="rt2">SHOW.</span></span>
+      </span>
+    </h1>
+    <div class="hero-divider" aria-hidden="true"></div>
+    <p class="hero-sub fade-up" id="heroSub">
+      Encore scans your tickets, tracks what your friends are seeing,
+      and makes sure you never find out too late that everyone went without you.
+    </p>
+    <div class="hero-actions fade-up" id="heroActions">
+      <a href="index.html#demo" class="btn-hero-primary">Try the Demo</a>
+      <a href="index.html#features" class="btn-hero-ghost">See How It Works</a>
+    </div>
+  </div>
+  <div class="hero-stats fade-up" id="heroStats" aria-label="App statistics">
+    <div class="hero-stat"><div class="hero-stat-n">9</div><div class="hero-stat-l">Ticket Platforms</div></div>
+    <div class="hero-stat"><div class="hero-stat-n">8</div><div class="hero-stat-l">Streaming Services</div></div>
+    <div class="hero-stat"><div class="hero-stat-n">∞</div><div class="hero-stat-l">Shows Tracked</div></div>
+    <div class="hero-stat"><div class="hero-stat-n">0</div><div class="hero-stat-l">Setup Required</div></div>
+  </div>
+  <div class="hero-scroll" aria-hidden="true">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
 
-            <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      TICKER
 ══════════════════════════════════════════ -->
-            <div class="ticker" aria-hidden="true">
-                <div class="ticker-track">
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Gmail Ticket
-                        Scanning</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Real-time Urgency
-                        Alerts</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Social Profiles</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Genre Discovery</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Ticket Platforms</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>8 Streaming
-                        Services</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Artist Bucket
-                        Lists</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Followers &amp;
-                        Following</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Resale Marketplace
-                        Links</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Concert History</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Mutual Show
-                        Detection</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Show
-                        Notifications</span
-                    >
-                    <!-- Duplicate for seamless loop -->
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Gmail Ticket
-                        Scanning</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Real-time Urgency
-                        Alerts</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Social Profiles</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Genre Discovery</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Ticket Platforms</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>8 Streaming
-                        Services</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Artist Bucket
-                        Lists</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Followers &amp;
-                        Following</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Resale Marketplace
-                        Links</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Concert History</span
-                    >
-                    <span class="ticker-item hi"
-                        ><span class="ticker-dot"></span>Mutual Show
-                        Detection</span
-                    >
-                    <span class="ticker-item"
-                        ><span class="ticker-dot"></span>Show
-                        Notifications</span
-                    >
-                </div>
-            </div>
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Gmail Ticket Scanning</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Real-time Urgency Alerts</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Social Profiles</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Genre Discovery</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>9 Ticket Platforms</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>8 Streaming Services</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Artist Bucket Lists</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Followers &amp; Following</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Resale Marketplace Links</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Concert History</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Mutual Show Detection</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Show Notifications</span>
+    <!-- Duplicate for seamless loop -->
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Gmail Ticket Scanning</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Real-time Urgency Alerts</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Social Profiles</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Genre Discovery</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>9 Ticket Platforms</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>8 Streaming Services</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Artist Bucket Lists</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Followers &amp; Following</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Resale Marketplace Links</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Concert History</span>
+    <span class="ticker-item hi"><span class="ticker-dot"></span>Mutual Show Detection</span>
+    <span class="ticker-item"><span class="ticker-dot"></span>Show Notifications</span>
+  </div>
+</div>
 
-            <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      FEATURES
 ══════════════════════════════════════════ -->
-            <section id="features" aria-labelledby="features-heading">
-                <div class="inner">
-                    <h2 class="section-label" id="features-heading">
-                        Features
-                    </h2>
-                    <p class="section-sub fade-up">
-                        Everything a serious show-goer needs — from finding the
-                        ticket to reliving the memory.
-                    </p>
-                    <div class="features-grid">
-                        <article class="feat-card fade-up d1">
-                            <div class="feat-icon" aria-hidden="true">📧</div>
-                            <h3 class="feat-title">Gmail Scanner</h3>
-                            <p class="feat-body">
-                                Connects to your inbox and automatically finds
-                                ticket confirmations from Ticketmaster,
-                                SeatGeek, Live Nation, Eventbrite, and more.
-                                Your show list builds itself.
-                            </p>
-                        </article>
-                        <article class="feat-card fade-up d2">
-                            <div class="feat-icon" aria-hidden="true">🔴</div>
-                            <h3 class="feat-title">Urgency Alerts</h3>
-                            <p class="feat-body">
-                                Shows within 14 days glow red. Shows within 30
-                                days glow amber. You always know which shows
-                                need action — tickets, rides, hotel — right now.
-                            </p>
-                        </article>
-                        <article class="feat-card fade-up d3">
-                            <div class="feat-icon" aria-hidden="true">👥</div>
-                            <h3 class="feat-title">Social Layer</h3>
-                            <p class="feat-body">
-                                Follow friends, see their upcoming shows, and
-                                instantly know when you're both going to the
-                                same concert. No more "wait, you were there
-                                too?!" texts.
-                            </p>
-                        </article>
-                        <article class="feat-card fade-up d1">
-                            <div class="feat-icon" aria-hidden="true">🎯</div>
-                            <h3 class="feat-title">Artist Bucket Lists</h3>
-                            <p class="feat-body">
-                                Add artists you need to see before you die. When
-                                someone in your network has the same name on
-                                their list, you both get surfaced to each other
-                                instantly.
-                            </p>
-                        </article>
-                        <article class="feat-card fade-up d2">
-                            <div class="feat-icon" aria-hidden="true">🎸</div>
-                            <h3 class="feat-title">Genre Discovery</h3>
-                            <p class="feat-body">
-                                Tap any genre tag to explore every artist,
-                                upcoming show, and person in the app who shares
-                                that taste. Bass heads find bass heads. Techno
-                                finds techno.
-                            </p>
-                        </article>
-                        <article class="feat-card fade-up d3">
-                            <div class="feat-icon" aria-hidden="true">🎫</div>
-                            <h3 class="feat-title">Ticket Sources</h3>
-                            <p class="feat-body">
-                                Primary links to the official source plus resale
-                                links to CashorTrade, StubHub, SeatGeek, Vivid
-                                Seats, and DICE — all in one tap from any show's
-                                detail page.
-                            </p>
-                        </article>
-                    </div>
-                </div>
-            </section>
+<section id="features" aria-labelledby="features-heading">
+  <div class="inner">
+    <h2 class="section-label" id="features-heading">Features</h2>
+    <p class="section-sub fade-up">
+      Everything a serious show-goer needs — from finding the ticket to reliving the memory.
+    </p>
+    <div class="features-grid">
+      <article class="feat-card fade-up d1">
+        <div class="feat-icon" aria-hidden="true">📧</div>
+        <h3 class="feat-title">Gmail Scanner</h3>
+        <p class="feat-body">Connects to your inbox and automatically finds ticket confirmations from Ticketmaster, SeatGeek, Live Nation, Eventbrite, and more. Your show list builds itself.</p>
+      </article>
+      <article class="feat-card fade-up d2">
+        <div class="feat-icon" aria-hidden="true">🔴</div>
+        <h3 class="feat-title">Urgency Alerts</h3>
+        <p class="feat-body">Shows within 14 days glow red. Shows within 30 days glow amber. You always know which shows need action — tickets, rides, hotel — right now.</p>
+      </article>
+      <article class="feat-card fade-up d3">
+        <div class="feat-icon" aria-hidden="true">👥</div>
+        <h3 class="feat-title">Social Layer</h3>
+        <p class="feat-body">Follow friends, see their upcoming shows, and instantly know when you're both going to the same concert. No more "wait, you were there too?!" texts.</p>
+      </article>
+      <article class="feat-card fade-up d1">
+        <div class="feat-icon" aria-hidden="true">🎯</div>
+        <h3 class="feat-title">Artist Bucket Lists</h3>
+        <p class="feat-body">Add artists you need to see before you die. When someone in your network has the same name on their list, you both get surfaced to each other instantly.</p>
+      </article>
+      <article class="feat-card fade-up d2">
+        <div class="feat-icon" aria-hidden="true">🎸</div>
+        <h3 class="feat-title">Genre Discovery</h3>
+        <p class="feat-body">Tap any genre tag to explore every artist, upcoming show, and person in the app who shares that taste. Bass heads find bass heads. Techno finds techno.</p>
+      </article>
+      <article class="feat-card fade-up d3">
+        <div class="feat-icon" aria-hidden="true">🎫</div>
+        <h3 class="feat-title">9 Ticket Sources</h3>
+        <p class="feat-body">Primary links to the official source plus resale links to CashorTrade, StubHub, SeatGeek, Vivid Seats, and DICE — all in one tap from any show's detail page.</p>
+      </article>
+    </div>
+  </div>
+</section>
 
-            <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      PHOTO GRID
 ══════════════════════════════════════════ -->
-            <div class="photo-section" aria-label="Concert photography">
-                <div class="photo-hed-wrap">
-                    <div>
-                        <h2 class="section-label">The Experience</h2>
-                    </div>
-                    <p
-                        class="section-sub fade-up"
-                        style="max-width: 300px; font-size: 15px"
-                    >
-                        From the festival field to the club basement — Encore
-                        lives where the music does.
-                    </p>
-                </div>
-                <div class="photo-grid">
-                    <div class="photo-item tall fade-up d1">
-                        <img
-                            src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=85"
-                            alt="Festival stage at night with colorful lights"
-                            loading="lazy"
-                            width="600"
-                            height="900"
-                        />
-                        <div class="photo-caption">Main Stage · 11PM</div>
-                    </div>
-                    <div class="photo-item fade-up d2">
-                        <img
-                            src="https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&q=85"
-                            alt="Friends enjoying a concert together"
-                            loading="lazy"
-                            width="800"
-                            height="533"
-                        />
-                        <div class="photo-caption">Everyone made it</div>
-                    </div>
-                    <div class="photo-item fade-up d3">
-                        <img
-                            src="https://images.unsplash.com/photo-1506157786151-b8491531f063?w=600&q=85"
-                            alt="Concert crowd with stage lights"
-                            loading="lazy"
-                            width="600"
-                            height="400"
-                        />
-                        <div class="photo-caption">Red Rocks · Colorado</div>
-                    </div>
-                    <div class="photo-item wide fade-up d2">
-                        <img
-                            src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=85"
-                            alt="Massive concert crowd under stage lights"
-                            loading="lazy"
-                            width="1200"
-                            height="800"
-                        />
-                        <div class="photo-caption">
-                            It was worth every penny
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="photo-section" aria-label="Concert photography">
+  <div class="photo-hed-wrap">
+    <div>
+      <h2 class="section-label">The Experience</h2>
+    </div>
+    <p class="section-sub fade-up" style="max-width:300px;font-size:15px">
+      From the festival field to the club basement — Encore lives where the music does.
+    </p>
+  </div>
+  <div class="photo-grid">
+    <div class="photo-item tall fade-up d1">
+      <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=85" alt="Festival stage at night with colorful lights" loading="lazy" width="600" height="900"/>
+      <div class="photo-caption">Main Stage · 11PM</div>
+    </div>
+    <div class="photo-item fade-up d2">
+      <img src="https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&q=85" alt="Friends enjoying a concert together" loading="lazy" width="800" height="533"/>
+      <div class="photo-caption">Everyone made it</div>
+    </div>
+    <div class="photo-item fade-up d3">
+      <img src="https://images.unsplash.com/photo-1506157786151-b8491531f063?w=600&q=85" alt="Concert crowd with stage lights" loading="lazy" width="600" height="400"/>
+      <div class="photo-caption">Red Rocks · Colorado</div>
+    </div>
+    <div class="photo-item wide fade-up d2">
+      <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=85" alt="Massive concert crowd under stage lights" loading="lazy" width="1200" height="800"/>
+      <div class="photo-caption">It was worth every penny</div>
+    </div>
+  </div>
+</div>
 
-            <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      HOW IT WORKS
 ══════════════════════════════════════════ -->
-            <section id="how" class="how-section" aria-labelledby="how-heading">
-                <div class="inner">
-                    <h2 class="section-label" id="how-heading">How It Works</h2>
-                    <div class="how-steps">
-                        <div class="how-step fade-up d1">
-                            <div class="step-num" aria-hidden="true">01</div>
-                            <h3 class="step-title">Connect your inbox</h3>
-                            <p class="step-body">
-                                Sign in with Google and Encore scans your email
-                                for ticket confirmations automatically. Or add
-                                shows manually in seconds.
-                            </p>
-                        </div>
-                        <div class="how-step fade-up d2">
-                            <div class="step-num" aria-hidden="true">02</div>
-                            <h3 class="step-title">Follow your people</h3>
-                            <p class="step-body">
-                                Search for friends by name, handle, or genre.
-                                Follow them and their upcoming shows appear in
-                                your feed instantly.
-                            </p>
-                        </div>
-                        <div class="how-step fade-up d3">
-                            <div class="step-num" aria-hidden="true">03</div>
-                            <h3 class="step-title">Watch for alerts</h3>
-                            <p class="step-body">
-                                Red cards mean two weeks or less. Amber means a
-                                month. The urgency system means you always know
-                                when to act fast on tickets.
-                            </p>
-                        </div>
-                        <div class="how-step fade-up d4">
-                            <div class="step-num" aria-hidden="true">04</div>
-                            <h3 class="step-title">Show up together</h3>
-                            <p class="step-body">
-                                Tag who's going, see mutual shows you share with
-                                friends, and build a profile that shows your
-                                real concert history and taste.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+<section id="how" class="how-section" aria-labelledby="how-heading">
+  <div class="inner">
+    <h2 class="section-label" id="how-heading">How It Works</h2>
+    <div class="how-steps">
+      <div class="how-step fade-up d1">
+        <div class="step-num" aria-hidden="true">01</div>
+        <h3 class="step-title">Connect your inbox</h3>
+        <p class="step-body">Sign in with Google and Encore scans your email for ticket confirmations automatically. Or add shows manually in seconds.</p>
+      </div>
+      <div class="how-step fade-up d2">
+        <div class="step-num" aria-hidden="true">02</div>
+        <h3 class="step-title">Follow your people</h3>
+        <p class="step-body">Search for friends by name, handle, or genre. Follow them and their upcoming shows appear in your feed instantly.</p>
+      </div>
+      <div class="how-step fade-up d3">
+        <div class="step-num" aria-hidden="true">03</div>
+        <h3 class="step-title">Watch for alerts</h3>
+        <p class="step-body">Red cards mean two weeks or less. Amber means a month. The urgency system means you always know when to act fast on tickets.</p>
+      </div>
+      <div class="how-step fade-up d4">
+        <div class="step-num" aria-hidden="true">04</div>
+        <h3 class="step-title">Show up together</h3>
+        <p class="step-body">Tag who's going, see mutual shows you share with friends, and build a profile that shows your real concert history and taste.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-            <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      SOCIAL PROOF
 ══════════════════════════════════════════ -->
-            <div class="social-proof" aria-label="The problem Encore solves">
-                <div class="sp-inner">
-                    <div class="fade-up">
-                        <h2
-                            class="section-label"
-                            style="
-                                font-size: clamp(22px, 3.5vw, 36px);
-                                font-family:
-                                    &quot;Playfair Display&quot;, serif;
-                                font-style: italic;
-                                letter-spacing: 0;
-                                color: var(--fg);
-                            "
-                        >
-                            "Stop finding out Monday that
-                            <span style="color: var(--gold)"
-                                >half your friends were at the same show</span
-                            >
-                            Friday night."
-                        </h2>
-                        <div class="line-draw" style="margin-top: 32px"></div>
-                    </div>
-                    <div class="sp-cards fade-up d2">
-                        <div class="sp-card">
-                            <div class="sp-av" style="background: #f5a623">
-                                KY
-                            </div>
-                            <div class="sp-info">
-                                <div class="sp-name">Kyle</div>
-                                <div class="sp-status">
-                                    Subtronics · Red Rocks · Apr 23
-                                </div>
-                            </div>
-                            <span class="sp-badge sp-going">✓ Going</span>
-                        </div>
-                        <div class="sp-card">
-                            <div class="sp-av" style="background: #9b6bf5">
-                                JO
-                            </div>
-                            <div class="sp-info">
-                                <div class="sp-name">Jordan</div>
-                                <div class="sp-status">
-                                    Subtronics · Red Rocks · Apr 23
-                                </div>
-                            </div>
-                            <span class="sp-badge sp-going">✓ Going</span>
-                        </div>
-                        <div class="sp-card">
-                            <div class="sp-av" style="background: #e85d3a">
-                                AL
-                            </div>
-                            <div class="sp-info">
-                                <div class="sp-name">Alex</div>
-                                <div class="sp-status">
-                                    Subtronics · Red Rocks · Apr 23
-                                </div>
-                            </div>
-                            <span
-                                class="sp-badge sp-going"
-                                style="
-                                    background: rgba(245, 166, 35, 0.1);
-                                    color: var(--gold);
-                                    border-color: var(--gold-border);
-                                "
-                                >Not yet</span
-                            >
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="social-proof" aria-label="The problem Encore solves">
+  <div class="sp-inner">
+    <div class="fade-up">
+      <h2 class="section-label" style="font-size:clamp(22px,3.5vw,36px);font-family:'Playfair Display',serif;font-style:italic;letter-spacing:0;color:var(--fg)">
+        "Stop finding out Monday that <span style="color:var(--gold)">half your friends were at the same show</span> Friday night."
+      </h2>
+      <div class="line-draw" style="margin-top:32px"></div>
+    </div>
+    <div class="sp-cards fade-up d2">
+      <div class="sp-card">
+        <div class="sp-av" style="background:#F5A623">KY</div>
+        <div class="sp-info"><div class="sp-name">Kyle</div><div class="sp-status">Subtronics · Red Rocks · Apr 23</div></div>
+        <span class="sp-badge sp-going">✓ Going</span>
+      </div>
+      <div class="sp-card">
+        <div class="sp-av" style="background:#9B6BF5">JO</div>
+        <div class="sp-info"><div class="sp-name">Jordan</div><div class="sp-status">Subtronics · Red Rocks · Apr 23</div></div>
+        <span class="sp-badge sp-going">✓ Going</span>
+      </div>
+      <div class="sp-card">
+        <div class="sp-av" style="background:#E85D3A">AL</div>
+        <div class="sp-info"><div class="sp-name">Alex</div><div class="sp-status">Subtronics · Red Rocks · Apr 23</div></div>
+        <span class="sp-badge sp-going" style="background:rgba(245,166,35,.1);color:var(--gold);border-color:var(--gold-border)">Not yet</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-            <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      PLATFORM FEATURES
 ══════════════════════════════════════════ -->
-            <section aria-labelledby="platform-heading">
-                <div class="inner">
-                    <h2 class="section-label" id="platform-heading">
-                        Platform
-                    </h2>
-                    <div class="platform-grid">
-                        <div class="pf-item fade-up d1">
-                            <div class="pf-icon" aria-hidden="true">🎵</div>
-                            <h3 class="pf-title">Rich Artist Pages</h3>
-                            <p class="pf-body">
-                                Tap any artist name and get their upcoming
-                                shows, attending friends, and links to every
-                                major streaming platform in one place.
-                            </p>
-                            <div class="pf-tags">
-                                <span class="pf-tag">Spotify</span
-                                ><span class="pf-tag">Apple Music</span
-                                ><span class="pf-tag">Beatport</span
-                                ><span class="pf-tag">SoundCloud</span>
-                            </div>
-                        </div>
-                        <div class="pf-item fade-up d2">
-                            <div class="pf-icon" aria-hidden="true">👤</div>
-                            <h3 class="pf-title">Expressive Profiles</h3>
-                            <p class="pf-body">
-                                Set your genre tags, favorite artists, bucket
-                                list, show vibe, lifetime show count, and social
-                                links. Your music identity, all in one card.
-                            </p>
-                        </div>
-                        <div class="pf-item fade-up d3">
-                            <div class="pf-icon" aria-hidden="true">🔎</div>
-                            <h3 class="pf-title">Genre Discovery</h3>
-                            <p class="pf-body">
-                                Tap a genre tag — House, Bass, Techno, DnB — and
-                                see every artist, every upcoming show, and every
-                                person in the app who shares that sound.
-                            </p>
-                            <div class="pf-tags">
-                                <span class="pf-tag">House</span
-                                ><span class="pf-tag">Techno</span
-                                ><span class="pf-tag">Bass</span
-                                ><span class="pf-tag">DnB</span
-                                ><span class="pf-tag">Trance</span>
-                            </div>
-                        </div>
-                        <div class="pf-item fade-up d4">
-                            <div class="pf-icon" aria-hidden="true">📱</div>
-                            <h3 class="pf-title">Works Everywhere</h3>
-                            <p class="pf-body">
-                                No app store required. Load it on any server,
-                                open it on any browser. Add to your home screen
-                                on iOS or Android for a native app feel.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+<section aria-labelledby="platform-heading">
+  <div class="inner">
+    <h2 class="section-label" id="platform-heading">Platform</h2>
+    <div class="platform-grid">
+      <div class="pf-item fade-up d1">
+        <div class="pf-icon" aria-hidden="true">🎵</div>
+        <h3 class="pf-title">Rich Artist Pages</h3>
+        <p class="pf-body">Tap any artist name and get their upcoming shows, attending friends, and links to every major streaming platform in one place.</p>
+        <div class="pf-tags"><span class="pf-tag">Spotify</span><span class="pf-tag">Apple Music</span><span class="pf-tag">Beatport</span><span class="pf-tag">SoundCloud</span></div>
+      </div>
+      <div class="pf-item fade-up d2">
+        <div class="pf-icon" aria-hidden="true">👤</div>
+        <h3 class="pf-title">Expressive Profiles</h3>
+        <p class="pf-body">Set your genre tags, favorite artists, bucket list, show vibe, lifetime show count, and social links. Your music identity, all in one card.</p>
+      </div>
+      <div class="pf-item fade-up d3">
+        <div class="pf-icon" aria-hidden="true">🔎</div>
+        <h3 class="pf-title">Genre Discovery</h3>
+        <p class="pf-body">Tap a genre tag — House, Bass, Techno, DnB — and see every artist, every upcoming show, and every person in the app who shares that sound.</p>
+        <div class="pf-tags"><span class="pf-tag">House</span><span class="pf-tag">Techno</span><span class="pf-tag">Bass</span><span class="pf-tag">DnB</span><span class="pf-tag">Trance</span></div>
+      </div>
+      <div class="pf-item fade-up d4">
+        <div class="pf-icon" aria-hidden="true">📱</div>
+        <h3 class="pf-title">Works Everywhere</h3>
+        <p class="pf-body">No app store required. Load it on any server, open it on any browser. Add to your home screen on iOS or Android for a native app feel.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-            <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      DEMO CTA
 ══════════════════════════════════════════ -->
-            <div class="demo-section" id="demo" aria-labelledby="demo-heading">
-                <div class="demo-content">
-                    <p class="demo-eyebrow">Try it now — no sign-up required</p>
-                    <h2 class="demo-hed" id="demo-heading">
-                        <span class="reveal-wrap"
-                            ><span class="reveal-text">SEE IT</span></span
-                        >
-                        <span class="reveal-wrap" style="color: var(--gold)"
-                            ><span class="reveal-text">IN ACTION</span></span
-                        >
-                    </h2>
-                    <p class="demo-sub fade-up">
-                        The demo is loaded with real upcoming EDM shows, real
-                        ticket links, and a friend group ready to explore. No
-                        login. No setup. Just open and go.
-                    </p>
-                    <a
-                        href="app.html"
-                        class="btn-demo fade-up d2"
-                        aria-label="Open the Encore app demo"
-                    >
-                        Check Out the Demo
-                        <span class="btn-demo-arrow" aria-hidden="true">→</span>
-                    </a>
-                    <p class="demo-note fade-up d3">
-                        Loads instantly · Works on mobile · Real Ticketmaster
-                        links
-                    </p>
-                </div>
-            </div>
-        </main>
+<div class="demo-section" id="demo" aria-labelledby="demo-heading">
+  <div class="demo-content">
+    <p class="demo-eyebrow">Try it now — no sign-up required</p>
+    <h2 class="demo-hed" id="demo-heading">
+      <span class="reveal-wrap"><span class="reveal-text">SEE IT</span></span>
+      <span class="reveal-wrap" style="color:var(--gold)"><span class="reveal-text">IN ACTION</span></span>
+    </h2>
+    <p class="demo-sub fade-up">
+      The demo is loaded with real upcoming EDM shows, real ticket links,
+      and a friend group ready to explore. No login. No setup. Just open and go.
+    </p>
+    <a href="app.html" class="btn-demo fade-up d2" aria-label="Open the Encore app demo">
+      Check Out the Demo <span class="btn-demo-arrow" aria-hidden="true">→</span>
+    </a>
+    <p class="demo-note fade-up d3">Loads instantly · Works on mobile · Real Ticketmaster links</p>
+  </div>
+</div>
+</main>
 
-        <!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      FOOTER
 ══════════════════════════════════════════ -->
-        <footer role="contentinfo">
-            <div class="foot-logo">ENCORE</div>
-            <p class="foot-copy">
-                © 2026 Encore. Concert tracking for people who actually go to
-                shows.
-            </p>
-            <nav class="foot-links" aria-label="Footer navigation">
-                <a href="app.html">Open App</a>
-                <a href="index.html#features">Features</a>
-                <a href="index.html#demo">Demo</a>
-            </nav>
-        </footer>
+<footer role="contentinfo">
+  <div class="foot-logo">ENCORE</div>
+  <p class="foot-copy">© 2026 Encore. Concert tracking for people who actually go to shows.</p>
+  <nav class="foot-links" aria-label="Footer navigation">
+    <a href="app.html">Open App</a>
+    <a href="index.html#features">Features</a>
+    <a href="index.html#demo">Demo</a>
+    <a href="privacy.html">Privacy</a>
+  </nav>
+</footer>
 
-        <script src="js/landing.js" defer></script>
-    </body>
+<script src="js/landing.js" defer></script>
+</body>
 </html>

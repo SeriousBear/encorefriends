@@ -559,14 +559,18 @@ async function doScan(setSt, setPr, userId) {
   const searches = [
     // Major platforms by sender domain
     "from:(ticketmaster.com OR seatgeek.com OR axs.com OR dice.fm OR etix.com OR tixr.com OR vividseats.com OR tickpick.com OR showclix.com)",
-    // More platforms
-    "from:(livenation.com OR eventbrite.com OR eventbritemail.com OR frontgatetickets.com OR universe.com OR bandsintown.com)",
-    // Subject line patterns — catches any sender including venues, promoters
-    'subject:("your tickets" OR "ticket confirmation" OR "e-ticket" OR "order confirmation") (concert OR show OR festival OR tour OR live OR venue)',
-    // Broader subject patterns
-    'subject:("you\'re going" OR "booking confirmation" OR "your order") (ticket OR artist OR venue OR show OR festival)',
-    // Receipt-style from any ticketing service
-    "subject:(receipt OR confirmation) (ticket OR admission OR pass OR entry) (concert OR show OR festival OR tour)",
+    // More platforms including RA
+    "from:(livenation.com OR eventbrite.com OR eventbritemail.com OR frontgatetickets.com OR universe.com OR bandsintown.com OR ra.co OR residentadvisor.net OR ticketweb.com OR eventim.com)",
+    // RA specific — catches after-parties, club nights
+    "from:(ra.co OR residentadvisor.net)",
+    // Subject line patterns — catches any sender including venues and promoters
+    'subject:("your tickets" OR "ticket confirmation" OR "e-ticket" OR "order confirmation") (concert OR show OR festival OR tour OR live OR venue OR party OR event)',
+    // Broader subject patterns — after-parties, club nights, raves
+    'subject:("you\'re going" OR "booking confirmation" OR "your order" OR "your booking") (ticket OR artist OR venue OR show OR festival OR party OR rave OR club)',
+    // Receipt-style from ANY sender — catches small venues and local promoters
+    "subject:(receipt OR confirmation) (ticket OR admission OR pass OR entry) (concert OR show OR festival OR tour OR party OR event)",
+    // Wide net — any ticket-related email in last 2 years
+    "subject:(ticket OR tickets) (artist OR venue OR festival OR show OR concert OR party OR rave OR tour) newer_than:2y",
   ];
 
   // Run all searches and deduplicate by message id
@@ -641,6 +645,9 @@ async function doScan(setSt, setPr, userId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
@@ -2656,11 +2663,11 @@ function App() {
   };
 
   const scanGmail = async () => {
-    if (GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE") {
-      toast(
-        "Add your Google Client ID to app.js to enable Gmail scanning.",
-        true,
-      );
+    if (
+      ANTHROPIC_API_KEY === "YOUR_ANTHROPIC_API_KEY_HERE" ||
+      GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE"
+    ) {
+      toast("Set API keys — see setup guide at bottom of file.", true);
       return;
     }
     setScanning(true);
