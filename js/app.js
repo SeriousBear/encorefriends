@@ -583,14 +583,11 @@ async function doScan(setSt, setPr, userId) {
   // Run all searches and deduplicate by message id
   const seen = new Set();
   const allMsgs = [];
-  console.log("=== ENCORE GMAIL SCAN START ===");
-  console.log(
     "Got OAuth token:",
     token ? "YES (" + token.substring(0, 20) + "...)" : "NO",
   );
   for (let s = 0; s < searches.length; s++) {
     setPr(10 + Math.round((s / searches.length) * 25));
-    console.log("Search " + (s + 1) + "/" + searches.length + ":", searches[s]);
     try {
       const res = await fetch(
         "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=" +
@@ -599,7 +596,6 @@ async function doScan(setSt, setPr, userId) {
         { headers: { Authorization: "Bearer " + token } },
       );
       const data = await res.json();
-      console.log(
         "  → Returned " +
           (data.messages?.length || 0) +
           " messages | Estimate: " +
@@ -613,10 +609,8 @@ async function doScan(setSt, setPr, userId) {
         }
       }
     } catch (e) {
-      console.error("  → Search failed:", e);
     }
   }
-  console.log("=== TOTAL UNIQUE EMAILS: " + allMsgs.length + " ===");
 
   setPr(35);
   setSt("Reading " + allMsgs.length + " emails…");
@@ -704,21 +698,17 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
   });
 
   const d = await ai.json();
-  console.log("=== AI RESPONSE ===", d);
   if (d.error) console.error("AI ERROR:", d.error);
   const t = (d.content || [])
     .filter((b) => b.type === "text")
     .map((b) => b.text)
     .join("");
-  console.log("AI extracted text:", t);
   const match = t.match(/\[[\s\S]*\]/);
   if (!match) {
-    console.warn("No JSON array found in AI response");
     return [];
   }
 
   const parsed = JSON.parse(match[0]);
-  console.log("=== PARSED CONCERTS:", parsed.length, "===", parsed);
   setPr(92);
   setSt("Saving to your account…");
 
@@ -800,19 +790,9 @@ function CCard({
     : null;
 
   return (
-    <div className={"card " + cc} onClick={() => onOpen(c)}>
+    <div className={"card " + cc} onClick={() => onOpen(c)} style={{position:"relative"}}>
       <div className="cbar" style={{ background: uColor(u) }} />
-      <div className="cbody">
-        <div
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            display: "flex",
-            gap: 5,
-            zIndex: 2,
-          }}
-        >
+      <div style={{position:"absolute",top:8,right:8,display:"flex",gap:5,zIndex:10}}>
           {isNew && (
             <div
               style={{
@@ -871,7 +851,8 @@ function CCard({
               ×
             </button>
           )}
-        </div>
+      </div>
+      <div className="cbody">
         {u === "urgent" && (
           <div className="upill pill-u">
             <div className="pdot" style={{ background: "#FF5050" }} />
@@ -3256,8 +3237,14 @@ function App() {
                   <div className="empty-i">🎵</div>
                   <div className="empty-t">No Shows Yet</div>
                   <div className="empty-s">
-                    Load demo, scan Gmail, or add a show manually.
+                    Scan your Gmail to automatically find your ticket confirmations.
                   </div>
+                  <button
+                    onClick={scanGmail}
+                    style={{marginTop:20,padding:"12px 28px",background:"#F5A623",border:"none",borderRadius:4,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#000",cursor:"pointer"}}
+                  >
+                    Scan Gmail
+                  </button>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="empty">
