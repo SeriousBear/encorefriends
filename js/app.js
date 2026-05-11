@@ -567,6 +567,8 @@ async function doScan(setSt, setPr, userId) {
     "from:ra.co OR from:residentadvisor.net",
     // See Tickets specifically
     "from:seetickets.us OR from:seetickets.com",
+    // Payment plan emails — catches Movement-style installment completions
+    'subject:("payment plan" OR "payment plan complete" OR "order receipt" OR "final payment" OR "installment") (festival OR concert OR show OR event OR ticket)',
     // Subject patterns — any sender
     'subject:("your tickets" OR "your ticket" OR "ticket confirmation" OR "e-ticket" OR "order confirmation" OR "purchase confirmation")',
     // Booking/order patterns
@@ -672,7 +674,7 @@ async function doScan(setSt, setPr, userId) {
 STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
 
 1. CONFIRMED PURCHASES ONLY — the user must have actually bought a ticket. Look for phrases like:
-   ✓ "Your order", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Order #", "Payment plan", "Installment payment"
+   ✓ "Your order", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Order #", "Payment plan", "Installment payment", "Payment Plan Complete", "Order Receipt", "Payment Plan Schedule", "Final payment"
    ✗ DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Don't miss", "Just announced", "Save the date", advertisements, presale invites, refund/cancel notices, waitlist emails, "we thought you'd like"
 
 2. MUSIC EVENTS ONLY:
