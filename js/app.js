@@ -575,10 +575,6 @@ async function doScan(setSt, setPr, userId) {
     "subject:(receipt OR confirmation) (ticket OR admission OR pass OR entry OR show OR concert OR event OR festival OR party)",
     // Wide net — any ticket email in last 2 years
     "subject:(ticket OR tickets OR admission) newer_than:2y",
-    // Payment plan installment emails — catches "Initial Payment Plan Payment for Movement..."
-    'subject:("payment plan" OR "order receipt") (festival OR concert OR show OR event)',
-    // See Tickets payment plan specifically
-    "from:seetickets.us subject:(payment OR order OR receipt)",
   ];
 
   // Run all searches and deduplicate by message id
@@ -622,7 +618,23 @@ async function doScan(setSt, setPr, userId) {
   setPr(35);
   setSt("Reading " + allMsgs.length + " emails…");
 
-  // Fetch full snippets for top 50 unique emails
+  // Helper to decode base64url email body parts
+  const decodeBody = (payload) => {
+    try {
+      if (payload.body?.data) {
+        return atob(payload.body.data.replace(/-/g, "+").replace(/_/g, "/"));
+      }
+      if (payload.parts) {
+        for (const part of payload.parts) {
+          const text = decodeBody(part);
+          if (text) return text;
+        }
+      }
+    } catch (e) {}
+    return "";
+  };
+
+  // Fetch full email content
   const bodies = [];
   const toFetch = allMsgs.slice(0, 50);
   for (let i = 0; i < toFetch.length; i++) {
@@ -642,16 +654,43 @@ async function doScan(setSt, setPr, userId) {
         (m.payload?.headers?.find((h) => h.name === "From") || {}).value || "";
       const date =
         (m.payload?.headers?.find((h) => h.name === "Date") || {}).value || "";
-      bodies.push(
-        "From: " +
+
+      // For payment/receipt emails decode full body so AI sees event details
+      const isPaymentEmail =
+        subj.toLowerCase().includes("payment") ||
+        subj.toLowerCase().includes("order receipt") ||
+        from.toLowerCase().includes("seetickets") ||
+        from.toLowerCase().includes("see tickets");
+
+      let content;
+      if (isPaymentEmail) {
+        const fullBody = decodeBody(m.payload);
+        const plainText = fullBody
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 1200);
+        content =
+          "From: " +
+          from +
+          "\nSubject: " +
+          subj +
+          "\nDate: " +
+          date +
+          "\nBody: " +
+          (plainText || m.snippet || "");
+      } else {
+        content =
+          "From: " +
           from +
           "\nSubject: " +
           subj +
           "\nDate: " +
           date +
           "\nSnippet: " +
-          (m.snippet || ""),
-      );
+          (m.snippet || "");
+      }
+      bodies.push(content);
     } catch (e) {
       /* skip failed fetches */
     }
@@ -675,10 +714,9 @@ async function doScan(setSt, setPr, userId) {
 
 STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
 
-1. CONFIRMED PURCHASES ONLY — the email must confirm money was paid for a ticket. Look for ANY of these signals:
-   ✓ PURCHASE SIGNALS: "Your order", "Order #", "Order Number", "Order Receipt", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Billed to Card", "Customer Name", "Purchase Date", "Payment plan", "Initial Payment", "Installment", "Payment Plan Complete"
-   ✓ PAYMENT PLAN EMAILS: ANY email about a payment plan installment for an event IS a confirmed purchase. Include it even if it says "Initial Payment" or "Payment 1 of 4"
-   ✗ DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Don't miss", "Just announced", "Save the date", advertisements, presale invites, refund/cancel notices, waitlist emails
+1. CONFIRMED PURCHASES ONLY — the user must have actually bought a ticket. Look for phrases like:
+   ✓ "Your order", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Order #", "Payment plan", "Installment payment"
+   ✗ DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Don't miss", "Just announced", "Save the date", advertisements, presale invites, refund/cancel notices, waitlist emails, "we thought you'd like"
 
 2. MUSIC EVENTS ONLY:
    ✓ Concerts, DJ sets, festivals, club nights, raves, after-parties, music tours
@@ -2604,20 +2642,6 @@ function App() {
       });
   }, [session]);
 
-  // Auto-scan on visit if last scan was >24hrs ago
-  useEffect(() => {
-    if (!session) return;
-    const key = "encore_last_scan_" + session.user.id;
-    const lastScan = localStorage.getItem(key);
-    if (!lastScan) return; // never scanned — let user trigger first scan manually
-    const hoursSince = (Date.now() - parseInt(lastScan)) / (1000 * 60 * 60);
-    if (hoursSince > 24) {
-      // Delay 3s to let UI and concerts load first
-      const t = setTimeout(() => scanGmail(), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [session]);
-
   // Load real concerts from Supabase
   useEffect(() => {
     if (!session) return;
@@ -2858,12 +2882,6 @@ function App() {
           ? `Found ${r.length} show${r.length !== 1 ? "s" : ""}!`
           : "No new shows found.",
       );
-      if (session?.user?.id) {
-        localStorage.setItem(
-          "encore_last_scan_" + session.user.id,
-          Date.now().toString(),
-        );
-      }
       if (r.length) {
         const ex = new Set(liveConcerts.map((c) => c.artist + c.date));
         setLiveConcerts((p) => [
