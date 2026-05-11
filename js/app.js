@@ -35,6 +35,7 @@ const RESELLERS = [
     url: (a) =>
       "https://seatgeek.com/" +
       a.toLowerCase().replace(/[^a-z0-9]+/g, "-") +
+      "-tickets",
   },
   {
     name: "Vivid Seats",
@@ -111,16 +112,114 @@ const STREAMS = [
 ];
 
 const SOURCES = [
+  "Ticketmaster",
+  "SeatGeek",
+  "Live Nation",
+  "Eventbrite",
+  "StubHub",
+  "AXS",
+  "DICE",
+  "TickPick",
+  "Direct",
+  "Other",
 ];
 const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 const GENRES = [
+  "House",
+  "Techno",
+  "Bass",
+  "Trance",
+  "DnB",
+  "Dubstep",
+  "EDM",
+  "Ambient",
+  "Breaks",
+  "Garage",
+  "Industrial",
+  "Minimal",
+  "Progressive",
+  "Big Room",
+  "Deep House",
+  "Tech House",
+  "UK Garage",
+  "Jungle",
+  "Footwork",
+  "Tribal",
 ];
 
 const ARTIST_SUGG = [
+  "Subtronics",
+  "John Summit",
+  "Rezz",
+  "deadmau5",
+  "Fisher",
+  "Fred Again..",
+  "Eric Prydz",
+  "Dom Dolla",
+  "Four Tet",
+  "Skrillex",
+  "Flume",
+  "Peggy Gou",
+  "Mall Grab",
+  "Solomun",
+  "Tale Of Us",
+  "Nina Kraviz",
+  "Charlotte de Witte",
+  "Aphex Twin",
+  "Floating Points",
+  "Jon Hopkins",
+  "Richie Hawtin",
+  "Adam Beyer",
+  "Amelie Lens",
+  "BICEP",
+  "Bonobo",
+  "Jamie xx",
+  "Justice",
+  "Kaskade",
+  "Lane 8",
+  "Maceo Plex",
+  "Moderat",
+  "Orbital",
+  "Phantogram",
+  "GRiZ",
+  "Illenium",
+  "Martin Garrix",
+  "Porter Robinson",
+  "Odesza",
+  "Chris Liebing",
+  "Stephan Bodzin",
 ];
 
 const AVATAR_COLORS = [
+  "#F5A623",
+  "#E85D3A",
+  "#9B6BF5",
+  "#2ECC71",
+  "#3498DB",
+  "#E91E8C",
+  "#1ABC9C",
+  "#E74C3C",
+  "#8E44AD",
+  "#F39C12",
+  "#27AE60",
+  "#2980B9",
+  "#D35400",
+  "#16A085",
+  "#7F8C8D",
+  "#C0392B",
 ];
 
 // ── DEMO DATA ────────────────────────────────────────────────────────────────
@@ -164,6 +263,7 @@ const INIT_CONCERTS = [
     date: "2026-05-01",
     source: "Ticketmaster",
     ticketUrl:
+      "https://www.ticketmaster.com/john-summit-tickets/artist/2730221",
     genres: ["House", "Tech House"],
   },
   {
@@ -174,6 +274,7 @@ const INIT_CONCERTS = [
     date: "2026-05-02",
     source: "Ticketmaster",
     ticketUrl:
+      "https://www.ticketmaster.com/john-summit-tickets/artist/2730221",
     genres: ["House", "Tech House"],
   },
   {
@@ -194,6 +295,7 @@ const INIT_CONCERTS = [
     date: "2026-05-15",
     source: "Ticketmaster",
     ticketUrl:
+      "https://www.ticketmaster.com/john-summit-tickets/artist/2730221",
     genres: ["House", "EDM"],
   },
   {
@@ -456,17 +558,26 @@ async function doScan(setSt, setPr, userId) {
   // Multiple search passes to maximize coverage across ALL ticket platforms
   const searches = [
     // Major platforms — using @ format for more reliable matching
+    "from:(@ticketmaster.com OR @seatgeek.com OR @axs.com OR @dice.fm OR @etix.com OR @tixr.com OR @vividseats.com OR @tickpick.com OR @showclix.com OR @stubhub.com)",
     // More platforms — RA, See Tickets, Eventbrite, Live Nation, etc.
+    "from:(@ra.co OR @residentadvisor.net OR @seetickets.us OR @seetickets.com OR @livenation.com OR @eventbrite.com OR @eventbritemail.com OR @frontgatetickets.com OR @universe.com OR @bandsintown.com OR @ticketweb.com OR @eventim.com)",
     // Catch-all for noreply addresses from ticket senders
+    "from:(noreply OR no-reply OR notifications OR tickets OR orders) (ticket OR ticketing OR event OR concert OR booking OR admission)",
     // RA specifically by domain
+    "from:ra.co OR from:residentadvisor.net",
     // See Tickets specifically
+    "from:seetickets.us OR from:seetickets.com",
     // Subject patterns — any sender
     'subject:("your tickets" OR "your ticket" OR "ticket confirmation" OR "e-ticket" OR "order confirmation" OR "purchase confirmation")',
     // Booking/order patterns
     'subject:("booking confirmation" OR "your order" OR "your booking" OR "order #" OR "you\'re going")',
     // Receipt-style — catches small venues and local promoters
+    "subject:(receipt OR confirmation) (ticket OR admission OR pass OR entry OR show OR concert OR event OR festival OR party)",
     // Wide net — any ticket email in last 2 years
+    "subject:(ticket OR tickets OR admission) newer_than:2y",
     // Payment plan emails — specifically targets Movement-style subjects
+    "from:seetickets.us subject:(payment OR order OR receipt)",
+    "subject:(payment plan) (festival OR concert OR show OR event OR ticket)",
   ];
 
   // Run all searches and deduplicate by message id
@@ -478,22 +589,17 @@ async function doScan(setSt, setPr, userId) {
       const res = await fetch(
         "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=" +
           enc(searches[s]) +
+          "&maxResults=30",
         { headers: { Authorization: "Bearer " + token } },
       );
       const data = await res.json();
-        "  → Returned " +
-          (data.messages?.length || 0) +
-          " messages | Estimate: " +
-
-      if (data.error)
       for (const msg of data.messages || []) {
         if (!seen.has(msg.id)) {
           seen.add(msg.id);
           allMsgs.push(msg);
         }
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   setPr(35);
@@ -508,6 +614,7 @@ async function doScan(setSt, setPr, userId) {
         await fetch(
           "https://gmail.googleapis.com/gmail/v1/users/me/messages/" +
             toFetch[i].id +
+            "?format=full",
           { headers: { Authorization: "Bearer " + token } },
         )
       ).json();
@@ -581,7 +688,6 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
   });
 
   const d = await ai.json();
-  if (d.error)
   const t = (d.content || [])
     .filter((b) => b.type === "text")
     .map((b) => b.text)
@@ -673,67 +779,80 @@ function CCard({
     : null;
 
   return (
-    <div className={"card " + cc} onClick={() => onOpen(c)} style={{position:"relative"}}>
+    <div
+      className={"card " + cc}
+      onClick={() => onOpen(c)}
+      style={{ position: "relative" }}
+    >
       <div className="cbar" style={{ background: uColor(u) }} />
-      <div style={{position:"absolute",top:8,right:8,display:"flex",gap:5,zIndex:10}}>
-          {isNew && (
-            <div
-              style={{
-                padding: "2px 7px",
-                background: "rgba(245,166,35,.15)",
-                border: "1px solid rgba(245,166,35,.4)",
-                borderRadius: 3,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 8,
-                fontWeight: 700,
-                letterSpacing: 1,
-                color: "#F5A623",
-                textTransform: "uppercase",
-              }}
-            >
-              NEW
-            </div>
-          )}
-          {c.is_festival && (
-            <div
-              style={{
-                padding: "2px 7px",
-                background: "rgba(155,107,245,.12)",
-                border: "1px solid rgba(155,107,245,.35)",
-                borderRadius: 3,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 8,
-                fontWeight: 700,
-                letterSpacing: 1,
-                color: "#9B6BF5",
-                textTransform: "uppercase",
-              }}
-            >
-              FEST
-            </div>
-          )}
-          {onDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(c.id);
-              }}
-              style={{
-                padding: "2px 7px",
-                background: "transparent",
-                border: "1px solid #2a2a2a",
-                borderRadius: 3,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 9,
-                color: "#444",
-                cursor: "pointer",
-                lineHeight: 1,
-              }}
-              title="Remove this show"
-            >
-              ×
-            </button>
-          )}
+      <div
+        style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          display: "flex",
+          gap: 5,
+          zIndex: 10,
+        }}
+      >
+        {isNew && (
+          <div
+            style={{
+              padding: "2px 7px",
+              background: "rgba(245,166,35,.15)",
+              border: "1px solid rgba(245,166,35,.4)",
+              borderRadius: 3,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 8,
+              fontWeight: 700,
+              letterSpacing: 1,
+              color: "#F5A623",
+              textTransform: "uppercase",
+            }}
+          >
+            NEW
+          </div>
+        )}
+        {c.is_festival && (
+          <div
+            style={{
+              padding: "2px 7px",
+              background: "rgba(155,107,245,.12)",
+              border: "1px solid rgba(155,107,245,.35)",
+              borderRadius: 3,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 8,
+              fontWeight: 700,
+              letterSpacing: 1,
+              color: "#9B6BF5",
+              textTransform: "uppercase",
+            }}
+          >
+            FEST
+          </div>
+        )}
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(c.id);
+            }}
+            style={{
+              padding: "2px 7px",
+              background: "transparent",
+              border: "1px solid #2a2a2a",
+              borderRadius: 3,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 9,
+              color: "#444",
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
+            title="Remove this show"
+          >
+            ×
+          </button>
+        )}
       </div>
       <div className="cbody">
         {u === "urgent" && (
@@ -2751,6 +2870,13 @@ function App() {
     if (!name.trim()) return;
     const id = Date.now();
     const colors = [
+      "#E85D3A",
+      "#9B6BF5",
+      "#2ECC71",
+      "#3498DB",
+      "#F39C12",
+      "#E91E8C",
+      "#1ABC9C",
     ];
     setUsers((p) => [
       ...p,
@@ -3087,6 +3213,7 @@ function App() {
                       ? "My Tickets"
                       : (
                           (users.find((u) => u.id === filter)?.name || "") +
+                          "'s Shows"
                         ).toUpperCase()}
                 </div>
                 <div className="pg-cnt">{filtered.length} shows</div>
@@ -3112,11 +3239,25 @@ function App() {
                   <div className="empty-i">🎵</div>
                   <div className="empty-t">No Shows Yet</div>
                   <div className="empty-s">
-                    Scan your Gmail to automatically find your ticket confirmations.
+                    Scan your Gmail to automatically find your ticket
+                    confirmations.
                   </div>
                   <button
                     onClick={scanGmail}
-                    style={{marginTop:20,padding:"12px 28px",background:"#F5A623",border:"none",borderRadius:4,fontFamily:"'Syne',sans-serif",fontSize:12,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"#000",cursor:"pointer"}}
+                    style={{
+                      marginTop: 20,
+                      padding: "12px 28px",
+                      background: "#F5A623",
+                      border: "none",
+                      borderRadius: 4,
+                      fontFamily: "'Syne',sans-serif",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: 1.5,
+                      textTransform: "uppercase",
+                      color: "#000",
+                      cursor: "pointer",
+                    }}
                   >
                     Scan Gmail
                   </button>
