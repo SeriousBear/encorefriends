@@ -618,7 +618,7 @@ async function doScan(setSt, setPr, userId) {
   setPr(35);
   setSt("Reading " + allMsgs.length + " emails…");
 
-  // Helper to decode base64url email body parts
+  // Helper to decode base64url email body
   const decodeBody = (payload) => {
     try {
       if (payload.body?.data) {
@@ -634,7 +634,6 @@ async function doScan(setSt, setPr, userId) {
     return "";
   };
 
-  // Fetch full email content
   const bodies = [];
   const toFetch = allMsgs.slice(0, 50);
   for (let i = 0; i < toFetch.length; i++) {
@@ -655,7 +654,7 @@ async function doScan(setSt, setPr, userId) {
       const date =
         (m.payload?.headers?.find((h) => h.name === "Date") || {}).value || "";
 
-      // For payment/receipt emails decode full body so AI sees event details
+      // For payment/See Tickets emails decode full body so AI sees event details
       const isPaymentEmail =
         subj.toLowerCase().includes("payment") ||
         subj.toLowerCase().includes("order receipt") ||
@@ -670,6 +669,7 @@ async function doScan(setSt, setPr, userId) {
           .replace(/\s+/g, " ")
           .trim()
           .slice(0, 1200);
+        console.log("FULL BODY EMAIL:", subj, "\n", plainText.slice(0, 300));
         content =
           "From: " +
           from +
@@ -714,8 +714,9 @@ async function doScan(setSt, setPr, userId) {
 
 STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
 
-1. CONFIRMED PURCHASES ONLY — the user must have actually bought a ticket. Look for phrases like:
-   ✓ "Your order", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Order #", "Payment plan", "Installment payment"
+1. CONFIRMED PURCHASES ONLY — the email must confirm money was paid. Look for ANY of:
+   ✓ "Your order", "Order #", "Order Number", "Order Receipt", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Billed to Card", "Customer Name", "Purchase Date", "Payment plan", "Initial Payment", "Installment", "Payment Plan Complete"
+   ✓ PAYMENT PLAN EMAILS: ANY installment payment for an event IS a confirmed purchase. Include even "Initial Payment" or "Payment 1 of 4"
    ✗ DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Don't miss", "Just announced", "Save the date", advertisements, presale invites, refund/cancel notices, waitlist emails, "we thought you'd like"
 
 2. MUSIC EVENTS ONLY:
