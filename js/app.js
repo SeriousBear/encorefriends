@@ -1,7 +1,7 @@
-/* ===========================================================
+/* ============================================================
    ENCORE — App Logic
    app.js  (React + Babel via CDN)
-   =========================================================== */
+   ============================================================ */
 
 const { useState, useEffect } = React;
 const enc = encodeURIComponent;
@@ -583,8 +583,14 @@ async function doScan(setSt, setPr, userId) {
   // Run all searches and deduplicate by message id
   const seen = new Set();
   const allMsgs = [];
+  console.log("=== ENCORE GMAIL SCAN START ===");
+  console.log(
+    "Got OAuth token:",
+    token ? "YES (" + token.substring(0, 20) + "...)" : "NO",
+  );
   for (let s = 0; s < searches.length; s++) {
     setPr(10 + Math.round((s / searches.length) * 25));
+    console.log("Search " + (s + 1) + "/" + searches.length + ":", searches[s]);
     try {
       const res = await fetch(
         "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=" +
@@ -593,14 +599,24 @@ async function doScan(setSt, setPr, userId) {
         { headers: { Authorization: "Bearer " + token } },
       );
       const data = await res.json();
+      console.log(
+        "  → Returned " +
+          (data.messages?.length || 0) +
+          " messages | Estimate: " +
+          (data.resultSizeEstimate || 0),
+      );
+      if (data.error) console.error("  → GMAIL API ERROR:", data.error);
       for (const msg of data.messages || []) {
         if (!seen.has(msg.id)) {
           seen.add(msg.id);
           allMsgs.push(msg);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("  → Search failed:", e);
+    }
   }
+  console.log("=== TOTAL UNIQUE EMAILS: " + allMsgs.length + " ===");
 
   setPr(35);
   setSt("Reading " + allMsgs.length + " emails…");
@@ -688,16 +704,21 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
   });
 
   const d = await ai.json();
+  console.log("=== AI RESPONSE ===", d);
+  if (d.error) console.error("AI ERROR:", d.error);
   const t = (d.content || [])
     .filter((b) => b.type === "text")
     .map((b) => b.text)
     .join("");
+  console.log("AI extracted text:", t);
   const match = t.match(/\[[\s\S]*\]/);
   if (!match) {
+    console.warn("No JSON array found in AI response");
     return [];
   }
 
   const parsed = JSON.parse(match[0]);
+  console.log("=== PARSED CONCERTS:", parsed.length, "===", parsed);
   setPr(92);
   setSt("Saving to your account…");
 
@@ -779,82 +800,78 @@ function CCard({
     : null;
 
   return (
-    <div
-      className={"card " + cc}
-      onClick={() => onOpen(c)}
-      style={{ position: "relative" }}
-    >
+    <div className={"card " + cc} onClick={() => onOpen(c)}>
       <div className="cbar" style={{ background: uColor(u) }} />
-      <div
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          display: "flex",
-          gap: 5,
-          zIndex: 10,
-        }}
-      >
-        {isNew && (
-          <div
-            style={{
-              padding: "2px 7px",
-              background: "rgba(245,166,35,.15)",
-              border: "1px solid rgba(245,166,35,.4)",
-              borderRadius: 3,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 8,
-              fontWeight: 700,
-              letterSpacing: 1,
-              color: "#F5A623",
-              textTransform: "uppercase",
-            }}
-          >
-            NEW
-          </div>
-        )}
-        {c.is_festival && (
-          <div
-            style={{
-              padding: "2px 7px",
-              background: "rgba(155,107,245,.12)",
-              border: "1px solid rgba(155,107,245,.35)",
-              borderRadius: 3,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 8,
-              fontWeight: 700,
-              letterSpacing: 1,
-              color: "#9B6BF5",
-              textTransform: "uppercase",
-            }}
-          >
-            FEST
-          </div>
-        )}
-        {onDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(c.id);
-            }}
-            style={{
-              padding: "2px 7px",
-              background: "transparent",
-              border: "1px solid #2a2a2a",
-              borderRadius: 3,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 9,
-              color: "#444",
-              cursor: "pointer",
-              lineHeight: 1,
-            }}
-            title="Remove this show"
-          >
-            ×
-          </button>
-        )}
-      </div>
       <div className="cbody">
+        <div
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            display: "flex",
+            gap: 5,
+            zIndex: 2,
+          }}
+        >
+          {isNew && (
+            <div
+              style={{
+                padding: "2px 7px",
+                background: "rgba(245,166,35,.15)",
+                border: "1px solid rgba(245,166,35,.4)",
+                borderRadius: 3,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 8,
+                fontWeight: 700,
+                letterSpacing: 1,
+                color: "#F5A623",
+                textTransform: "uppercase",
+              }}
+            >
+              NEW
+            </div>
+          )}
+          {c.is_festival && (
+            <div
+              style={{
+                padding: "2px 7px",
+                background: "rgba(155,107,245,.12)",
+                border: "1px solid rgba(155,107,245,.35)",
+                borderRadius: 3,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 8,
+                fontWeight: 700,
+                letterSpacing: 1,
+                color: "#9B6BF5",
+                textTransform: "uppercase",
+              }}
+            >
+              FEST
+            </div>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(c.id);
+              }}
+              style={{
+                padding: "2px 7px",
+                background: "transparent",
+                border: "1px solid #2a2a2a",
+                borderRadius: 3,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 9,
+                color: "#444",
+                cursor: "pointer",
+                lineHeight: 1,
+              }}
+              title="Remove this show"
+            >
+              ×
+            </button>
+          )}
+        </div>
         {u === "urgent" && (
           <div className="upill pill-u">
             <div className="pdot" style={{ background: "#FF5050" }} />
@@ -930,6 +947,10 @@ function CDetail({
   const bc = u === "urgent" ? "bdg-u" : u === "soon" ? "bdg-s" : "bdg-n",
     rc = u === "urgent" ? "#FF5555" : "#F5A623";
   const showR = u === "urgent" || u === "soon";
+  const isFestival = c.is_festival && c.end_date && c.end_date !== c.date;
+  const dateStr = isFestival
+    ? fmt(c.date).full + " – " + fmt(c.end_date).full
+    : d.dow + ", " + d.full;
   return (
     <div className="mwrap" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
@@ -939,7 +960,7 @@ function CDetail({
           <div className="sh-artist">{c.artist}</div>
           <div className="sh-venue">{c.venue}</div>
           <div className="sh-date">
-            {c.city} · {d.dow}, {d.full}
+            {c.city} · {dateStr}
           </div>
           <div className={"sh-daybdg " + bc}>
             <span
@@ -3239,28 +3260,8 @@ function App() {
                   <div className="empty-i">🎵</div>
                   <div className="empty-t">No Shows Yet</div>
                   <div className="empty-s">
-                    Scan your Gmail to automatically find your ticket
-                    confirmations.
+                    Load demo, scan Gmail, or add a show manually.
                   </div>
-                  <button
-                    onClick={scanGmail}
-                    style={{
-                      marginTop: 20,
-                      padding: "12px 28px",
-                      background: "#F5A623",
-                      border: "none",
-                      borderRadius: 4,
-                      fontFamily: "'Syne',sans-serif",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      letterSpacing: 1.5,
-                      textTransform: "uppercase",
-                      color: "#000",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Scan Gmail
-                  </button>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="empty">
