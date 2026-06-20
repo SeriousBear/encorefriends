@@ -539,14 +539,14 @@ const uColor = (u) =>
 //   2. the label on the button,
 //   3. an extra Gmail search pass so that platform's emails get scanned.
 const TICKET_VENDORS = [
-  { name: "Ticketmaster", aliases: ["ticketmaster", "tm"], domains: ["ticketmaster.com"] },
+  { name: "Ticketmaster", aliases: ["ticketmaster", "tm"], domains: ["ticketmaster.com"], eventRx: /ticketmaster\.com\/event\/([A-Za-z0-9]+)/i, eventUrl: (id) => "https://www.ticketmaster.com/event/" + id },
   { name: "Live Nation", aliases: ["live nation", "livenation"], domains: ["livenation.com"] },
   { name: "SeatGeek", aliases: ["seatgeek"], domains: ["seatgeek.com"] },
-  { name: "AXS", aliases: ["axs"], domains: ["axs.com"] },
-  { name: "DICE", aliases: ["dice", "dice.fm"], domains: ["dice.fm"] },
-  { name: "Resident Advisor", aliases: ["resident advisor", "ra", "residentadvisor"], domains: ["ra.co", "residentadvisor.net"] },
+  { name: "AXS", aliases: ["axs"], domains: ["axs.com"], eventRx: /axs\.com\/events\/(\d+)/i, eventUrl: (id) => "https://www.axs.com/events/" + id },
+  { name: "DICE", aliases: ["dice", "dice.fm"], domains: ["dice.fm"], eventRx: /dice\.fm\/event\/([\w-]+)/i, eventUrl: (id) => "https://dice.fm/event/" + id },
+  { name: "Resident Advisor", aliases: ["resident advisor", "ra", "residentadvisor"], domains: ["ra.co", "residentadvisor.net"], eventRx: /ra\.co\/events\/(\d+)/i, eventUrl: (id) => "https://ra.co/events/" + id },
   { name: "See Tickets", aliases: ["see tickets", "seetickets"], domains: ["seetickets.us", "seetickets.com"] },
-  { name: "Eventbrite", aliases: ["eventbrite"], domains: ["eventbrite.com", "eventbritemail.com"] },
+  { name: "Eventbrite", aliases: ["eventbrite"], domains: ["eventbrite.com", "eventbritemail.com"], eventRx: /eventbrite\.com\/e\/([\w-]+)/i, eventUrl: (id) => "https://www.eventbrite.com/e/" + id },
   { name: "Etix", aliases: ["etix"], domains: ["etix.com"] },
   { name: "Tixr", aliases: ["tixr"], domains: ["tixr.com"] },
   { name: "Vivid Seats", aliases: ["vivid seats", "vividseats"], domains: ["vividseats.com"] },
@@ -576,22 +576,15 @@ const findVendor = (source) => {
   );
 };
 
-// A domain-scoped search reliably lands on the right vendor's page for this
-// artist, without hard-coding each site's (changeable) internal search URL.
-const vendorSearchUrl = (domain, artist) =>
-  "https://www.google.com/search?q=" + enc((artist || "") + " tickets site:" + domain);
-
-// Resolve the best "buy" link for a concert.
+// Resolve the DIRECT purchase link for a concert. Returns a trustworthy event
+// URL, or null — there is no search fallback. A captured URL is used only when
+// it sits on the show's known vendor domain.
 const primaryUrl = (c) => {
-  const captured = c.ticketUrl || c.ticket_url; // seed data is camelCase, DB rows snake_case
+  const captured = c.ticketUrl || c.ticket_url; // seed data camelCase, DB rows snake_case
+  if (!captured || !/^https?:\/\//i.test(captured)) return null;
   const v = findVendor(c.source);
-  // Honor a real captured URL, but only if it matches the known vendor's domain
-  // (guards against tracking/login links that don't point at the event itself).
-  if (captured && /^https?:\/\//i.test(captured)) {
-    if (!v || v.domains.some((d) => captured.includes(d))) return captured;
-  }
-  if (v) return vendorSearchUrl(v.domains[0], c.artist);
-  return "https://www.google.com/search?q=" + enc((c.artist || "") + " tickets");
+  if (v && !v.domains.some((d) => captured.includes(d))) return null;
+  return captured;
 };
 
 // Label for the buy button; null when the source is unknown/generic.
@@ -751,25 +744,22 @@ async function doScan(setSt, setPr, userId) {
     }
   };
 
-  // Pull direct event-page links out of the HTML. The URL lives in the <a>
-  // href, which plain-text extraction drops — so we read hrefs directly. Keep
-  // only links on a known vendor's domain whose path looks like an event page,
-  // so a buyer lands on the exact purchase page instead of a search. These get
-  // appended to the email text so the model can attach the right one per show.
-  const isEventUrl = (u) => /\/(events?|e)\/[\w%.-]/i.test(u);
-  const extractEventLinks = (html) => {
-    try {
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      const hrefs = [...doc.querySelectorAll("a[href]")]
-        .map((a) => a.getAttribute("href"))
-        .filter((h) => h && /^https?:\/\//i.test(h));
-      const onVendor = hrefs.filter((u) =>
-        TICKET_VENDORS.some((v) => v.domains.some((d) => u.includes(d))),
-      );
-      return [...new Set(onVendor.filter(isEventUrl))].slice(0, 4);
-    } catch (e) {
-      return [];
+  // Find direct event-page links by scanning the RAW email (HTML + plain-text
+  // parts, lightly URL-decoded so links buried inside tracking redirects are
+  // still found) for each vendor's canonical event-URL pattern, then rebuilding
+  // a clean link. Robust to "View event" buttons whose href is a click-tracker,
+  // as long as the real event URL appears somewhere in the email.
+  const extractEventLinks = (html, text) => {
+    let raw = (html || "") + "\n" + (text || "");
+    raw += "\n" + raw.replace(/%2F/gi, "/").replace(/%3A/gi, ":");
+    const found = [];
+    for (const v of TICKET_VENDORS) {
+      if (!v.eventRx) continue;
+      const rx = new RegExp(v.eventRx.source, "ig");
+      let m;
+      while ((m = rx.exec(raw))) found.push(v.eventUrl(m[1]));
     }
+    return [...new Set(found)].slice(0, 4);
   };
 
   // Accept a ticket_url only if it's real: a proper URL that actually appeared
@@ -815,7 +805,7 @@ async function doScan(setSt, setPr, userId) {
       if (!bodyText) bodyText = m.snippet || "";
       bodyText = bodyText.slice(0, BODY_CHAR_CAP);
 
-      const eventLinks = html ? extractEventLinks(html) : [];
+      const eventLinks = extractEventLinks(html, text);
       bodies.push(
         "From: " +
           from +
@@ -911,7 +901,7 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
           .eq("artist", c.artist)
           .eq("date", c.date)
           .maybeSingle();
-        if (existing) continue; // skip duplicate from payment plan emails
+        if (existing) continue; // skip duplicate (same event across emails)
 
         const { data, error } = await supabase
           .from("concerts")
@@ -1161,17 +1151,26 @@ function CDetail({
             {dt}
           </div>
           <div className="sh-lbl nb">Get Tickets</div>
-          <a
-            className="sh-buy"
-            href={primaryUrl(c)}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span>
-              {vendorLabel(c) ? "Buy on " + vendorLabel(c) : "Find Tickets"}
-            </span>
-            <span className="sh-buy-src">Official ↗</span>
-          </a>
+          {primaryUrl(c) ? (
+            <a
+              className="sh-buy"
+              href={primaryUrl(c)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span>
+                {vendorLabel(c) ? "Buy on " + vendorLabel(c) : "Get Tickets"}
+              </span>
+              <span className="sh-buy-src">Official ↗</span>
+            </a>
+          ) : (
+            <div className="sh-buy sh-buy-nolink">
+              <span>
+                {vendorLabel(c) ? "Via " + vendorLabel(c) : "Ticket link unavailable"}
+              </span>
+              <span className="sh-buy-src">no direct link</span>
+            </div>
+          )}
           {showR && (
             <>
               <div className="rsh" style={{ color: rc }}>
@@ -1764,14 +1763,16 @@ function ArtistSheet({ artistName, concerts, onClose, onOpenConcert }) {
                     <div className="art-show-date">
                       {d.mo} {d.day}
                     </div>
-                    <a
-                      className="art-show-btn"
-                      href={primaryUrl(c)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Tickets ↗
-                    </a>
+                    {primaryUrl(c) && (
+                      <a
+                        className="art-show-btn"
+                        href={primaryUrl(c)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Tickets ↗
+                      </a>
+                    )}
                   </div>
                 );
               })}
@@ -1961,20 +1962,22 @@ function GenrePage({
                       >
                         tap to see artist
                       </span>
-                      <a
-                        href={primaryUrl(c)}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          fontSize: 8,
-                          fontFamily: "'DM Mono',monospace",
-                          color: "#F5A623",
-                          textDecoration: "none",
-                        }}
-                      >
-                        tickets ↗
-                      </a>
+                      {primaryUrl(c) && (
+                        <a
+                          href={primaryUrl(c)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            fontSize: 8,
+                            fontFamily: "'DM Mono',monospace",
+                            color: "#F5A623",
+                            textDecoration: "none",
+                          }}
+                        >
+                          tickets ↗
+                        </a>
+                      )}
                     </div>
                   </div>
                 );
@@ -3035,6 +3038,28 @@ function App() {
     }
   };
 
+  const clearMyShows = async () => {
+    if (!window.confirm("Delete ALL your shows? This can't be undone.")) return;
+    if (session?.user?.id) {
+      // Mirror the per-show delete: remove attendee rows first, then concerts.
+      const { data: mine } = await supabase
+        .from("concerts")
+        .select("id")
+        .eq("owner_id", session.user.id);
+      const ids = (mine || []).map((r) => r.id);
+      if (ids.length) {
+        await supabase.from("concert_attendees").delete().in("concert_id", ids);
+        await supabase
+          .from("concerts")
+          .delete()
+          .eq("owner_id", session.user.id);
+      }
+    }
+    setLiveConcerts([]);
+    setDbConcerts([]);
+    toast("All shows cleared.");
+  };
+
   const addManually = () => {
     if (!nc.artist.trim() || !nc.date) return;
     setLiveConcerts((p) => [
@@ -3185,6 +3210,14 @@ function App() {
                 disabled={scanning}
               >
                 {scanning ? "Scanning…" : "⟲ Scan Gmail"}
+              </button>
+              <button
+                className="btn-sm"
+                onClick={clearMyShows}
+                disabled={scanning}
+                title="Delete all your shows"
+              >
+                ⌫ Clear
               </button>
             </div>
           )}
