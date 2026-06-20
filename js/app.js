@@ -621,7 +621,63 @@ async function doScan(setSt, setPr, userId) {
   setPr(35);
   setSt("Reading " + allMsgs.length + " emails…");
 
-  // Fetch full snippets for top 50 unique emails
+  // Decode a base64url-encoded Gmail body part to a UTF-8 string
+  const b64urlDecode = (data) => {
+    try {
+      const bin = atob(data.replace(/-/g, "+").replace(/_/g, "/"));
+      // Handle UTF-8 multi-byte characters correctly
+      const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+      return new TextDecoder("utf-8").decode(bytes);
+    } catch (e) {
+      return "";
+    }
+  };
+
+  // Walk the MIME tree and return the best body source.
+  // Prefers text/html (richest content); falls back to text/plain.
+  const extractRawBody = (payload) => {
+    if (!payload) return { html: "", text: "" };
+    let html = "";
+    let text = "";
+    const walk = (part) => {
+      if (!part) return;
+      const mime = part.mimeType || "";
+      if (part.body?.data) {
+        if (mime === "text/html" && !html) html = b64urlDecode(part.body.data);
+        else if (mime === "text/plain" && !text)
+          text = b64urlDecode(part.body.data);
+      }
+      if (part.parts) part.parts.forEach(walk);
+    };
+    walk(payload);
+    return { html, text };
+  };
+
+  // Convert an HTML email body to clean plain text using the browser's own
+  // parser. Strips style/script/head content (not just tags), collapses
+  // whitespace, and caps length to keep token usage predictable.
+  const cleanEmailBody = (html) => {
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      doc.querySelectorAll("style, script, head, title").forEach((el) =>
+        el.remove(),
+      );
+      const txt = doc.body?.innerText || doc.body?.textContent || "";
+      return txt.replace(/\s{2,}/g, " ").trim();
+    } catch (e) {
+      // Fallback: naive tag strip if DOMParser somehow fails
+      return html
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+    }
+  };
+
+  const BODY_CHAR_CAP = 800;
+
+  // Fetch full content for top 75 unique emails and extract clean body text
   const bodies = [];
   const toFetch = allMsgs.slice(0, 75);
   for (let i = 0; i < toFetch.length; i++) {
@@ -641,6 +697,16 @@ async function doScan(setSt, setPr, userId) {
         (m.payload?.headers?.find((h) => h.name === "From") || {}).value || "";
       const date =
         (m.payload?.headers?.find((h) => h.name === "Date") || {}).value || "";
+
+      // Universal body extraction: decode the full body, clean it to plain
+      // text, and cap it. Fall back to the snippet if extraction is empty.
+      const { html, text } = extractRawBody(m.payload);
+      let bodyText = "";
+      if (html) bodyText = cleanEmailBody(html);
+      if (!bodyText && text) bodyText = text.replace(/\s{2,}/g, " ").trim();
+      if (!bodyText) bodyText = m.snippet || "";
+      bodyText = bodyText.slice(0, BODY_CHAR_CAP);
+
       bodies.push(
         "From: " +
           from +
@@ -648,8 +714,8 @@ async function doScan(setSt, setPr, userId) {
           subj +
           "\nDate: " +
           date +
-          "\nSnippet: " +
-          (m.snippet || ""),
+          "\nBody: " +
+          bodyText,
       );
     } catch (e) {
       /* skip failed fetches */
