@@ -530,8 +530,78 @@ const fmt = (ds) => {
 };
 const uColor = (u) =>
   u === "urgent" ? "#FF5050" : u === "soon" ? "#F5A623" : "#2a2a2a";
-const primaryUrl = (c) =>
-  c.ticketUrl || "https://www.ticketmaster.com/search?q=" + enc(c.artist);
+// ── TICKET VENDORS ──────────────────────────────────────────────────────────
+// Single source of truth for ticketing platforms. To support a new ticket
+// site, add ONE entry here: its display name, any aliases the scan might
+// return for it, and its sender domain(s). That entry then drives, automatically:
+//   1. the "Buy on …" link destination (a Resident Advisor show links to
+//      Resident Advisor, not Ticketmaster),
+//   2. the label on the button,
+//   3. an extra Gmail search pass so that platform's emails get scanned.
+const TICKET_VENDORS = [
+  { name: "Ticketmaster", aliases: ["ticketmaster", "tm"], domains: ["ticketmaster.com"] },
+  { name: "Live Nation", aliases: ["live nation", "livenation"], domains: ["livenation.com"] },
+  { name: "SeatGeek", aliases: ["seatgeek"], domains: ["seatgeek.com"] },
+  { name: "AXS", aliases: ["axs"], domains: ["axs.com"] },
+  { name: "DICE", aliases: ["dice", "dice.fm"], domains: ["dice.fm"] },
+  { name: "Resident Advisor", aliases: ["resident advisor", "ra", "residentadvisor"], domains: ["ra.co", "residentadvisor.net"] },
+  { name: "See Tickets", aliases: ["see tickets", "seetickets"], domains: ["seetickets.us", "seetickets.com"] },
+  { name: "Eventbrite", aliases: ["eventbrite"], domains: ["eventbrite.com", "eventbritemail.com"] },
+  { name: "Etix", aliases: ["etix"], domains: ["etix.com"] },
+  { name: "Tixr", aliases: ["tixr"], domains: ["tixr.com"] },
+  { name: "Vivid Seats", aliases: ["vivid seats", "vividseats"], domains: ["vividseats.com"] },
+  { name: "TickPick", aliases: ["tickpick"], domains: ["tickpick.com"] },
+  { name: "ShowClix", aliases: ["showclix"], domains: ["showclix.com"] },
+  { name: "StubHub", aliases: ["stubhub"], domains: ["stubhub.com"] },
+  { name: "Front Gate Tickets", aliases: ["front gate", "frontgate", "frontgatetickets"], domains: ["frontgatetickets.com"] },
+  { name: "Universe", aliases: ["universe"], domains: ["universe.com"] },
+  { name: "Bandsintown", aliases: ["bandsintown"], domains: ["bandsintown.com"] },
+  { name: "TicketWeb", aliases: ["ticketweb"], domains: ["ticketweb.com"] },
+  { name: "Eventim", aliases: ["eventim"], domains: ["eventim.com"] },
+];
+
+// Match a scanned source string ("RA", "Resident Advisor", "ra.co" …) to a vendor.
+const findVendor = (source) => {
+  if (!source) return null;
+  const s = String(source).toLowerCase().trim();
+  return (
+    TICKET_VENDORS.find((v) => v.name.toLowerCase() === s) ||
+    TICKET_VENDORS.find(
+      (v) =>
+        v.aliases.includes(s) ||
+        v.domains.some((d) => s.includes(d)) ||
+        v.aliases.some((a) => s.includes(a)),
+    ) ||
+    null
+  );
+};
+
+// A domain-scoped search reliably lands on the right vendor's page for this
+// artist, without hard-coding each site's (changeable) internal search URL.
+const vendorSearchUrl = (domain, artist) =>
+  "https://www.google.com/search?q=" + enc((artist || "") + " tickets site:" + domain);
+
+// Resolve the best "buy" link for a concert.
+const primaryUrl = (c) => {
+  const captured = c.ticketUrl || c.ticket_url; // seed data is camelCase, DB rows snake_case
+  const v = findVendor(c.source);
+  // Honor a real captured URL, but only if it matches the known vendor's domain
+  // (guards against tracking/login links that don't point at the event itself).
+  if (captured && /^https?:\/\//i.test(captured)) {
+    if (!v || v.domains.some((d) => captured.includes(d))) return captured;
+  }
+  if (v) return vendorSearchUrl(v.domains[0], c.artist);
+  return "https://www.google.com/search?q=" + enc((c.artist || "") + " tickets");
+};
+
+// Label for the buy button; null when the source is unknown/generic.
+const vendorLabel = (c) => {
+  const v = findVendor(c.source);
+  if (v) return v.name;
+  const s = String(c.source || "").toLowerCase();
+  if (c.source && !["direct", "unknown", ""].includes(s)) return c.source;
+  return null;
+};
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
 // ── STYLES ──────────────────────────────────────────────────────────────────
@@ -557,10 +627,8 @@ async function doScan(setSt, setPr, userId) {
 
   // Multiple search passes to maximize coverage across ALL ticket platforms
   const searches = [
-    // Major platforms — using @ format for more reliable matching
-    "from:(@ticketmaster.com OR @seatgeek.com OR @axs.com OR @dice.fm OR @etix.com OR @tixr.com OR @vividseats.com OR @tickpick.com OR @showclix.com OR @stubhub.com)",
-    // More platforms — RA, See Tickets, Eventbrite, Live Nation, etc.
-    "from:(@ra.co OR @residentadvisor.net OR @seetickets.us OR @seetickets.com OR @livenation.com OR @eventbrite.com OR @eventbritemail.com OR @frontgatetickets.com OR @universe.com OR @bandsintown.com OR @ticketweb.com OR @eventim.com)",
+    // Vendor domain passes are generated from TICKET_VENDORS just below this
+    // array, so adding a vendor to that registry also extends inbox coverage.
     // Catch-all for noreply addresses from ticket senders
     "from:(noreply OR no-reply OR notifications OR tickets OR orders) (ticket OR ticketing OR event OR concert OR booking OR admission)",
     // RA specifically by domain
@@ -579,6 +647,14 @@ async function doScan(setSt, setPr, userId) {
     "from:seetickets.us subject:(payment OR order OR receipt)",
     "subject:(payment plan) (festival OR concert OR show OR event OR ticket)",
   ];
+
+  // Generate a domain-based search pass for every vendor in the registry,
+  // chunked so each Gmail query stays short. Adding a vendor above is enough
+  // to have its emails scanned here — no need to edit this list by hand.
+  for (let i = 0; i < TICKET_VENDORS.length; i += 6) {
+    const domains = TICKET_VENDORS.slice(i, i + 6).flatMap((v) => v.domains);
+    searches.push("from:(" + domains.map((d) => "@" + d).join(" OR ") + ")");
+  }
 
   // Run all searches and deduplicate by message id
   const seen = new Set();
@@ -675,6 +751,38 @@ async function doScan(setSt, setPr, userId) {
     }
   };
 
+  // Pull direct event-page links out of the HTML. The URL lives in the <a>
+  // href, which plain-text extraction drops — so we read hrefs directly. Keep
+  // only links on a known vendor's domain whose path looks like an event page,
+  // so a buyer lands on the exact purchase page instead of a search. These get
+  // appended to the email text so the model can attach the right one per show.
+  const isEventUrl = (u) => /\/(events?|e)\/[\w%.-]/i.test(u);
+  const extractEventLinks = (html) => {
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const hrefs = [...doc.querySelectorAll("a[href]")]
+        .map((a) => a.getAttribute("href"))
+        .filter((h) => h && /^https?:\/\//i.test(h));
+      const onVendor = hrefs.filter((u) =>
+        TICKET_VENDORS.some((v) => v.domains.some((d) => u.includes(d))),
+      );
+      return [...new Set(onVendor.filter(isEventUrl))].slice(0, 4);
+    } catch (e) {
+      return [];
+    }
+  };
+
+  // Accept a ticket_url only if it's real: a proper URL that actually appeared
+  // in a scanned email (guards against the model inventing one), and — when the
+  // vendor is known — sits on that vendor's own domain.
+  const validTicketUrl = (url, source) => {
+    if (!url || !/^https?:\/\//i.test(url)) return "";
+    if (!bodies.some((b) => b.includes(url))) return "";
+    const v = findVendor(source);
+    if (v && !v.domains.some((d) => url.includes(d))) return "";
+    return url;
+  };
+
   const BODY_CHAR_CAP = 800;
 
   // Fetch full content for top 75 unique emails and extract clean body text
@@ -707,6 +815,7 @@ async function doScan(setSt, setPr, userId) {
       if (!bodyText) bodyText = m.snippet || "";
       bodyText = bodyText.slice(0, BODY_CHAR_CAP);
 
+      const eventLinks = html ? extractEventLinks(html) : [];
       bodies.push(
         "From: " +
           from +
@@ -715,7 +824,8 @@ async function doScan(setSt, setPr, userId) {
           "\nDate: " +
           date +
           "\nBody: " +
-          bodyText,
+          bodyText +
+          (eventLinks.length ? "\nLinks: " + eventLinks.join(" ") : ""),
       );
     } catch (e) {
       /* skip failed fetches */
@@ -753,7 +863,7 @@ STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
 4. PAYMENT PLAN DEDUPLICATION — if multiple payment confirmation emails reference the same event/order, include the EVENT only ONCE.
 
 Return ONLY a valid JSON array. Each object:
-{"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": "", "is_festival": boolean}
+{"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean}
 
 - artist: performer/band/DJ name. For festivals, use the festival name (e.g. "Movement Festival")
 - venue: venue or festival site
@@ -761,7 +871,7 @@ Return ONLY a valid JSON array. Each object:
 - date: start date — REQUIRED
 - end_date: end date — for single-day shows equals date
 - source: ticketing platform (Ticketmaster, SeatGeek, RA, See Tickets, etc.)
-- ticket_url: ""
+- ticket_url: the direct event/ticket page for THIS show. If this email has a "Links:" line, copy the matching URL from it EXACTLY, character for character — do not modify, shorten, or invent one. If there is no suitable link, use "".
 - is_festival: true if multi-day festival
 
 Deduplicate aggressively. Return [] if no qualifying purchases found.`,
@@ -812,8 +922,8 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
             city: c.city || "",
             date: c.date,
             end_date: c.end_date || c.date,
-            source: c.source || "Unknown",
-            ticket_url: c.ticket_url || "",
+            source: findVendor(c.source)?.name || c.source || "Unknown",
+            ticket_url: validTicketUrl(c.ticket_url, c.source),
             is_festival: c.is_festival || false,
             genres: [],
             scanned_at: new Date().toISOString(),
@@ -835,7 +945,12 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
   }
 
   // Fallback — return without saving
-  return parsed.map((c, i) => ({ ...c, id: Date.now() + i, attendees: [0] }));
+  return parsed.map((c, i) => ({
+    ...c,
+    ticket_url: validTicketUrl(c.ticket_url, c.source),
+    id: Date.now() + i,
+    attendees: [0],
+  }));
 }
 
 // ── CONCERT CARD ─────────────────────────────────────────────────────────────
@@ -1053,7 +1168,7 @@ function CDetail({
             rel="noreferrer"
           >
             <span>
-              Buy on {c.source !== "Direct" ? c.source : "Ticketmaster"}
+              {vendorLabel(c) ? "Buy on " + vendorLabel(c) : "Find Tickets"}
             </span>
             <span className="sh-buy-src">Official ↗</span>
           </a>
@@ -1651,11 +1766,7 @@ function ArtistSheet({ artistName, concerts, onClose, onOpenConcert }) {
                     </div>
                     <a
                       className="art-show-btn"
-                      href={
-                        c.ticketUrl ||
-                        "https://www.ticketmaster.com/search?q=" +
-                          encodeURIComponent(c.artist)
-                      }
+                      href={primaryUrl(c)}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -1851,11 +1962,7 @@ function GenrePage({
                         tap to see artist
                       </span>
                       <a
-                        href={
-                          c.ticketUrl ||
-                          "https://www.ticketmaster.com/search?q=" +
-                            encodeURIComponent(c.artist)
-                        }
+                        href={primaryUrl(c)}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
