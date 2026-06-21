@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Encore — Autocomplete Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --gold: #f5a623;
+        --bg: #070707;
+        --bg2: #0f0f0f;
+        --fg: #f0ede8;
+        --fg2: #8a8a8a;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Syne", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        padding: 48px 20px 120px;
+      }
+      .wrap { max-width: 560px; margin: 0 auto; }
+      h1 {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 44px;
+        letter-spacing: 3px;
+      }
+      .sub {
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: var(--fg2);
+        margin: 4px 0 40px;
+      }
+      .field { margin-bottom: 44px; position: relative; }
+      label {
+        display: block;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 12px;
+      }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(245, 166, 35, 0.12);
+        border: 1px solid rgba(245, 166, 35, 0.35);
+        color: var(--fg);
+        border-radius: 999px;
+        padding: 6px 10px 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .chip img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+      .chip button {
+        background: none; border: none; color: var(--fg2);
+        cursor: pointer; font-size: 15px; line-height: 1; padding: 0;
+      }
+      .chip button:hover { color: var(--gold); }
+      input[type="text"] {
+        width: 100%;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--fg);
+        font-family: "Syne", sans-serif;
+        font-size: 15px;
+        padding: 13px 14px;
+        outline: none;
+      }
+      input[type="text"]:focus { border-color: var(--gold); }
+      .menu {
+        position: absolute;
+        left: 0; right: 0;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin-top: 6px;
+        max-height: 280px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+      }
+      .menu.open { display: block; }
+      .opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .opt:hover, .opt.active { background: rgba(245, 166, 35, 0.1); }
+      .opt img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #222; }
+      .opt .meta { font-family: "DM Mono", monospace; font-size: 10px; color: var(--fg2); margin-left: auto; }
+      .hint, .status {
+        font-family: "DM Mono", monospace;
+        font-size: 10px;
+        color: var(--fg2);
+        margin-top: 8px;
+      }
+      .status.err { color: #ff6b6b; }
+      .out {
+        margin-top: 56px;
+        border-top: 1px solid var(--border);
+        padding-top: 20px;
+        font-family: "DM Mono", monospace;
+        font-size: 12px;
+        color: var(--fg2);
+        white-space: pre-wrap;
+        line-height: 1.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>AUTOCOMPLETE TEST</h1>
+      <div class="sub">genres = curated list · artists = spotify proxy</div>
+
+      <!-- GENRES -->
+      <div class="field">
+        <label>Genres</label>
+        <div class="chips" id="genreChips"></div>
+        <input type="text" id="genreInput" placeholder="Start typing a genre…" autocomplete="off" />
+        <div class="menu" id="genreMenu"></div>
+        <div class="hint">Curated list — works offline, no API.</div>
+      </div>
+
+      <!-- ARTISTS -->
+      <div class="field">
+        <label>Artists</label>
+        <div class="chips" id="artistChips"></div>
+        <input type="text" id="artistInput" placeholder="Start typing an artist…" autocomplete="off" />
+        <div class="menu" id="artistMenu"></div>
+        <div class="status" id="artistStatus">Needs the Spotify proxy deployed (or `netlify dev`).</div>
+      </div>
+
+      <div class="out" id="out">selected genres: []
+selected artists: []</div>
+    </div>
+
+    <script>
+      // ── Endpoint for the artist proxy. Relative path works once deployed on
+      //    Netlify. Change if you host the function elsewhere. ──
+      const ARTIST_ENDPOINT = "/.netlify/functions/spotify-artist-search";
+
+      // ── Curated genre list (broad coverage, weighted toward the live scene) ──
+      const GENRES = [
+        "Techno","House","Deep House","Tech House","Minimal Techno","Melodic Techno",
+        "Progressive House","Trance","Psytrance","Drum & Bass","Dubstep","UK Garage",
+        "2-Step","Breakbeat","Bass","Future Bass","Ambient","IDM","Electro","EDM",
+        "Big Room","Hardstyle","Hardcore","Gabber","Jungle","Footwork","Downtempo",
+        "Trip-Hop","Synthwave","Vaporwave","Disco","Nu-Disco","Italo Disco","Acid House",
+        "Electronica","Glitch","Drone",
+        "Hip-Hop","Rap","Trap","Drill","Boom Bap","Cloud Rap","Grime",
+        "R&B","Neo-Soul","Soul","Funk","Motown","Afrobeats","Amapiano",
+        "Rock","Classic Rock","Indie Rock","Alternative Rock","Punk","Post-Punk",
+        "Hardcore Punk","Pop Punk","Emo","Metal","Heavy Metal","Death Metal","Black Metal",
+        "Metalcore","Grunge","Shoegaze","Psychedelic Rock","Garage Rock","Math Rock",
+        "Post-Rock","Prog Rock","Stoner Rock","Industrial",
+        "Pop","Indie Pop","Synth-Pop","Dream Pop","Hyperpop","K-Pop","J-Pop","Electropop",
+        "Art Pop","Bedroom Pop",
+        "Jazz","Smooth Jazz","Bebop","Jazz Fusion","Swing","Blues","Soul Blues",
+        "Folk","Indie Folk","Singer-Songwriter","Country","Americana","Bluegrass","Folk Rock",
+        "Latin","Reggaeton","Salsa","Cumbia","Bossa Nova","Samba","Flamenco","Afrobeat",
+        "Highlife","Dancehall","Reggae","Dub","Ska","Soca",
+        "Classical","Opera","Contemporary Classical","Film Score","Soundtrack","Gospel",
+        "World","Experimental","Noise","New Age","Lo-Fi","Spoken Word"
+      ];
+
+      const selectedGenres = [];
+      const selectedArtists = [];
+
+      const out = document.getElementById("out");
+      const render = () => {
+        out.textContent =
+          "selected genres: " + JSON.stringify(selectedGenres) + "\n" +
+          "selected artists: " + JSON.stringify(selectedArtists.map((a) => a.name));
+      };
+
+      // ── Generic chip renderer ──
+      const renderChips = (el, items, onRemove, withImg) => {
+        el.innerHTML = "";
+        items.forEach((it, i) => {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          const label = withImg ? it.name : it;
+          chip.innerHTML =
+            (withImg && it.image ? '<img src="' + it.image + '" alt="">' : "") +
+            "<span>" + label + "</span>";
+          const x = document.createElement("button");
+          x.textContent = "×";
+          x.onclick = () => onRemove(i);
+          chip.appendChild(x);
+          el.appendChild(chip);
+        });
+      };
+
+      // ── GENRES (offline filter) ──
+      const gInput = document.getElementById("genreInput");
+      const gMenu = document.getElementById("genreMenu");
+      const gChips = document.getElementById("genreChips");
+
+      const drawGenreChips = () =>
+        renderChips(gChips, selectedGenres, (i) => {
+          selectedGenres.splice(i, 1); drawGenreChips(); render();
+        }, false);
+
+      const addGenre = (g) => {
+        if (!selectedGenres.includes(g)) selectedGenres.push(g);
+        gInput.value = ""; gMenu.classList.remove("open");
+        drawGenreChips(); render();
+      };
+
+      gInput.addEventListener("input", () => {
+        const q = gInput.value.trim().toLowerCase();
+        if (!q) { gMenu.classList.remove("open"); return; }
+        const matches = GENRES.filter(
+          (g) => g.toLowerCase().includes(q) && !selectedGenres.includes(g)
+        ).slice(0, 8);
+        gMenu.innerHTML = "";
+        matches.forEach((g) => {
+          const o = document.createElement("div");
+          o.className = "opt";
+          o.innerHTML = "<span>" + g + "</span>";
+          o.onclick = () => addGenre(g);
+          gMenu.appendChild(o);
+        });
+        gMenu.classList.toggle("open", matches.length > 0);
+      });
+      gInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const first = gMenu.querySelector(".opt");
+          if (first) first.click();
+        }
+      });
+
+      // ── ARTISTS (Spotify proxy, debounced) ──
+      const aInput = document.getElementById("artistInput");
+      const aMenu = document.getElementById("artistMenu");
+      const aChips = document.getElementById("artistChips");
+      const aStatus = document.getElementById("artistStatus");
+
+      const drawArtistChips = () =>
+        renderChips(aChips, selectedArtists, (i) => {
+          selectedArtists.splice(i, 1); drawArtistChips(); render();
+        }, true);
+
+      const addArtist = (a) => {
+        if (!selectedArtists.some((x) => x.id === a.id)) selectedArtists.push(a);
+        aInput.value = ""; aMenu.classList.remove("open");
+        drawArtistChips(); render();
+      };
+
+      let aTimer = null;
+      aInput.addEventListener("input", () => {
+        const q = aInput.value.trim();
+        clearTimeout(aTimer);
+        if (q.length < 2) { aMenu.classList.remove("open"); return; }
+        aStatus.className = "status";
+        aStatus.textContent = "Searching…";
+        aTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(ARTIST_ENDPOINT + "?q=" + encodeURIComponent(q));
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            const items = data.artists || [];
+            aMenu.innerHTML = "";
+            items.forEach((a) => {
+              const o = document.createElement("div");
+              o.className = "opt";
+              const fol = a.followers
+                ? (a.followers >= 1e6
+                    ? (a.followers / 1e6).toFixed(1) + "M"
+                    : Math.round(a.followers / 1e3) + "K")
+                : "";
+              o.innerHTML =
+                (a.image ? '<img src="' + a.image + '" alt="">' : '<img alt="">') +
+                "<span>" + a.name + "</span>" +
+                (fol ? '<span class="meta">' + fol + " followers</span>" : "");
+              o.onclick = () => addArtist(a);
+              aMenu.appendChild(o);
+            });
+            aMenu.classList.toggle("open", items.length > 0);
+            aStatus.textContent = items.length
+              ? items.length + " results"
+              : "No matches.";
+          } catch (err) {
+            aMenu.classList.remove("open");
+            aStatus.className = "status err";
+            aStatus.textContent = "Proxy error: " + err.message;
+          }
+        }, 300);
+      });
+
+      // close menus on outside click
+      document.addEventListener("click", (e) => {
+        if (!gInput.parentElement.contains(e.target)) gMenu.classList.remove("open");
+        if (!aInput.parentElement.contains(e.target)) aMenu.classList.remove("open");
+      });
+
+      render();
+    </script>
+  </body>
+</html>
