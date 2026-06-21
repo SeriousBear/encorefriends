@@ -326,290 +326,8 @@ const AVATAR_COLORS = [
   "#C0392B",
 ];
 
-// ── DEMO DATA ────────────────────────────────────────────────────────────────
-// Upcoming EDM shows with real ticket links
-const INIT_CONCERTS = [
-  {
-    id: 1,
-    artist: "deadmau5",
-    venue: "XS Nightclub at Wynn Las Vegas",
-    city: "Las Vegas, NV",
-    date: "2026-04-25",
-    source: "Ticketmaster",
-    ticketUrl: "https://www.ticketmaster.com/deadmau5-tickets/artist/1221074",
-    genres: ["Techno", "House", "Progressive"],
-  },
-  {
-    id: 2,
-    artist: "Subtronics",
-    venue: "Red Rocks Amphitheatre",
-    city: "Morrison, CO",
-    date: "2026-04-23",
-    source: "Ticketmaster",
-    ticketUrl: "https://www.ticketmaster.com/event/1C006241A9FD3AB6",
-    genres: ["Bass", "Dubstep"],
-  },
-  {
-    id: 3,
-    artist: "Subtronics",
-    venue: "Red Rocks Amphitheatre",
-    city: "Morrison, CO",
-    date: "2026-04-24",
-    source: "Ticketmaster",
-    ticketUrl: "https://www.ticketmaster.com/subtronics-tickets/artist/2359181",
-    genres: ["Bass", "Dubstep"],
-  },
-  {
-    id: 4,
-    artist: "John Summit",
-    venue: "LIV Nightclub",
-    city: "Las Vegas, NV",
-    date: "2026-05-01",
-    source: "Ticketmaster",
-    ticketUrl:
-      "https://www.ticketmaster.com/john-summit-tickets/artist/2730221",
-    genres: ["House", "Tech House"],
-  },
-  {
-    id: 5,
-    artist: "John Summit",
-    venue: "LIV Nightclub Miami",
-    city: "Miami Beach, FL",
-    date: "2026-05-02",
-    source: "Ticketmaster",
-    ticketUrl:
-      "https://www.ticketmaster.com/john-summit-tickets/artist/2730221",
-    genres: ["House", "Tech House"],
-  },
-  {
-    id: 6,
-    artist: "deadmau5",
-    venue: "XS Nightclub at Wynn Las Vegas",
-    city: "Las Vegas, NV",
-    date: "2026-05-08",
-    source: "Ticketmaster",
-    ticketUrl: "https://www.ticketmaster.com/deadmau5-tickets/artist/1221074",
-    genres: ["Techno", "House"],
-  },
-  {
-    id: 7,
-    artist: "John Summit",
-    venue: "EDC Las Vegas",
-    city: "Las Vegas, NV",
-    date: "2026-05-15",
-    source: "Ticketmaster",
-    ticketUrl:
-      "https://www.ticketmaster.com/john-summit-tickets/artist/2730221",
-    genres: ["House", "EDM"],
-  },
-  {
-    id: 8,
-    artist: "Subtronics b2b GRiZ",
-    venue: "Gorge Amphitheatre",
-    city: "George, WA",
-    date: "2026-05-23",
-    source: "Ticketmaster",
-    ticketUrl: "https://www.ticketmaster.com/subtronics-tickets/artist/2359181",
-    genres: ["Bass", "DnB", "Breaks"],
-  },
-  {
-    id: 9,
-    artist: "deadmau5",
-    venue: "XS Nightclub at Wynn Las Vegas",
-    city: "Las Vegas, NV",
-    date: "2026-06-27",
-    source: "Ticketmaster",
-    ticketUrl: "https://www.ticketmaster.com/deadmau5-tickets/artist/1221074",
-    genres: ["Techno", "House"],
-  },
-];
+// Demo seed data removed in Pass 2 — profiles & concerts now load from Supabase.
 
-// Past shows (fixed history — not editable by demo)
-const PAST_SHOWS = [
-  {
-    id: "p1",
-    artist: "Fred Again..",
-    venue: "Madison Square Garden",
-    city: "New York, NY",
-    date: "2026-01-15",
-  },
-  {
-    id: "p2",
-    artist: "Fisher",
-    venue: "Avant Gardner",
-    city: "Brooklyn, NY",
-    date: "2026-02-08",
-  },
-  {
-    id: "p3",
-    artist: "Eric Prydz",
-    venue: "Marquee NYC",
-    city: "New York, NY",
-    date: "2026-03-01",
-  },
-  {
-    id: "p4",
-    artist: "Subtronics",
-    venue: "Terminal 5",
-    city: "New York, NY",
-    date: "2026-03-14",
-  },
-  {
-    id: "p5",
-    artist: "John Summit",
-    venue: "Club Space",
-    city: "Miami, FL",
-    date: "2026-03-22",
-  },
-  {
-    id: "p6",
-    artist: "Rezz",
-    venue: "Brooklyn Mirage",
-    city: "Brooklyn, NY",
-    date: "2026-03-29",
-  },
-  {
-    id: "p7",
-    artist: "Skrillex",
-    venue: "Brooklyn Mirage",
-    city: "Brooklyn, NY",
-    date: "2026-02-14",
-  },
-  {
-    id: "p8",
-    artist: "Dom Dolla",
-    venue: "Elsewhere",
-    city: "Brooklyn, NY",
-    date: "2026-01-31",
-  },
-  {
-    id: "p9",
-    artist: "Peggy Gou",
-    venue: "Elsewhere",
-    city: "Brooklyn, NY",
-    date: "2026-02-21",
-  },
-  {
-    id: "p10",
-    artist: "deadmau5",
-    venue: "XS Nightclub",
-    city: "Las Vegas, NV",
-    date: "2026-01-24",
-  },
-];
-
-// Users — id 0 = current logged-in user
-const INIT_USERS = [
-  {
-    id: 0,
-    name: "Kyle",
-    handle: "kyle",
-    color: "#F5A623",
-    location: "New York, NY",
-    bio: "Chasing bass drops and big rooms since 2017.",
-    genres: ["House", "Bass", "Techno"],
-    following: [1, 2, 3],
-    upcoming: [2, 5, 7],
-    past: ["p2", "p3", "p5", "p6"],
-    ratings: { p2: 5, p3: 5, p5: 4, p6: 5 },
-    artists: ["Subtronics", "John Summit", "Rezz"],
-    bucketList: ["Eric Prydz", "Solomun", "Four Tet"],
-    vibe: "both",
-    totalShows: 47,
-    social: { instagram: "kyle.shows", spotify: "", soundcloud: "" },
-  },
-  {
-    id: 1,
-    name: "Alex",
-    handle: "alexr",
-    color: "#E85D3A",
-    location: "Brooklyn, NY",
-    bio: "If it goes below 128 BPM I'm not interested.",
-    genres: ["Techno", "House", "DnB"],
-    following: [0, 2, 4],
-    upcoming: [2, 3, 8],
-    past: ["p1", "p4", "p7", "p8"],
-    ratings: { p1: 4, p4: 5, p7: 5, p8: 3 },
-  },
-  {
-    id: 2,
-    name: "Jordan",
-    handle: "jordanm",
-    color: "#9B6BF5",
-    location: "Chicago, IL",
-    bio: "Main stage devotee. All genres welcome.",
-    genres: ["EDM", "Trance", "Bass"],
-    following: [0, 1, 3],
-    upcoming: [1, 4, 7],
-    past: ["p1", "p2", "p5", "p9"],
-    ratings: { p1: 5, p2: 4, p5: 5, p9: 4 },
-  },
-  {
-    id: 3,
-    name: "Sam",
-    handle: "sammyb",
-    color: "#2ECC71",
-    location: "Los Angeles, CA",
-    bio: "West coast bass music evangelist.",
-    genres: ["Bass", "Dubstep", "DnB"],
-    following: [0, 2, 5],
-    upcoming: [3, 5, 8],
-    past: ["p4", "p6", "p7", "p10"],
-    ratings: { p4: 4, p6: 5, p7: 4, p10: 3 },
-  },
-  {
-    id: 4,
-    name: "Priya",
-    handle: "priyak",
-    color: "#E91E8C",
-    location: "San Francisco, CA",
-    bio: "Deep house and late nights. No bad vibes.",
-    genres: ["House", "Garage", "Ambient"],
-    following: [2, 5, 6],
-    upcoming: [4, 6, 9],
-    past: ["p2", "p3", "p8", "p9"],
-    ratings: { p2: 5, p3: 5, p8: 4, p9: 5 },
-  },
-  {
-    id: 5,
-    name: "Marcus",
-    handle: "marcusd",
-    color: "#3498DB",
-    location: "Miami, FL",
-    bio: "Ultra regular. Club Space is my second home.",
-    genres: ["Techno", "House", "Trance"],
-    following: [3, 4, 6],
-    upcoming: [5, 7, 9],
-    past: ["p1", "p5", "p10"],
-    ratings: { p1: 4, p5: 5, p10: 4 },
-  },
-  {
-    id: 6,
-    name: "Leila",
-    handle: "leila_e",
-    color: "#1ABC9C",
-    location: "New York, NY",
-    bio: "Vinyl collector. Boutique raves over festivals.",
-    genres: ["Techno", "Breaks", "Ambient"],
-    following: [4, 5],
-    upcoming: [1, 3, 8],
-    past: ["p3", "p6", "p9"],
-    ratings: { p3: 5, p6: 4, p9: 5 },
-  },
-  {
-    id: 7,
-    name: "Darius",
-    handle: "dariush",
-    color: "#F39C12",
-    location: "Detroit, MI",
-    bio: "Techno roots, global travels.",
-    genres: ["Techno", "House", "DnB"],
-    following: [1, 6],
-    upcoming: [2, 4, 6],
-    past: ["p2", "p7", "p8", "p10"],
-    ratings: { p2: 4, p7: 5, p8: 4, p10: 3 },
-  },
-];
 
 // ── HELPERS ─────────────────────────────────────────────────────────────────
 const now0 = () => {
@@ -3028,20 +2746,23 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
 // Shown once, right after a new user signs in, before they reach the app.
 // name + handle are required; location, genres, artists are optional.
 // Writes the real row to `profiles` and hands it back via onComplete.
-function Onboarding({ session, onComplete }) {
+function Onboarding({ session, profile, onComplete }) {
   const meta = (session.user && session.user.user_metadata) || {};
+  const p = profile || {};
   const [step, setStep] = useState(1);
-  const [name, setName] = useState(meta.full_name || meta.name || "");
+  const [name, setName] = useState(p.name || meta.full_name || meta.name || "");
   const [handle, setHandle] = useState(
-    (meta.full_name || meta.name || "")
+    (p.handle || meta.full_name || meta.name || "")
       .toLowerCase()
       .replace(/[^a-z0-9_]/g, "")
       .slice(0, 20),
   );
   const [handleStatus, setHandleStatus] = useState(""); // "", checking, taken, ok, short
-  const [location, setLocation] = useState("");
-  const [genres, setGenres] = useState([]);
-  const [artists, setArtists] = useState([]);
+  const [location, setLocation] = useState(p.location || "");
+  const [email, setEmail] = useState((session.user && session.user.email) || "");
+  const [phone, setPhone] = useState("");
+  const [genres, setGenres] = useState(p.genres || []);
+  const [artists, setArtists] = useState(p.artists || []);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
   const [color] = useState(() => {
@@ -3049,7 +2770,7 @@ function Onboarding({ session, onComplete }) {
       "#E85D3A", "#9B6BF5", "#2ECC71", "#3498DB",
       "#F39C12", "#E91E8C", "#1ABC9C", "#F5A623",
     ];
-    return palette[Math.floor(Math.random() * palette.length)];
+    return p.color || palette[Math.floor(Math.random() * palette.length)];
   });
 
   // Live handle availability check (debounced)
@@ -3088,12 +2809,13 @@ function Onboarding({ session, onComplete }) {
       handle: handle.trim(),
       color,
       location: location.trim(),
-      bio: "",
+      bio: p.bio || "",
       genres,
       artists,
-      vibe: "both",
-      total_shows: 0,
-      social: {},
+      vibe: p.vibe || "both",
+      total_shows: p.total_shows || 0,
+      social: p.social || {},
+      onboarded: true,
     };
     const { data, error } = await supabase
       .from("profiles")
@@ -3104,6 +2826,16 @@ function Onboarding({ session, onComplete }) {
       setErr(error.message);
       setSaving(false);
       return;
+    }
+    // Contact info lives in a separate, owner-only table — NOT in the public
+    // profiles table (which is world-readable). Used for friend notifications.
+    if (email.trim() || phone.trim()) {
+      await supabase
+        .from("user_contacts")
+        .upsert(
+          { id: session.user.id, email: email.trim(), phone: phone.trim() },
+          { onConflict: "id" },
+        );
     }
     onComplete(data);
   };
@@ -3310,19 +3042,44 @@ function Onboarding({ session, onComplete }) {
                 marginBottom: 4,
               }}
             >
-              Where are you based?
+              Location & notifications
             </div>
             <div style={{ ...help, marginTop: 0, marginBottom: 22 }}>
-              Optional — helps friends find shows near you.
+              All optional. Email and phone are how friends can ping you when
+              they grab tickets — kept private, never shown on your profile.
             </div>
-            <label style={lbl}>City</label>
-            <input
-              style={inp}
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Brooklyn, NY"
-              maxLength={60}
-            />
+            <div style={{ marginBottom: 18 }}>
+              <label style={lbl}>City</label>
+              <input
+                style={inp}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Brooklyn, NY"
+                maxLength={60}
+              />
+            </div>
+            <div style={{ marginBottom: 18 }}>
+              <label style={lbl}>Email for notifications</label>
+              <input
+                style={inp}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                maxLength={120}
+              />
+            </div>
+            <div>
+              <label style={lbl}>Phone (for texts)</label>
+              <input
+                style={inp}
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 555 123 4567"
+                maxLength={30}
+              />
+            </div>
             <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
               <button onClick={() => setStep(1)} style={btnBack}>
                 Back
@@ -3457,33 +3214,72 @@ function App() {
       });
   }, [session]);
 
-  // Load real concerts from Supabase
-  useEffect(() => {
+  // Load (or reload) the user's concerts from Supabase. Called on session load
+  // and again after every scan, so the dashboard always reflects what's saved —
+  // even when a re-scan finds only duplicates and returns nothing new.
+  const reloadConcerts = async () => {
     if (!session) return;
-    supabase
+    const { data } = await supabase
       .from("concerts")
       .select("*, concert_attendees(user_id)")
-      .eq("owner_id", session.user.id)
-      .then(({ data }) => {
-        if (data)
-          setDbConcerts(
-            data.map((c) => ({
-              ...c,
-              attendees: (c.concert_attendees || []).map((a) => a.user_id),
-            })),
-          );
-        setConcertsLoaded(true);
-      });
+      .order("date", { ascending: true });
+    if (data)
+      setDbConcerts(
+        data.map((c) => ({
+          ...c,
+          attendees: (c.concert_attendees || []).map((a) => a.user_id),
+        })),
+      );
+    setConcertsLoaded(true);
+  };
+
+  useEffect(() => {
+    reloadConcerts();
   }, [session]);
 
-  const [users, setUsers] = useState(INIT_USERS);
-  // Seed attendees from each user's upcoming array once at init
-  const seededConcerts = INIT_CONCERTS.map((c) => {
-    const att = INIT_USERS.filter((u) => (u.upcoming || []).includes(c.id)).map(
-      (u) => u.id,
-    );
-    return { ...c, attendees: att };
-  });
+  const [users, setUsers] = useState([]);
+  const [myFollowing, setMyFollowing] = useState([]);
+
+  // Load the people directory (all public profiles) + the follow graph, and
+  // build each user's `following` list from the follows table.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [{ data: profs }, { data: fols }] = await Promise.all([
+        supabase.from("profiles").select("*"),
+        supabase.from("follows").select("follower_id, following_id"),
+      ]);
+      if (cancelled || !profs) return;
+      const followMap = {};
+      (fols || []).forEach((f) => {
+        if (!followMap[f.follower_id]) followMap[f.follower_id] = [];
+        followMap[f.follower_id].push(f.following_id);
+      });
+      setUsers(
+        profs.map((pr) => ({
+          id: pr.id,
+          name: pr.name || "User",
+          handle: pr.handle || "",
+          color: pr.color || "#F5A623",
+          location: pr.location || "",
+          bio: pr.bio || "",
+          genres: pr.genres || [],
+          artists: pr.artists || [],
+          bucketList: pr.bucket_list || [],
+          vibe: pr.vibe || "both",
+          totalShows: pr.total_shows || 0,
+          social: pr.social || {},
+          following: followMap[pr.id] || [],
+          past: [],
+          ratings: {},
+        })),
+      );
+      if (session?.user?.id) setMyFollowing(followMap[session.user.id] || []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
   const [view, setView] = useState("feed"); // "feed" | "search" | "profile" | "edit" | "genre"
   const [genreView, setGenreView] = useState(null); // current genre string when view==="genre"
   const [prevView, setPrevView] = useState("feed"); // where to go back from genre page
@@ -3506,7 +3302,7 @@ function App() {
   const [scanPr, setScanPr] = useState(0);
   const [notif, setNotif] = useState(null);
   const [errMsg, setErrMsg] = useState(null);
-  const [pastShows] = useState(PAST_SHOWS);
+  const [pastShows] = useState([]);
   const [liveConcerts, setLiveConcerts] = useState([]);
   const [concertsLoaded, setConcertsLoaded] = useState(false);
 
@@ -3543,15 +3339,22 @@ function App() {
     );
   if (!session) return <LoginPage />;
 
-  // New users (no profile yet) go through the onboarding walkthrough.
-  if (!profile || !profile.handle)
-    return <Onboarding session={session} onComplete={(p) => setProfile(p)} />;
+  // Show onboarding until the user explicitly completes it. A DB trigger
+  // auto-creates a profile (with a generated handle) on signup, so we can't
+  // gate on an empty handle — we gate on the explicit `onboarded` flag.
+  if (!profile || !profile.onboarded)
+    return (
+      <Onboarding
+        session={session}
+        profile={profile}
+        onComplete={(p) => setProfile(p)}
+      />
+    );
 
   // Build curUser from real Supabase profile, fallback to demo while loading
   const curUser = profile
     ? {
         id: session.user.id, // real UUID
-        _demoId: 0, // keep for demo UI compatibility
         name: profile.name || session.user.user_metadata?.full_name || "User",
         handle: profile.handle || "",
         color: profile.color || "#F5A623",
@@ -3563,7 +3366,7 @@ function App() {
         vibe: profile.vibe || "both",
         totalShows: profile.total_shows || 0,
         social: profile.social || {},
-        following: [],
+        following: myFollowing,
         upcoming: [],
         past: [],
         ratings: {},
@@ -3594,9 +3397,9 @@ function App() {
     toast("Show removed.");
   };
 
-  const toggleAttendee = (cid, uid) => {
-    const u2 = users.find((u) => u.id === uid);
+  const toggleAttendee = async (cid, uid) => {
     const c = liveConcerts.find((c) => c.id === cid);
+    if (!c) return;
     const adding = !(c.attendees || []).includes(uid);
     setLiveConcerts((p) =>
       p.map((c) =>
@@ -3605,21 +3408,37 @@ function App() {
           : {
               ...c,
               attendees: adding
-                ? [...c.attendees, uid]
-                : c.attendees.filter((i) => i !== uid),
+                ? [...(c.attendees || []), uid]
+                : (c.attendees || []).filter((i) => i !== uid),
             },
       ),
     );
+    // RLS lets a user change only their OWN attendance, so persist just that.
+    if (session?.user?.id && uid === session.user.id) {
+      if (adding)
+        await supabase
+          .from("concert_attendees")
+          .insert({ concert_id: cid, user_id: uid });
+      else
+        await supabase
+          .from("concert_attendees")
+          .delete()
+          .eq("concert_id", cid)
+          .eq("user_id", uid);
+    }
+    const u2 = users.find((u) => u.id === uid);
     if (adding && u2?.notify && uid !== curUser.id)
       toast(u2.name + " tagged on " + c.artist + " — notified!");
   };
   const toggleGoing = (cid) => toggleAttendee(cid, curUser.id);
-  const toggleFollow = (uid) => {
+  const toggleFollow = async (uid) => {
+    if (!session?.user?.id || uid === curUser.id) return;
     const u2 = users.find((u) => u.id === uid);
-    const isF = curUser.following.includes(uid);
+    const isF = myFollowing.includes(uid);
+    setMyFollowing((p) => (isF ? p.filter((i) => i !== uid) : [...p, uid]));
     setUsers((p) =>
       p.map((u) =>
-        u.id === 0
+        u.id === curUser.id
           ? {
               ...u,
               following: isF
@@ -3629,7 +3448,21 @@ function App() {
           : u,
       ),
     );
-    toast(isF ? "Unfollowed " + u2.name : "Now following " + u2.name + "!");
+    toast(
+      isF
+        ? "Unfollowed " + (u2?.name || "")
+        : "Now following " + (u2?.name || "") + "!",
+    );
+    if (isF)
+      await supabase
+        .from("follows")
+        .delete()
+        .eq("follower_id", curUser.id)
+        .eq("following_id", uid);
+    else
+      await supabase
+        .from("follows")
+        .insert({ follower_id: curUser.id, following_id: uid });
   };
   const toggleNotif = (e, uid) => {
     e?.stopPropagation();
@@ -3701,7 +3534,12 @@ function App() {
           ? `Found ${r.length} show${r.length !== 1 ? "s" : ""}!`
           : "No new shows found.",
       );
-      if (r.length) {
+      if (userId) {
+        // Source of truth: re-pull from the DB so the dashboard shows every
+        // saved show — including ones a re-scan skipped as duplicates.
+        await reloadConcerts();
+      } else if (r.length) {
+        // Not signed in (legacy path): merge into the local view only.
         const ex = new Set(liveConcerts.map((c) => c.artist + c.date));
         setLiveConcerts((p) => [
           ...p,
@@ -3752,20 +3590,34 @@ function App() {
     toast("All shows cleared.");
   };
 
-  const addManually = () => {
+  const addManually = async () => {
     if (!nc.artist.trim() || !nc.date) return;
-    setLiveConcerts((p) => [
-      ...p,
-      {
-        ...nc,
-        id: Date.now(),
-        attendees: [curUser.id],
-        myTicket: true,
+    if (!session?.user?.id) return;
+    const { data, error } = await supabase
+      .from("concerts")
+      .insert({
+        owner_id: session.user.id,
         artist: nc.artist.trim(),
         venue: nc.venue.trim(),
         city: nc.city.trim(),
-      },
-    ]);
+        date: nc.date,
+        end_date: nc.date,
+        source: nc.source || "Other",
+        ticket_url: "",
+        is_festival: false,
+        genres: [],
+      })
+      .select()
+      .single();
+    if (error) {
+      toast("Couldn't add: " + error.message, true);
+      return;
+    }
+    if (data)
+      await supabase
+        .from("concert_attendees")
+        .insert({ concert_id: data.id, user_id: session.user.id });
+    await reloadConcerts();
     setNc({
       artist: "",
       venue: "",
@@ -3775,36 +3627,6 @@ function App() {
     });
     setShowAddC(false);
     toast(nc.artist.trim() + " added!");
-  };
-
-  const addFriend = (name) => {
-    if (!name.trim()) return;
-    const id = Date.now();
-    const colors = [
-      "#E85D3A",
-      "#9B6BF5",
-      "#2ECC71",
-      "#3498DB",
-      "#F39C12",
-      "#E91E8C",
-      "#1ABC9C",
-    ];
-    setUsers((p) => [
-      ...p,
-      {
-        id,
-        name: name.trim(),
-        handle: name.trim().toLowerCase().replace(/\s+/g, ""),
-        color: colors[p.length % colors.length],
-        location: "",
-        bio: "",
-        genres: [],
-        following: [],
-        upcoming: [],
-        past: [],
-        ratings: {},
-      },
-    ]);
   };
 
   // ── DERIVED ──
@@ -3880,16 +3702,6 @@ function App() {
           </div>
           {view === "feed" && (
             <div className="hdr-r2">
-              <button
-                className="btn-sm btn-outline"
-                onClick={() => {
-                  setLiveConcerts(seededConcerts);
-                  setView("feed");
-                  setFilter("all");
-                }}
-              >
-                Demo
-              </button>
               <button
                 className="btn-sm btn-amber"
                 onClick={() => setShowAddC(true)}
@@ -4031,46 +3843,9 @@ function App() {
                   </button>
                 </div>
               ))}
-              {!showAddF ? (
-                <button className="sb-add" onClick={() => setView("search")}>
-                  ⌕ Discover &amp; follow
-                </button>
-              ) : (
-                <div>
-                  <input
-                    className="sb-inp"
-                    placeholder="Name…"
-                    value={newFN}
-                    onChange={(e) => setNewFN(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        addFriend(newFN);
-                        setNewFN("");
-                        setShowAddF(false);
-                      }
-                    }}
-                    autoFocus
-                  />
-                  <div className="sb-aa">
-                    <button
-                      className="sb-ok"
-                      onClick={() => {
-                        addFriend(newFN);
-                        setNewFN("");
-                        setShowAddF(false);
-                      }}
-                    >
-                      Add
-                    </button>
-                    <button
-                      className="sb-cn"
-                      onClick={() => setShowAddF(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              <button className="sb-add" onClick={() => setView("search")}>
+                ⌕ Discover &amp; follow
+              </button>
             </aside>
           )}
 
@@ -4158,7 +3933,7 @@ function App() {
                   <div className="empty-i">🎵</div>
                   <div className="empty-t">No Shows Yet</div>
                   <div className="empty-s">
-                    Load demo, scan Gmail, or add a show manually.
+                    Scan Gmail or add a show manually to get started.
                   </div>
                 </div>
               ) : filtered.length === 0 ? (
