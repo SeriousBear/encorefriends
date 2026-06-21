@@ -138,26 +138,130 @@ const MONTHS = [
   "Dec",
 ];
 const GENRES = [
-  "House",
   "Techno",
-  "Bass",
-  "Trance",
-  "DnB",
-  "Dubstep",
-  "EDM",
-  "Ambient",
-  "Breaks",
-  "Garage",
-  "Industrial",
-  "Minimal",
-  "Progressive",
-  "Big Room",
+  "House",
   "Deep House",
   "Tech House",
+  "Minimal Techno",
+  "Melodic Techno",
+  "Progressive House",
+  "Trance",
+  "Psytrance",
+  "Drum & Bass",
+  "Dubstep",
   "UK Garage",
+  "2-Step",
+  "Breakbeat",
+  "Bass",
+  "Future Bass",
+  "Ambient",
+  "IDM",
+  "Electro",
+  "EDM",
+  "Big Room",
+  "Hardstyle",
+  "Hardcore",
+  "Gabber",
   "Jungle",
   "Footwork",
-  "Tribal",
+  "Downtempo",
+  "Trip-Hop",
+  "Synthwave",
+  "Vaporwave",
+  "Disco",
+  "Nu-Disco",
+  "Italo Disco",
+  "Acid House",
+  "Electronica",
+  "Glitch",
+  "Drone",
+  "Hip-Hop",
+  "Rap",
+  "Trap",
+  "Drill",
+  "Boom Bap",
+  "Cloud Rap",
+  "Grime",
+  "R&B",
+  "Neo-Soul",
+  "Soul",
+  "Funk",
+  "Motown",
+  "Afrobeats",
+  "Amapiano",
+  "Rock",
+  "Classic Rock",
+  "Indie Rock",
+  "Alternative Rock",
+  "Punk",
+  "Post-Punk",
+  "Hardcore Punk",
+  "Pop Punk",
+  "Emo",
+  "Metal",
+  "Heavy Metal",
+  "Death Metal",
+  "Black Metal",
+  "Metalcore",
+  "Grunge",
+  "Shoegaze",
+  "Psychedelic Rock",
+  "Garage Rock",
+  "Math Rock",
+  "Post-Rock",
+  "Prog Rock",
+  "Stoner Rock",
+  "Industrial",
+  "Pop",
+  "Indie Pop",
+  "Synth-Pop",
+  "Dream Pop",
+  "Hyperpop",
+  "K-Pop",
+  "J-Pop",
+  "Electropop",
+  "Art Pop",
+  "Bedroom Pop",
+  "Jazz",
+  "Smooth Jazz",
+  "Bebop",
+  "Jazz Fusion",
+  "Swing",
+  "Blues",
+  "Soul Blues",
+  "Folk",
+  "Indie Folk",
+  "Singer-Songwriter",
+  "Country",
+  "Americana",
+  "Bluegrass",
+  "Folk Rock",
+  "Latin",
+  "Reggaeton",
+  "Salsa",
+  "Cumbia",
+  "Bossa Nova",
+  "Samba",
+  "Flamenco",
+  "Afrobeat",
+  "Highlife",
+  "Dancehall",
+  "Reggae",
+  "Dub",
+  "Ska",
+  "Soca",
+  "Classical",
+  "Opera",
+  "Contemporary Classical",
+  "Film Score",
+  "Soundtrack",
+  "Gospel",
+  "World",
+  "Experimental",
+  "Noise",
+  "New Age",
+  "Lo-Fi",
+  "Spoken Word",
 ];
 
 const ARTIST_SUGG = [
@@ -582,6 +686,7 @@ const findVendor = (source) => {
 const primaryUrl = (c) => {
   const captured = c.ticketUrl || c.ticket_url; // seed data camelCase, DB rows snake_case
   if (!captured || !/^https?:\/\//i.test(captured)) return null;
+  if (c.is_festival) return captured; // festival's own site, validated on save
   const v = findVendor(c.source);
   if (v && !v.domains.some((d) => captured.includes(d))) return null;
   return captured;
@@ -611,7 +716,21 @@ async function doScan(setSt, setPr, userId) {
     callback: () => {},
   });
   const token = await new Promise((res, rej) => {
-    tc.callback = (r) => (r.error ? rej(r) : res(r.access_token));
+    // Backstop: if the consent popup is closed or abandoned, the success
+    // callback never fires — so reject on error_callback and on a timeout,
+    // otherwise the scan would hang on "Connecting to Google…" forever.
+    const timer = setTimeout(
+      () => rej(new Error("Timed out connecting to Google.")),
+      120000,
+    );
+    tc.callback = (r) => {
+      clearTimeout(timer);
+      r.error ? rej(r) : res(r.access_token);
+    };
+    tc.error_callback = (e) => {
+      clearTimeout(timer);
+      rej(new Error((e && e.type) || "Google sign-in was cancelled."));
+    };
     tc.requestAccessToken({ prompt: "consent" });
   });
 
@@ -762,12 +881,45 @@ async function doScan(setSt, setPr, userId) {
     return [...new Set(found)].slice(0, 4);
   };
 
+  // For festivals we link to the festival's own website (which then routes the
+  // buyer wherever they need). Collect external homepage links from the email —
+  // excluding ticket vendors (handled above) and obvious social/tracking/infra
+  // domains — and normalize to the site origin so the link is stable.
+  const SITE_DENY = [
+    "facebook.", "instagram.", "twitter.", "x.com", "youtube.", "youtu.be",
+    "spotify.", "soundcloud.", "tiktok.", "apple.com", "google.", "linkedin.",
+    "threads.net", "mailchimp", "list-manage", "sendgrid", "unsubscribe",
+  ];
+  const extractSiteLinks = (html) => {
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const origins = [];
+      for (const a of doc.querySelectorAll("a[href]")) {
+        const href = a.getAttribute("href") || "";
+        if (!/^https?:\/\//i.test(href)) continue;
+        const low = href.toLowerCase();
+        if (TICKET_VENDORS.some((v) => v.domains.some((d) => low.includes(d))))
+          continue;
+        if (SITE_DENY.some((d) => low.includes(d))) continue;
+        try {
+          const o = new URL(href).origin;
+          if (!origins.includes(o)) origins.push(o);
+        } catch (e) {}
+      }
+      return origins.slice(0, 4);
+    } catch (e) {
+      return [];
+    }
+  };
+
   // Accept a ticket_url only if it's real: a proper URL that actually appeared
-  // in a scanned email (guards against the model inventing one), and — when the
-  // vendor is known — sits on that vendor's own domain.
-  const validTicketUrl = (url, source) => {
+  // in a scanned email (guards against the model inventing one). For regular
+  // shows it must sit on the known vendor's domain; for festivals it's the
+  // festival's own site, so the vendor-domain check doesn't apply.
+  const validTicketUrl = (url, source, isFestival) => {
     if (!url || !/^https?:\/\//i.test(url)) return "";
     if (!bodies.some((b) => b.includes(url))) return "";
+    if (isFestival) return url;
     const v = findVendor(source);
     if (v && !v.domains.some((d) => url.includes(d))) return "";
     return url;
@@ -806,6 +958,7 @@ async function doScan(setSt, setPr, userId) {
       bodyText = bodyText.slice(0, BODY_CHAR_CAP);
 
       const eventLinks = extractEventLinks(html, text);
+      const siteLinks = extractSiteLinks(html);
       bodies.push(
         "From: " +
           from +
@@ -815,7 +968,8 @@ async function doScan(setSt, setPr, userId) {
           date +
           "\nBody: " +
           bodyText +
-          (eventLinks.length ? "\nLinks: " + eventLinks.join(" ") : ""),
+          (eventLinks.length ? "\nLinks: " + eventLinks.join(" ") : "") +
+          (siteLinks.length ? "\nSite: " + siteLinks.join(" ") : ""),
       );
     } catch (e) {
       /* skip failed fetches */
@@ -861,7 +1015,7 @@ Return ONLY a valid JSON array. Each object:
 - date: start date — REQUIRED
 - end_date: end date — for single-day shows equals date
 - source: ticketing platform (Ticketmaster, SeatGeek, RA, See Tickets, etc.)
-- ticket_url: the direct event/ticket page for THIS show. If this email has a "Links:" line, copy the matching URL from it EXACTLY, character for character — do not modify, shorten, or invent one. If there is no suitable link, use "".
+- ticket_url: the direct link for THIS show, copied EXACTLY from this email — never invented. For a FESTIVAL, use the festival's official website from this email's "Site:" line. For a regular show, use the matching event URL from the "Links:" line. If neither has a suitable link, use "".
 - is_festival: true if multi-day festival
 
 Deduplicate aggressively. Return [] if no qualifying purchases found.`,
@@ -913,7 +1067,7 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
             date: c.date,
             end_date: c.end_date || c.date,
             source: findVendor(c.source)?.name || c.source || "Unknown",
-            ticket_url: validTicketUrl(c.ticket_url, c.source),
+            ticket_url: validTicketUrl(c.ticket_url, c.source, c.is_festival),
             is_festival: c.is_festival || false,
             genres: [],
             scanned_at: new Date().toISOString(),
@@ -937,7 +1091,7 @@ Deduplicate aggressively. Return [] if no qualifying purchases found.`,
   // Fallback — return without saving
   return parsed.map((c, i) => ({
     ...c,
-    ticket_url: validTicketUrl(c.ticket_url, c.source),
+    ticket_url: validTicketUrl(c.ticket_url, c.source, c.is_festival),
     id: Date.now() + i,
     attendees: [0],
   }));
@@ -2749,11 +2903,531 @@ function LoginPage() {
 }
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
+// ── ARTIST SEARCH WIDGET (Spotify-backed, mirrors TagSearch markup) ──────────
+// Same look/CSS as TagSearch, but suggestions come from the Netlify Spotify
+// proxy instead of a static list. Stores plain artist-name strings.
+function ArtistSearch({ value, onChange, max, placeholder }) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(
+          "/.netlify/functions/spotify-artist-search?q=" + encodeURIComponent(term),
+        );
+        const d = await r.json();
+        setResults((d.artists || []).map((a) => a.name));
+      } catch (e) {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const add = (name) => {
+    if (value.length < max && !value.includes(name)) onChange([...value, name]);
+    setQ("");
+    setResults([]);
+    setOpen(false);
+  };
+  const remove = (name) => onChange(value.filter((v) => v !== name));
+  const handleKey = (e) => {
+    if (e.key === "Enter" && q.trim()) {
+      e.preventDefault();
+      add(q.trim());
+    }
+    if (e.key === "Escape") setOpen(false);
+  };
+  const shown = results.filter((n) => !value.includes(n)).slice(0, 8);
+
+  return (
+    <div>
+      <div className="pill-row">
+        {value.map((v) => (
+          <div key={v} className="pill">
+            {v}
+            <button className="pill-x" onClick={() => remove(v)}>
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+      {value.length < max && (
+        <div className="tag-search-wrap">
+          <input
+            className="tag-search-inp"
+            placeholder={placeholder || "Search artists…"}
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setTimeout(() => setOpen(false), 150)}
+            onKeyDown={handleKey}
+          />
+          {open && q.trim().length >= 2 && (
+            <div className="tag-drop">
+              {loading && shown.length === 0 && (
+                <div className="tag-opt" style={{ color: "#555" }}>
+                  Searching…
+                </div>
+              )}
+              {shown.map((name) => (
+                <div
+                  key={name}
+                  className="tag-opt"
+                  onMouseDown={() => add(name)}
+                >
+                  {name}
+                  <span className="tag-opt-hint">tap to add</span>
+                </div>
+              ))}
+              {!loading && q.trim().length > 1 && !shown.includes(q.trim()) && (
+                <div
+                  className="tag-opt"
+                  style={{ color: "#F5A623" }}
+                  onMouseDown={() => add(q.trim())}
+                >
+                  + Add "{q.trim()}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      {value.length >= max && (
+        <div
+          style={{
+            fontSize: 10,
+            fontFamily: "'DM Mono',monospace",
+            color: "#444",
+            marginTop: 4,
+          }}
+        >
+          Max {max} reached
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── ONBOARDING WALKTHROUGH ───────────────────────────────────────────────────
+// Shown once, right after a new user signs in, before they reach the app.
+// name + handle are required; location, genres, artists are optional.
+// Writes the real row to `profiles` and hands it back via onComplete.
+function Onboarding({ session, onComplete }) {
+  const meta = (session.user && session.user.user_metadata) || {};
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState(meta.full_name || meta.name || "");
+  const [handle, setHandle] = useState(
+    (meta.full_name || meta.name || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "")
+      .slice(0, 20),
+  );
+  const [handleStatus, setHandleStatus] = useState(""); // "", checking, taken, ok, short
+  const [location, setLocation] = useState("");
+  const [genres, setGenres] = useState([]);
+  const [artists, setArtists] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
+  const [color] = useState(() => {
+    const palette = [
+      "#E85D3A", "#9B6BF5", "#2ECC71", "#3498DB",
+      "#F39C12", "#E91E8C", "#1ABC9C", "#F5A623",
+    ];
+    return palette[Math.floor(Math.random() * palette.length)];
+  });
+
+  // Live handle availability check (debounced)
+  useEffect(() => {
+    const h = handle.trim();
+    if (h.length === 0) {
+      setHandleStatus("");
+      return;
+    }
+    if (h.length < 2) {
+      setHandleStatus("short");
+      return;
+    }
+    setHandleStatus("checking");
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("handle", h)
+        .maybeSingle();
+      if (data && data.id !== session.user.id) setHandleStatus("taken");
+      else setHandleStatus("ok");
+    }, 400);
+    return () => clearTimeout(t);
+  }, [handle]);
+
+  const step1Valid =
+    name.trim().length > 0 && handle.trim().length >= 2 && handleStatus === "ok";
+
+  const finish = async () => {
+    setSaving(true);
+    setErr(null);
+    const row = {
+      id: session.user.id,
+      name: name.trim(),
+      handle: handle.trim(),
+      color,
+      location: location.trim(),
+      bio: "",
+      genres,
+      artists,
+      vibe: "both",
+      total_shows: 0,
+      social: {},
+    };
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert(row, { onConflict: "id" })
+      .select()
+      .single();
+    if (error) {
+      setErr(error.message);
+      setSaving(false);
+      return;
+    }
+    onComplete(data);
+  };
+
+  const lbl = {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 10,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    color: "#F5A623",
+    marginBottom: 8,
+    display: "block",
+  };
+  const inp = {
+    width: "100%",
+    background: "#0c0c0c",
+    border: "1px solid #1e1e1e",
+    borderRadius: 6,
+    color: "#f0ede8",
+    fontFamily: "'Syne',sans-serif",
+    fontSize: 15,
+    padding: "12px 13px",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+  const help = {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 10,
+    color: "#555",
+    marginTop: 6,
+    lineHeight: 1.5,
+  };
+
+  const handleMsg = {
+    checking: { t: "Checking…", c: "#555" },
+    taken: { t: "That handle's taken — try another.", c: "#ff6b6b" },
+    ok: { t: "Available", c: "#2ECC71" },
+    short: { t: "A little longer, please.", c: "#555" },
+    "": { t: "", c: "#555" },
+  }[handleStatus];
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        background: "#070707",
+      }}
+    >
+      <div style={{ textAlign: "center", marginBottom: 26 }}>
+        <div
+          style={{
+            fontFamily: "'Bebas Neue',sans-serif",
+            fontSize: 40,
+            letterSpacing: 7,
+            color: "#F5A623",
+          }}
+        >
+          ENCORE
+        </div>
+        <div
+          style={{
+            fontFamily: "'DM Mono',monospace",
+            fontSize: 10,
+            letterSpacing: 3,
+            color: "#444",
+            textTransform: "uppercase",
+          }}
+        >
+          Let's build your profile
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: "#111",
+          border: "1px solid #1e1e1e",
+          borderRadius: 10,
+          padding: "30px 26px",
+          maxWidth: 400,
+          width: "100%",
+        }}
+      >
+        {/* step dots */}
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            justifyContent: "center",
+            marginBottom: 26,
+          }}
+        >
+          {[1, 2, 3].map((n) => (
+            <div
+              key={n}
+              style={{
+                width: n === step ? 22 : 7,
+                height: 7,
+                borderRadius: 4,
+                background: n === step ? "#F5A623" : n < step ? "#7a5a1e" : "#262626",
+                transition: "all .2s",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* STEP 1 — name + handle */}
+        {step === 1 && (
+          <div>
+            <div
+              style={{
+                fontFamily: "'Bebas Neue',sans-serif",
+                fontSize: 24,
+                letterSpacing: 1,
+                marginBottom: 4,
+              }}
+            >
+              The basics
+            </div>
+            <div style={{ ...help, marginTop: 0, marginBottom: 22 }}>
+              Just a name and a handle. You can change these later.
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={lbl}>Your name</label>
+              <input
+                style={inp}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Kyle Weber"
+                maxLength={40}
+              />
+            </div>
+
+            <div>
+              <label style={lbl}>Handle</label>
+              <div style={{ position: "relative" }}>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 13,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "#555",
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 15,
+                  }}
+                >
+                  @
+                </span>
+                <input
+                  style={{ ...inp, paddingLeft: 26 }}
+                  value={handle}
+                  onChange={(e) =>
+                    setHandle(
+                      e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_]/g, "")
+                        .slice(0, 20),
+                    )
+                  }
+                  placeholder="kyleweber"
+                />
+              </div>
+              {handleMsg.t && (
+                <div style={{ ...help, color: handleMsg.c }}>{handleMsg.t}</div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setStep(2)}
+              disabled={!step1Valid}
+              style={{
+                width: "100%",
+                marginTop: 28,
+                padding: "13px",
+                background: step1Valid ? "#F5A623" : "#2a2a2a",
+                color: step1Valid ? "#000" : "#555",
+                border: "none",
+                borderRadius: 6,
+                fontFamily: "'Syne',sans-serif",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: step1Valid ? "pointer" : "not-allowed",
+              }}
+            >
+              Continue
+            </button>
+          </div>
+        )}
+
+        {/* STEP 2 — location */}
+        {step === 2 && (
+          <div>
+            <div
+              style={{
+                fontFamily: "'Bebas Neue',sans-serif",
+                fontSize: 24,
+                letterSpacing: 1,
+                marginBottom: 4,
+              }}
+            >
+              Where are you based?
+            </div>
+            <div style={{ ...help, marginTop: 0, marginBottom: 22 }}>
+              Optional — helps friends find shows near you.
+            </div>
+            <label style={lbl}>City</label>
+            <input
+              style={inp}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Brooklyn, NY"
+              maxLength={60}
+            />
+            <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
+              <button onClick={() => setStep(1)} style={btnBack}>
+                Back
+              </button>
+              <button onClick={() => setStep(3)} style={btnNext}>
+                Continue
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3 — taste */}
+        {step === 3 && (
+          <div>
+            <div
+              style={{
+                fontFamily: "'Bebas Neue',sans-serif",
+                fontSize: 24,
+                letterSpacing: 1,
+                marginBottom: 4,
+              }}
+            >
+              Your music taste
+            </div>
+            <div style={{ ...help, marginTop: 0, marginBottom: 22 }}>
+              Optional — pick a few so friends can see what you're into.
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={lbl}>Genres</label>
+              <TagSearch
+                value={genres}
+                onChange={setGenres}
+                suggestions={GENRES}
+                max={8}
+                placeholder="House, Techno, Bass…"
+              />
+            </div>
+
+            <div>
+              <label style={lbl}>Favorite artists</label>
+              <ArtistSearch
+                value={artists}
+                onChange={setArtists}
+                max={5}
+                placeholder="Search artists…"
+              />
+            </div>
+
+            {err && (
+              <div style={{ ...help, color: "#ff6b6b", marginTop: 16 }}>
+                Couldn't save: {err}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
+              <button
+                onClick={() => setStep(2)}
+                disabled={saving}
+                style={btnBack}
+              >
+                Back
+              </button>
+              <button onClick={finish} disabled={saving} style={btnNext}>
+                {saving ? "Saving…" : "Finish"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const btnBack = {
+  flex: "0 0 auto",
+  padding: "13px 18px",
+  background: "transparent",
+  color: "#777",
+  border: "1px solid #262626",
+  borderRadius: 6,
+  fontFamily: "'Syne',sans-serif",
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: "pointer",
+};
+const btnNext = {
+  flex: 1,
+  padding: "13px",
+  background: "#F5A623",
+  color: "#000",
+  border: "none",
+  borderRadius: 6,
+  fontFamily: "'Syne',sans-serif",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
 function App() {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [dbConcerts, setDbConcerts] = useState([]);
+  const [profileChecked, setProfileChecked] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -2776,9 +3450,10 @@ function App() {
       .from("profiles")
       .select("*")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data) setProfile(data);
+        setProfileChecked(true);
       });
   }, [session]);
 
@@ -2842,7 +3517,7 @@ function App() {
   }, [dbConcerts, concertsLoaded]);
 
   // ── EARLY AUTH RETURNS (after all hooks) ──
-  if (authLoading)
+  if (authLoading || (session && !profileChecked))
     return (
       <div
         style={{
@@ -2867,6 +3542,10 @@ function App() {
       </div>
     );
   if (!session) return <LoginPage />;
+
+  // New users (no profile yet) go through the onboarding walkthrough.
+  if (!profile || !profile.handle)
+    return <Onboarding session={session} onComplete={(p) => setProfile(p)} />;
 
   // Build curUser from real Supabase profile, fallback to demo while loading
   const curUser = profile
@@ -3041,7 +3720,6 @@ function App() {
   const clearMyShows = async () => {
     if (!window.confirm("Delete ALL your shows? This can't be undone.")) return;
     if (session?.user?.id) {
-      // Mirror the per-show delete: remove attendee rows first, then concerts.
       const { data: mine } = await supabase
         .from("concerts")
         .select("id")
@@ -3049,10 +3727,24 @@ function App() {
       const ids = (mine || []).map((r) => r.id);
       if (ids.length) {
         await supabase.from("concert_attendees").delete().in("concert_id", ids);
-        await supabase
+        // .select() returns the rows actually deleted, so we can verify it
+        // worked rather than assume it did (a blocked delete returns none).
+        const { data: del, error } = await supabase
           .from("concerts")
           .delete()
-          .eq("owner_id", session.user.id);
+          .eq("owner_id", session.user.id)
+          .select("id");
+        if (error) {
+          toast("Couldn't delete shows: " + error.message, true);
+          return;
+        }
+        if (!del || del.length === 0) {
+          toast(
+            "Delete was blocked — add a delete policy in Supabase (RLS).",
+            true,
+          );
+          return;
+        }
       }
     }
     setLiveConcerts([]);
