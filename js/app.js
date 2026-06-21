@@ -2449,7 +2449,7 @@ function SearchPage({
 }
 
 // ── LOGIN PAGE ───────────────────────────────────────────────────────────────
-function LoginPage() {
+function LoginPage({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -2589,7 +2589,31 @@ function LoginPage() {
             {error}
           </div>
         )}
-        <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 16 }}>
+        <div
+          style={{
+            borderTop: "1px solid #1a1a1a",
+            paddingTop: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
+          {onBack && (
+            <button
+              onClick={onBack}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: 11,
+                fontFamily: "'DM Mono',monospace",
+                color: "#666",
+                cursor: "pointer",
+                letterSpacing: 0.5,
+              }}
+            >
+              ← Keep browsing as guest
+            </button>
+          )}
           <a
             href="index.html"
             style={{
@@ -3218,7 +3242,6 @@ function App() {
   // and again after every scan, so the dashboard always reflects what's saved —
   // even when a re-scan finds only duplicates and returns nothing new.
   const reloadConcerts = async () => {
-    if (!session) return;
     const { data } = await supabase
       .from("concerts")
       .select("*, concert_attendees(user_id)")
@@ -3286,6 +3309,7 @@ function App() {
   const [artistModal, setArtistModal] = useState(null); // artist name string for sheet overlay
   const [profileId, setProfileId] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [showAuth, setShowAuth] = useState(false); // guest -> sign-in screen
   const [detail, setDetail] = useState(null);
   const [showAddC, setShowAddC] = useState(false);
   const [showAddF, setShowAddF] = useState(false); // desktop add friend
@@ -3337,12 +3361,15 @@ function App() {
         </div>
       </div>
     );
-  if (!session) return <LoginPage />;
+  // Guests can browse the app read-only. They reach the sign-in screen by
+  // tapping any "Sign up" CTA (which sets showAuth).
+  if (!session && showAuth)
+    return <LoginPage onBack={() => setShowAuth(false)} />;
 
-  // Show onboarding until the user explicitly completes it. A DB trigger
-  // auto-creates a profile (with a generated handle) on signup, so we can't
-  // gate on an empty handle — we gate on the explicit `onboarded` flag.
-  if (!profile || !profile.onboarded)
+  // Members must finish onboarding first. (A DB trigger auto-creates a profile
+  // with a generated handle on signup, so we gate on the explicit `onboarded`
+  // flag rather than an empty handle.)
+  if (session && (!profile || !profile.onboarded))
     return (
       <Onboarding
         session={session}
@@ -3371,7 +3398,33 @@ function App() {
         past: [],
         ratings: {},
       }
-    : users[0];
+    : {
+        id: null,
+        name: "Guest",
+        handle: "",
+        color: "#3a3a3a",
+        location: "",
+        bio: "",
+        genres: [],
+        artists: [],
+        bucketList: [],
+        vibe: "both",
+        totalShows: 0,
+        social: {},
+        following: [],
+        upcoming: [],
+        past: [],
+        ratings: {},
+      };
+  const isGuest = !session;
+  // Any write action by a guest opens the sign-in screen instead.
+  const requireAuth = () => {
+    if (isGuest) {
+      setShowAuth(true);
+      return false;
+    }
+    return true;
+  };
   const toast = (m, e) => {
     if (e) {
       setErrMsg(m);
@@ -3383,6 +3436,7 @@ function App() {
   };
 
   const deleteConcert = async (cid) => {
+    if (!requireAuth()) return;
     if (!confirm("Remove this show from your account? This can't be undone."))
       return;
     if (session?.user?.id) {
@@ -3398,6 +3452,7 @@ function App() {
   };
 
   const toggleAttendee = async (cid, uid) => {
+    if (!requireAuth()) return;
     const c = liveConcerts.find((c) => c.id === cid);
     if (!c) return;
     const adding = !(c.attendees || []).includes(uid);
@@ -3432,7 +3487,8 @@ function App() {
   };
   const toggleGoing = (cid) => toggleAttendee(cid, curUser.id);
   const toggleFollow = async (uid) => {
-    if (!session?.user?.id || uid === curUser.id) return;
+    if (!requireAuth()) return;
+    if (uid === curUser.id) return;
     const u2 = users.find((u) => u.id === uid);
     const isF = myFollowing.includes(uid);
     setMyFollowing((p) => (isF ? p.filter((i) => i !== uid) : [...p, uid]));
@@ -3477,6 +3533,7 @@ function App() {
     setView("profile");
   };
   const saveProfile = async (draft) => {
+    if (!requireAuth()) return;
     // Save to Supabase
     if (session?.user?.id) {
       await supabase
@@ -3516,6 +3573,7 @@ function App() {
   };
 
   const scanGmail = async () => {
+    if (!requireAuth()) return;
     if (GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE") {
       toast(
         "Add your Google Client ID to app.js to enable Gmail scanning.",
@@ -3556,6 +3614,7 @@ function App() {
   };
 
   const clearMyShows = async () => {
+    if (!requireAuth()) return;
     if (!window.confirm("Delete ALL your shows? This can't be undone.")) return;
     if (session?.user?.id) {
       const { data: mine } = await supabase
@@ -3591,6 +3650,7 @@ function App() {
   };
 
   const addManually = async () => {
+    if (!requireAuth()) return;
     if (!nc.artist.trim() || !nc.date) return;
     if (!session?.user?.id) return;
     const { data, error } = await supabase
@@ -3636,7 +3696,11 @@ function App() {
       ? liveConcerts
       : filter === "mine"
         ? liveConcerts.filter((c) => (c.attendees || []).includes(curUser.id))
-        : liveConcerts.filter((c) => (c.attendees || []).includes(filter));
+        : filter === "following"
+          ? liveConcerts.filter((c) =>
+              (c.attendees || []).some((a) => myFollowing.includes(a)),
+            )
+          : liveConcerts.filter((c) => (c.attendees || []).includes(filter));
   const grouped = [...filtered]
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .reduce((acc, c) => {
@@ -3672,57 +3736,79 @@ function App() {
               >
                 ⌕
               </button>
-              <div
-                className="my-avatar"
-                style={{ background: curUser.color }}
-                onClick={() => viewProfile(curUser.id)}
-                title="My profile"
-              >
-                {curUser.name.slice(0, 2).toUpperCase()}
-              </div>
-              <button
-                onClick={() => supabase.auth.signOut()}
-                style={{
-                  background: "transparent",
-                  border: "1px solid #1e1e1e",
-                  color: "#555",
-                  padding: "6px 10px",
-                  fontFamily: "'Syne',sans-serif",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
-                  cursor: "pointer",
-                  borderRadius: 3,
-                }}
-              >
-                Out
-              </button>
+              {isGuest ? (
+                <button
+                  className="btn-sm btn-amber"
+                  onClick={() => setShowAuth(true)}
+                >
+                  Sign up
+                </button>
+              ) : (
+                <>
+                  <div
+                    className="my-avatar"
+                    style={{ background: curUser.color }}
+                    onClick={() => viewProfile(curUser.id)}
+                    title="My profile"
+                  >
+                    {curUser.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <button
+                    onClick={() => supabase.auth.signOut()}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #1e1e1e",
+                      color: "#555",
+                      padding: "6px 10px",
+                      fontFamily: "'Syne',sans-serif",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                      cursor: "pointer",
+                      borderRadius: 3,
+                    }}
+                  >
+                    Out
+                  </button>
+                </>
+              )}
             </div>
           </div>
           {view === "feed" && (
             <div className="hdr-r2">
-              <button
-                className="btn-sm btn-amber"
-                onClick={() => setShowAddC(true)}
-              >
-                + Add
-              </button>
-              <button
-                className="btn-sm btn-primary"
-                onClick={scanGmail}
-                disabled={scanning}
-              >
-                {scanning ? "Scanning…" : "⟲ Scan Gmail"}
-              </button>
-              <button
-                className="btn-sm"
-                onClick={clearMyShows}
-                disabled={scanning}
-                title="Delete all your shows"
-              >
-                ⌫ Clear
-              </button>
+              {isGuest ? (
+                <button
+                  className="btn-sm btn-amber"
+                  onClick={() => setShowAuth(true)}
+                >
+                  Sign up to track your shows →
+                </button>
+              ) : (
+                <>
+                  <button
+                    className="btn-sm btn-amber"
+                    onClick={() => setShowAddC(true)}
+                  >
+                    + Add
+                  </button>
+                  <button
+                    className="btn-sm btn-primary"
+                    onClick={scanGmail}
+                    disabled={scanning}
+                  >
+                    {scanning ? "Scanning…" : "⟲ Scan Gmail"}
+                  </button>
+                  <button
+                    className="btn-sm"
+                    onClick={clearMyShows}
+                    disabled={scanning}
+                    title="Delete all your shows"
+                  >
+                    ⌫ Clear
+                  </button>
+                </>
+              )}
             </div>
           )}
         </header>
@@ -3749,6 +3835,21 @@ function App() {
                 }
               </span>
             </button>
+            {!isGuest && myFollowing.length > 0 && (
+              <button
+                className={"chip" + (filter === "following" ? " active" : "")}
+                onClick={() => setFilter("following")}
+              >
+                Following{" "}
+                <span className="chip-cnt">
+                  {
+                    liveConcerts.filter((c) =>
+                      (c.attendees || []).some((a) => myFollowing.includes(a)),
+                    ).length
+                  }
+                </span>
+              </button>
+            )}
             <div className="chip-div" />
             {followedFriends.map((f) => (
               <button
