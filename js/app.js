@@ -341,6 +341,16 @@ const getUrgency = (ds) => {
 };
 const daysUntil = (ds) =>
   Math.ceil((new Date(ds + "T00:00:00") - now0()) / 86400000);
+// Short, human relative time for shows that have already happened.
+const agoLabel = (dy) => {
+  const a = Math.abs(dy);
+  if (a <= 1) return "yesterday";
+  if (a < 7) return a + " days ago";
+  if (a < 14) return "last week";
+  if (a < 31) return Math.round(a / 7) + " weeks ago";
+  if (a < 365) return Math.round(a / 30) + " months ago";
+  return Math.round(a / 365) + " yr ago";
+};
 const fmt = (ds) => {
   const d = new Date(ds + "T12:00:00");
   return {
@@ -728,8 +738,8 @@ Return ONLY a valid JSON array. Each object:
 {"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean}
 
 - artist: performer/band/DJ name. For festivals, use the festival name (e.g. "Movement Festival")
-- venue: venue or festival site
-- city: "City, State"
+- venue: the venue name from the email. If the venue is shown as "TBA", "To be announced", "secret location", or is missing, scan the email body for an explicit address or a "LOCATION:" line and use the place or address found there.
+- city: "City, State" — taken ONLY from a location, address, or city explicitly written somewhere in this email (header, ticket, or body text). If only a street address is given, use that address's city and state. NEVER guess or infer the city from the promoter, sender, artist, or your own knowledge. If no location is stated anywhere in the email, use "".
 - date: start date — REQUIRED
 - end_date: end date — for single-day shows equals date
 - source: ticketing platform (Ticketmaster, SeatGeek, RA, See Tickets, etc.)
@@ -927,6 +937,19 @@ function CCard({
             {dy} days away
           </div>
         )}
+        {u === "past" && (
+          <div
+            className="upill"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              color: "#888",
+              border: "1px solid #2a2a2a",
+            }}
+          >
+            <div className="pdot" style={{ background: "#666" }} />
+            {agoLabel(dy)}
+          </div>
+        )}
         <div className="drow">
           <div className="dbdg">
             <div className="dmo">{d.mo}</div>
@@ -986,7 +1009,14 @@ function CDetail({
   const u = getUrgency(c.date),
     dy = daysUntil(c.date),
     d = fmt(c.date);
-  const dt = dy === 0 ? "Tonight!" : dy === 1 ? "Tomorrow!" : dy + " days away";
+  const dt =
+    dy < 0
+      ? agoLabel(dy)
+      : dy === 0
+        ? "Tonight!"
+        : dy === 1
+          ? "Tomorrow!"
+          : dy + " days away";
   const bc = u === "urgent" ? "bdg-u" : u === "soon" ? "bdg-s" : "bdg-n",
     rc = u === "urgent" ? "#FF5555" : "#F5A623";
   const showR = u === "urgent" || u === "soon";
@@ -2668,7 +2698,7 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
           "/.netlify/functions/spotify-artist-search?q=" + encodeURIComponent(term),
         );
         const d = await r.json();
-        setResults((d.artists || []).map((a) => a.name));
+        setResults(d.artists || []);
       } catch (e) {
         setResults([]);
       } finally {
@@ -2692,7 +2722,7 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
     }
     if (e.key === "Escape") setOpen(false);
   };
-  const shown = results.filter((n) => !value.includes(n)).slice(0, 8);
+  const shown = results.filter((a) => !value.includes(a.name)).slice(0, 8);
 
   return (
     <div>
@@ -2727,13 +2757,37 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
                   Searching…
                 </div>
               )}
-              {shown.map((name) => (
+              {shown.map((a) => (
                 <div
-                  key={name}
+                  key={a.id || a.name}
                   className="tag-opt"
-                  onMouseDown={() => add(name)}
+                  onMouseDown={() => add(a.name)}
+                  style={{ display: "flex", alignItems: "center", gap: 10 }}
                 >
-                  {name}
+                  {a.image ? (
+                    <img
+                      src={a.image}
+                      alt=""
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        background: "#222",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  <span style={{ flex: 1 }}>{a.name}</span>
                   <span className="tag-opt-hint">tap to add</span>
                 </div>
               ))}
@@ -2760,6 +2814,275 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
           }}
         >
           Max {max} reached
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── OSM (OpenStreetMap / Nominatim) venue + city autocomplete ────────────────
+// Hits the keyless place-search Netlify proxy. Picking a result fills the
+// venue + city fields below, which stay editable for manual correction.
+function PlaceSearch({ onPick, placeholder }) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 3) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(
+          "/.netlify/functions/place-search?q=" + encodeURIComponent(term),
+        );
+        const d = await r.json();
+        setResults(d.places || []);
+      } catch (e) {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 500); // gentle on Nominatim's ~1 req/sec usage policy
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const pick = (p) => {
+    onPick(p);
+    setQ("");
+    setResults([]);
+    setOpen(false);
+  };
+
+  return (
+    <div className="tag-search-wrap">
+      <input
+        className="tag-search-inp"
+        placeholder={placeholder || "Search venue or address…"}
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {open && q.trim().length >= 3 && (
+        <div className="tag-drop">
+          {loading && results.length === 0 && (
+            <div className="tag-opt" style={{ color: "#555" }}>
+              Searching…
+            </div>
+          )}
+          {!loading && results.length === 0 && (
+            <div className="tag-opt" style={{ color: "#555" }}>
+              No matches — just type it in below.
+            </div>
+          )}
+          {results.map((p, i) => (
+            <div
+              key={i}
+              className="tag-opt"
+              onMouseDown={() => pick(p)}
+              style={{ display: "block" }}
+            >
+              <div style={{ color: "#eee" }}>{p.venue || p.city}</div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontFamily: "'DM Mono',monospace",
+                  color: "#777",
+                  marginTop: 2,
+                }}
+              >
+                {p.full || p.city}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Sleek calendar date picker (Encore dark aesthetic, no library) ───────────
+function DatePicker({ value, onChange }) {
+  const base = value ? new Date(value + "T12:00:00") : new Date();
+  const [open, setOpen] = useState(false);
+  const [vy, setVy] = useState(base.getFullYear());
+  const [vm, setVm] = useState(base.getMonth());
+
+  const MO = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+  const DOW = ["S", "M", "T", "W", "T", "F", "S"];
+  const startDow = new Date(vy, vm, 1).getDay();
+  const daysInMonth = new Date(vy, vm + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const prev = () => {
+    if (vm === 0) {
+      setVm(11);
+      setVy(vy - 1);
+    } else setVm(vm - 1);
+  };
+  const next = () => {
+    if (vm === 11) {
+      setVm(0);
+      setVy(vy + 1);
+    } else setVm(vm + 1);
+  };
+  const pick = (d) => {
+    const mm = String(vm + 1).padStart(2, "0");
+    const dd = String(d).padStart(2, "0");
+    onChange(vy + "-" + mm + "-" + dd);
+    setOpen(false);
+  };
+
+  const label = value
+    ? new Date(value + "T12:00:00").toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "Pick a date";
+
+  const navBtn = {
+    background: "none",
+    border: "none",
+    color: "#F5A623",
+    fontSize: 20,
+    cursor: "pointer",
+    padding: "0 8px",
+    lineHeight: 1,
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="form-inp"
+        style={{
+          textAlign: "left",
+          cursor: "pointer",
+          color: value ? "#eee" : "#666",
+          width: "100%",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <span>{label}</span>
+        <span style={{ color: "#F5A623" }}>▾</span>
+      </button>
+      {open && (
+        <div
+          style={{
+            marginTop: 6,
+            background: "#0c0c0c",
+            border: "1px solid #1e1e1e",
+            borderRadius: 8,
+            padding: 12,
+            width: 268,
+            maxWidth: "100%",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <button type="button" onClick={prev} style={navBtn}>
+              ‹
+            </button>
+            <div
+              style={{
+                fontFamily: "'Bebas Neue',sans-serif",
+                fontSize: 17,
+                letterSpacing: 1,
+                color: "#eee",
+              }}
+            >
+              {MO[vm]} {vy}
+            </div>
+            <button type="button" onClick={next} style={navBtn}>
+              ›
+            </button>
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7,1fr)",
+              gap: 2,
+              marginBottom: 4,
+            }}
+          >
+            {DOW.map((d, i) => (
+              <div
+                key={i}
+                style={{
+                  textAlign: "center",
+                  fontFamily: "'DM Mono',monospace",
+                  fontSize: 9,
+                  color: "#555",
+                  padding: "2px 0",
+                }}
+              >
+                {d}
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7,1fr)",
+              gap: 2,
+            }}
+          >
+            {cells.map((d, i) => {
+              if (!d) return <div key={i} />;
+              const ds =
+                vy +
+                "-" +
+                String(vm + 1).padStart(2, "0") +
+                "-" +
+                String(d).padStart(2, "0");
+              const isSel = ds === value;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => pick(d)}
+                  style={{
+                    aspectRatio: "1",
+                    border: "none",
+                    borderRadius: 5,
+                    cursor: "pointer",
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 12,
+                    background: isSel ? "#F5A623" : "transparent",
+                    color: isSel ? "#000" : "#ccc",
+                  }}
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -3310,6 +3633,7 @@ function App() {
   const [profileId, setProfileId] = useState(null);
   const [filter, setFilter] = useState("all");
   const [showAuth, setShowAuth] = useState(false); // guest -> sign-in screen
+  const [showPast, setShowPast] = useState(false); // collapse past shows
   const [detail, setDetail] = useState(null);
   const [showAddC, setShowAddC] = useState(false);
   const [showAddF, setShowAddF] = useState(false); // desktop add friend
@@ -3701,7 +4025,11 @@ function App() {
               (c.attendees || []).some((a) => myFollowing.includes(a)),
             )
           : liveConcerts.filter((c) => (c.attendees || []).includes(filter));
-  const grouped = [...filtered]
+  const upcomingF = filtered.filter((c) => daysUntil(c.date) >= 0);
+  const pastF = filtered
+    .filter((c) => daysUntil(c.date) < 0)
+    .sort((a, b) => new Date(b.date) - new Date(a.date)); // most recent first
+  const grouped = [...upcomingF]
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .reduce((acc, c) => {
       const d = new Date(c.date + "T12:00:00"),
@@ -4043,25 +4371,70 @@ function App() {
                   <div className="empty-t">No Shows Here</div>
                 </div>
               ) : (
-                Object.values(grouped).map(({ l, items }) => (
-                  <div key={l} className="sec">
-                    <div className="sec-hdr">{l}</div>
-                    <div className="grid">
-                      {items.map((c) => (
-                        <CCard
-                          key={c.id}
-                          c={c}
-                          users={users}
-                          curUser={curUser}
-                          onOpen={setDetail}
-                          onToggleGoing={toggleGoing}
-                          onViewProfile={viewProfile}
-                          onDelete={deleteConcert}
-                        />
-                      ))}
+                <>
+                  {Object.values(grouped).map(({ l, items }) => (
+                    <div key={l} className="sec">
+                      <div className="sec-hdr">{l}</div>
+                      <div className="grid">
+                        {items.map((c) => (
+                          <CCard
+                            key={c.id}
+                            c={c}
+                            users={users}
+                            curUser={curUser}
+                            onOpen={setDetail}
+                            onToggleGoing={toggleGoing}
+                            onViewProfile={viewProfile}
+                            onDelete={deleteConcert}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  {Object.keys(grouped).length === 0 && pastF.length > 0 && (
+                    <div className="empty">
+                      <div className="empty-i">✓</div>
+                      <div className="empty-t">Nothing upcoming</div>
+                    </div>
+                  )}
+                  {pastF.length > 0 && (
+                    <div className="sec">
+                      <div
+                        onClick={() => setShowPast((s) => !s)}
+                        style={{
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          color: "#666",
+                          fontFamily: "'DM Mono',monospace",
+                          fontSize: 11,
+                          letterSpacing: 2,
+                          textTransform: "uppercase",
+                          margin: "28px 0 14px",
+                        }}
+                      >
+                        {showPast ? "▾" : "▸"} Past shows ({pastF.length})
+                      </div>
+                      {showPast && (
+                        <div className="grid">
+                          {pastF.map((c) => (
+                            <CCard
+                              key={c.id}
+                              c={c}
+                              users={users}
+                              curUser={curUser}
+                              onOpen={setDetail}
+                              onToggleGoing={toggleGoing}
+                              onViewProfile={viewProfile}
+                              onDelete={deleteConcert}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </main>
           )}
@@ -4095,49 +4468,50 @@ function App() {
               </div>
               <div className="form-row">
                 <div className="form-lbl">Artist *</div>
-                <input
-                  className="form-inp"
-                  placeholder="e.g. Deadmau5"
-                  value={nc.artist}
-                  onChange={(e) =>
-                    setNc((p) => ({ ...p, artist: e.target.value }))
-                  }
+                <ArtistSearch
+                  value={nc.artist ? [nc.artist] : []}
+                  max={1}
+                  placeholder="Search artist…"
+                  onChange={(a) => setNc((p) => ({ ...p, artist: a[0] || "" }))}
                 />
               </div>
               <div className="form-row">
-                <div className="form-lbl">Venue</div>
-                <input
-                  className="form-inp"
-                  placeholder="e.g. XS Nightclub"
-                  value={nc.venue}
-                  onChange={(e) =>
-                    setNc((p) => ({ ...p, venue: e.target.value }))
+                <div className="form-lbl">Venue &amp; City</div>
+                <PlaceSearch
+                  placeholder="Search venue or address…"
+                  onPick={(pl) =>
+                    setNc((p) => ({
+                      ...p,
+                      venue: pl.venue || p.venue,
+                      city: pl.city || p.city,
+                    }))
                   }
                 />
-              </div>
-              <div className="form-grid">
-                <div className="form-row" style={{ marginBottom: 0 }}>
-                  <div className="form-lbl">City</div>
+                <div className="form-grid" style={{ marginTop: 8 }}>
                   <input
                     className="form-inp"
-                    placeholder="Las Vegas, NV"
+                    placeholder="Venue"
+                    value={nc.venue}
+                    onChange={(e) =>
+                      setNc((p) => ({ ...p, venue: e.target.value }))
+                    }
+                  />
+                  <input
+                    className="form-inp"
+                    placeholder="City, State"
                     value={nc.city}
                     onChange={(e) =>
                       setNc((p) => ({ ...p, city: e.target.value }))
                     }
                   />
                 </div>
-                <div className="form-row" style={{ marginBottom: 0 }}>
-                  <div className="form-lbl">Date *</div>
-                  <input
-                    className="form-inp"
-                    type="date"
-                    value={nc.date}
-                    onChange={(e) =>
-                      setNc((p) => ({ ...p, date: e.target.value }))
-                    }
-                  />
-                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-lbl">Date *</div>
+                <DatePicker
+                  value={nc.date}
+                  onChange={(d) => setNc((p) => ({ ...p, date: d }))}
+                />
               </div>
               <div className="form-row" style={{ marginTop: 11 }}>
                 <div className="form-lbl">Source</div>
