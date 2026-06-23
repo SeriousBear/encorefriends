@@ -14,6 +14,21 @@ const SUPABASE_URL = "https://zfcehcqklrrfncihjwkk.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_LhcC2ZeRoWsD3eAGNIUfwg_iSJyJqip";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Web-push: paste the PUBLIC VAPID key here (the same one goes in Netlify env).
+// Generate once with:  npx web-push generate-vapid-keys
+const VAPID_PUBLIC_KEY =
+  "BJKV6Lf06d8lTNYYOsFZxsenCLtkt3R45S1ZjFBXAvOsNYln8gg-n2C5gjmL9DaMS95klHtkIK0qA17eA49DAog";
+
+// VAPID keys are URL-safe base64; the browser's subscribe() wants a Uint8Array.
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
 // ── RESELLERS ───────────────────────────────────────────────────────────────
 const RESELLERS = [
   {
@@ -328,7 +343,6 @@ const AVATAR_COLORS = [
 
 // Demo seed data removed in Pass 2 — profiles & concerts now load from Supabase.
 
-
 // ── HELPERS ─────────────────────────────────────────────────────────────────
 const now0 = () => {
   const n = new Date();
@@ -371,23 +385,73 @@ const uColor = (u) =>
 //   2. the label on the button,
 //   3. an extra Gmail search pass so that platform's emails get scanned.
 const TICKET_VENDORS = [
-  { name: "Ticketmaster", aliases: ["ticketmaster", "tm"], domains: ["ticketmaster.com"], eventRx: /ticketmaster\.com\/event\/([A-Za-z0-9]+)/i, eventUrl: (id) => "https://www.ticketmaster.com/event/" + id },
-  { name: "Live Nation", aliases: ["live nation", "livenation"], domains: ["livenation.com"] },
+  {
+    name: "Ticketmaster",
+    aliases: ["ticketmaster", "tm"],
+    domains: ["ticketmaster.com"],
+    eventRx: /ticketmaster\.com\/event\/([A-Za-z0-9]+)/i,
+    eventUrl: (id) => "https://www.ticketmaster.com/event/" + id,
+  },
+  {
+    name: "Live Nation",
+    aliases: ["live nation", "livenation"],
+    domains: ["livenation.com"],
+  },
   { name: "SeatGeek", aliases: ["seatgeek"], domains: ["seatgeek.com"] },
-  { name: "AXS", aliases: ["axs"], domains: ["axs.com"], eventRx: /axs\.com\/events\/(\d+)/i, eventUrl: (id) => "https://www.axs.com/events/" + id },
-  { name: "DICE", aliases: ["dice", "dice.fm"], domains: ["dice.fm"], eventRx: /dice\.fm\/event\/([\w-]+)/i, eventUrl: (id) => "https://dice.fm/event/" + id },
-  { name: "Resident Advisor", aliases: ["resident advisor", "ra", "residentadvisor"], domains: ["ra.co", "residentadvisor.net"], eventRx: /ra\.co\/events\/(\d+)/i, eventUrl: (id) => "https://ra.co/events/" + id },
-  { name: "See Tickets", aliases: ["see tickets", "seetickets"], domains: ["seetickets.us", "seetickets.com"] },
-  { name: "Eventbrite", aliases: ["eventbrite"], domains: ["eventbrite.com", "eventbritemail.com"], eventRx: /eventbrite\.com\/e\/([\w-]+)/i, eventUrl: (id) => "https://www.eventbrite.com/e/" + id },
+  {
+    name: "AXS",
+    aliases: ["axs"],
+    domains: ["axs.com"],
+    eventRx: /axs\.com\/events\/(\d+)/i,
+    eventUrl: (id) => "https://www.axs.com/events/" + id,
+  },
+  {
+    name: "DICE",
+    aliases: ["dice", "dice.fm"],
+    domains: ["dice.fm"],
+    eventRx: /dice\.fm\/event\/([\w-]+)/i,
+    eventUrl: (id) => "https://dice.fm/event/" + id,
+  },
+  {
+    name: "Resident Advisor",
+    aliases: ["resident advisor", "ra", "residentadvisor"],
+    domains: ["ra.co", "residentadvisor.net"],
+    eventRx: /ra\.co\/events\/(\d+)/i,
+    eventUrl: (id) => "https://ra.co/events/" + id,
+  },
+  {
+    name: "See Tickets",
+    aliases: ["see tickets", "seetickets"],
+    domains: ["seetickets.us", "seetickets.com"],
+  },
+  {
+    name: "Eventbrite",
+    aliases: ["eventbrite"],
+    domains: ["eventbrite.com", "eventbritemail.com"],
+    eventRx: /eventbrite\.com\/e\/([\w-]+)/i,
+    eventUrl: (id) => "https://www.eventbrite.com/e/" + id,
+  },
   { name: "Etix", aliases: ["etix"], domains: ["etix.com"] },
   { name: "Tixr", aliases: ["tixr"], domains: ["tixr.com"] },
-  { name: "Vivid Seats", aliases: ["vivid seats", "vividseats"], domains: ["vividseats.com"] },
+  {
+    name: "Vivid Seats",
+    aliases: ["vivid seats", "vividseats"],
+    domains: ["vividseats.com"],
+  },
   { name: "TickPick", aliases: ["tickpick"], domains: ["tickpick.com"] },
   { name: "ShowClix", aliases: ["showclix"], domains: ["showclix.com"] },
   { name: "StubHub", aliases: ["stubhub"], domains: ["stubhub.com"] },
-  { name: "Front Gate Tickets", aliases: ["front gate", "frontgate", "frontgatetickets"], domains: ["frontgatetickets.com"] },
+  {
+    name: "Front Gate Tickets",
+    aliases: ["front gate", "frontgate", "frontgatetickets"],
+    domains: ["frontgatetickets.com"],
+  },
   { name: "Universe", aliases: ["universe"], domains: ["universe.com"] },
-  { name: "Bandsintown", aliases: ["bandsintown"], domains: ["bandsintown.com"] },
+  {
+    name: "Bandsintown",
+    aliases: ["bandsintown"],
+    domains: ["bandsintown.com"],
+  },
   { name: "TicketWeb", aliases: ["ticketweb"], domains: ["ticketweb.com"] },
   { name: "Eventim", aliases: ["eventim"], domains: ["eventim.com"] },
 ];
@@ -575,9 +639,9 @@ async function doScan(setSt, setPr, userId) {
   const cleanEmailBody = (html) => {
     try {
       const doc = new DOMParser().parseFromString(html, "text/html");
-      doc.querySelectorAll("style, script, head, title").forEach((el) =>
-        el.remove(),
-      );
+      doc
+        .querySelectorAll("style, script, head, title")
+        .forEach((el) => el.remove());
       const txt = doc.body?.innerText || doc.body?.textContent || "";
       return txt.replace(/\s{2,}/g, " ").trim();
     } catch (e) {
@@ -614,9 +678,23 @@ async function doScan(setSt, setPr, userId) {
   // excluding ticket vendors (handled above) and obvious social/tracking/infra
   // domains — and normalize to the site origin so the link is stable.
   const SITE_DENY = [
-    "facebook.", "instagram.", "twitter.", "x.com", "youtube.", "youtu.be",
-    "spotify.", "soundcloud.", "tiktok.", "apple.com", "google.", "linkedin.",
-    "threads.net", "mailchimp", "list-manage", "sendgrid", "unsubscribe",
+    "facebook.",
+    "instagram.",
+    "twitter.",
+    "x.com",
+    "youtube.",
+    "youtu.be",
+    "spotify.",
+    "soundcloud.",
+    "tiktok.",
+    "apple.com",
+    "google.",
+    "linkedin.",
+    "threads.net",
+    "mailchimp",
+    "list-manage",
+    "sendgrid",
+    "unsubscribe",
   ];
   const extractSiteLinks = (html) => {
     try {
@@ -1068,7 +1146,9 @@ function CDetail({
           ) : (
             <div className="sh-buy sh-buy-nolink">
               <span>
-                {vendorLabel(c) ? "Via " + vendorLabel(c) : "Ticket link unavailable"}
+                {vendorLabel(c)
+                  ? "Via " + vendorLabel(c)
+                  : "Ticket link unavailable"}
               </span>
               <span className="sh-buy-src">no direct link</span>
             </div>
@@ -2695,7 +2775,8 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
     const t = setTimeout(async () => {
       try {
         const r = await fetch(
-          "/.netlify/functions/spotify-artist-search?q=" + encodeURIComponent(term),
+          "/.netlify/functions/spotify-artist-search?q=" +
+            encodeURIComponent(term),
         );
         const d = await r.json();
         setResults(d.artists || []);
@@ -2919,8 +3000,18 @@ function DatePicker({ value, onChange }) {
   const [vm, setVm] = useState(base.getMonth());
 
   const MO = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const DOW = ["S", "M", "T", "W", "T", "F", "S"];
   const startDow = new Date(vy, vm, 1).getDay();
@@ -3106,7 +3197,9 @@ function Onboarding({ session, profile, onComplete }) {
   );
   const [handleStatus, setHandleStatus] = useState(""); // "", checking, taken, ok, short
   const [location, setLocation] = useState(p.location || "");
-  const [email, setEmail] = useState((session.user && session.user.email) || "");
+  const [email, setEmail] = useState(
+    (session.user && session.user.email) || "",
+  );
   const [phone, setPhone] = useState("");
   const [genres, setGenres] = useState(p.genres || []);
   const [artists, setArtists] = useState(p.artists || []);
@@ -3114,8 +3207,14 @@ function Onboarding({ session, profile, onComplete }) {
   const [err, setErr] = useState(null);
   const [color] = useState(() => {
     const palette = [
-      "#E85D3A", "#9B6BF5", "#2ECC71", "#3498DB",
-      "#F39C12", "#E91E8C", "#1ABC9C", "#F5A623",
+      "#E85D3A",
+      "#9B6BF5",
+      "#2ECC71",
+      "#3498DB",
+      "#F39C12",
+      "#E91E8C",
+      "#1ABC9C",
+      "#F5A623",
     ];
     return p.color || palette[Math.floor(Math.random() * palette.length)];
   });
@@ -3145,7 +3244,9 @@ function Onboarding({ session, profile, onComplete }) {
   }, [handle]);
 
   const step1Valid =
-    name.trim().length > 0 && handle.trim().length >= 2 && handleStatus === "ok";
+    name.trim().length > 0 &&
+    handle.trim().length >= 2 &&
+    handleStatus === "ok";
 
   const finish = async () => {
     setSaving(true);
@@ -3286,7 +3387,8 @@ function Onboarding({ session, profile, onComplete }) {
                 width: n === step ? 22 : 7,
                 height: 7,
                 borderRadius: 4,
-                background: n === step ? "#F5A623" : n < step ? "#7a5a1e" : "#262626",
+                background:
+                  n === step ? "#F5A623" : n < step ? "#7a5a1e" : "#262626",
                 transition: "all .2s",
               }}
             />
@@ -3635,6 +3737,8 @@ function App() {
   const [showAuth, setShowAuth] = useState(false); // guest -> sign-in screen
   const [showPast, setShowPast] = useState(false); // collapse past shows
   const [detail, setDetail] = useState(null);
+  const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported
+  const [pushHidden, setPushHidden] = useState(false);
   const [showAddC, setShowAddC] = useState(false);
   const [showAddF, setShowAddF] = useState(false); // desktop add friend
   const [newFN, setNewFN] = useState("");
@@ -3659,6 +3763,32 @@ function App() {
     if (!concertsLoaded) return;
     setLiveConcerts(dbConcerts);
   }, [dbConcerts, concertsLoaded]);
+
+  // Detect push support + whether this browser is already subscribed.
+  useEffect(() => {
+    if (
+      typeof navigator === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window) ||
+      typeof Notification === "undefined"
+    ) {
+      setPushState("unsupported");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      setPushState("denied");
+      return;
+    }
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) =>
+        setPushState(
+          sub || Notification.permission === "granted" ? "granted" : "prompt",
+        ),
+      )
+      .catch(() => setPushState("unsupported"));
+  }, []);
 
   // ── EARLY AUTH RETURNS (after all hooks) ──
   if (authLoading || (session && !profileChecked))
@@ -3756,6 +3886,45 @@ function App() {
     } else {
       setNotif(m);
       setTimeout(() => setNotif(null), 3500);
+    }
+  };
+
+  // Ask permission, subscribe, and save the subscription to Supabase.
+  const enablePush = async () => {
+    if (!session?.user?.id) return;
+    if (
+      VAPID_PUBLIC_KEY ===
+      "BJKV6Lf06d8lTNYYOsFZxsenCLtkt3R45S1ZjFBXAvOsNYln8gg-n2C5gjmL9DaMS95klHtkIK0qA17eA49DAog"
+    ) {
+      toast("Push isn't configured yet.", true);
+      return;
+    }
+    try {
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        setPushState(perm === "denied" ? "denied" : "prompt");
+        return;
+      }
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+      const j = sub.toJSON();
+      await supabase.from("push_subscriptions").upsert(
+        {
+          user_id: session.user.id,
+          endpoint: j.endpoint,
+          p256dh: j.keys.p256dh,
+          auth: j.keys.auth,
+        },
+        { onConflict: "endpoint" },
+      );
+      setPushState("granted");
+      toast("Notifications on! 🔔");
+    } catch (e) {
+      setPushState("prompt");
+      toast("Couldn't enable notifications.", true);
     }
   };
 
@@ -4328,6 +4497,44 @@ function App() {
             <main className="main">
               {notif && <div className="toast-ok">🔔 {notif}</div>}
               {errMsg && <div className="toast-err">⚠ {errMsg}</div>}
+              {!isGuest && pushState === "prompt" && !pushHidden && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
+                    background: "#111",
+                    border: "1px solid #1e1e1e",
+                    borderRadius: 8,
+                    padding: "12px 14px",
+                    marginBottom: 16,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "'Syne',sans-serif",
+                      fontSize: 13,
+                      color: "#ccc",
+                    }}
+                  >
+                    🔔 Get a ping when people you follow add a show.
+                  </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn-sm btn-amber" onClick={enablePush}>
+                      Enable
+                    </button>
+                    <button
+                      className="btn-sm"
+                      onClick={() => setPushHidden(true)}
+                      style={{ color: "#777" }}
+                    >
+                      Not now
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="pg-head">
                 <div className="pg-title">
                   {filter === "all"
