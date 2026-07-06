@@ -32,7 +32,7 @@ function urlBase64ToUint8Array(base64String) {
 // Email-forwarding auto-tracking. Keep FORWARDING_ENABLED off until the
 // inbound-email backend (Cloudflare Email Routing / receiver function) is live —
 // otherwise users forward mail to an address nothing is listening on.
-const FORWARDING_ENABLED = false;
+const FORWARDING_ENABLED = true;
 const FORWARD_DOMAIN = "in.encorefriends.com";
 
 // ── RESELLERS ───────────────────────────────────────────────────────────────
