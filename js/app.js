@@ -33,7 +33,7 @@ function urlBase64ToUint8Array(base64String) {
 // inbound-email backend (Cloudflare Email Routing / receiver function) is live —
 // otherwise users forward mail to an address nothing is listening on.
 const FORWARDING_ENABLED = true;
-const FORWARD_DOMAIN = "in.encorefriends.com";
+const FORWARD_DOMAIN = "encorefriends.com";
 
 // ── RESELLERS ───────────────────────────────────────────────────────────────
 const RESELLERS = [
