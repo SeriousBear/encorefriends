@@ -29,6 +29,12 @@ function urlBase64ToUint8Array(base64String) {
   return arr;
 }
 
+// Email-forwarding auto-tracking. Keep FORWARDING_ENABLED off until the
+// inbound-email backend (Cloudflare Email Routing / receiver function) is live —
+// otherwise users forward mail to an address nothing is listening on.
+const FORWARDING_ENABLED = false;
+const FORWARD_DOMAIN = "in.encorefriends.com";
+
 // ── RESELLERS ───────────────────────────────────────────────────────────────
 const RESELLERS = [
   {
@@ -449,10 +455,53 @@ const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 // Styles loaded from css/app.css
 
 // ── GMAIL SCAN ──────────────────────────────────────────────────────────────
+// Make sure Google Identity Services is loaded. Injects the script on demand
+// and waits for it, so the scan works even if the host page didn't include the
+// tag, or the user clicked Scan before it finished loading.
+function ensureGsi() {
+  return new Promise((resolve, reject) => {
+    if (window.google?.accounts?.oauth2) return resolve();
+    const poll = () => {
+      let tries = 0;
+      const iv = setInterval(() => {
+        if (window.google?.accounts?.oauth2) {
+          clearInterval(iv);
+          resolve();
+        } else if (++tries > 50) {
+          clearInterval(iv);
+          reject(
+            new Error(
+              "Google sign-in is blocked. If you have an ad blocker or privacy extension on, turn it off for this site (or try an incognito window) and scan again.",
+            ),
+          );
+        }
+      }, 100);
+    };
+    const existing = document.querySelector(
+      'script[src*="accounts.google.com/gsi/client"]',
+    );
+    if (existing) {
+      poll();
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true;
+    s.defer = true;
+    s.onload = poll;
+    s.onerror = () =>
+      reject(
+        new Error(
+          "Google sign-in is blocked. An ad blocker or privacy extension is the likely cause — turn it off for this site (or use an incognito window) and try again.",
+        ),
+      );
+    document.head.appendChild(s);
+  });
+}
+
 async function doScan(setSt, setPr, userId) {
   setSt("Connecting to Google…");
-  if (!window.google?.accounts?.oauth2)
-    throw new Error("Add the Google GSI script tag.");
+  await ensureGsi();
   const tc = window.google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: "https://www.googleapis.com/auth/gmail.readonly",
@@ -3104,6 +3153,355 @@ function DatePicker({ value, onChange }) {
   );
 }
 
+// ── EMAIL-FORWARDING SETUP (auto-tracking) ───────────────────────────────────
+// A friendly ~1-minute walkthrough: the user copies their private Encore
+// address, adds it to Gmail forwarding (which the backend auto-verifies), and
+// creates one filter so only ticket emails forward in.
+function MailConnect({ session, profile, onTokenReady, onClose }) {
+  const [token, setToken] = useState((profile && profile.forward_token) || "");
+  const [verified, setVerified] = useState(
+    !!(profile && profile.forward_verified),
+  );
+  const [confirmCode, setConfirmCode] = useState(
+    (profile && profile.forward_confirm_code) || "",
+  );
+  const [copied, setCopied] = useState("");
+
+  // Mint a private, unguessable token once, and save it to the profile.
+  useEffect(() => {
+    if (token || !session?.user?.id) return;
+    const t =
+      "e" +
+      (typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID().replace(/-/g, "")
+        : Math.random().toString(36).slice(2) + Date.now().toString(36));
+    (async () => {
+      await supabase
+        .from("profiles")
+        .update({ forward_token: t })
+        .eq("id", session.user.id);
+      setToken(t);
+      onTokenReady && onTokenReady(t);
+    })();
+  }, []);
+
+  // Once the backend auto-confirms the forward, it flips forward_verified.
+  useEffect(() => {
+    if (verified || !session?.user?.id) return;
+    const iv = setInterval(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("forward_verified, forward_confirm_code")
+        .eq("id", session.user.id)
+        .single();
+      if (data && data.forward_confirm_code)
+        setConfirmCode(data.forward_confirm_code);
+      if (data && data.forward_verified) {
+        setVerified(true);
+        clearInterval(iv);
+      }
+    }, 5000);
+    return () => clearInterval(iv);
+  }, [verified]);
+
+  const addr = token ? token + "@" + FORWARD_DOMAIN : "generating…";
+  const FILTER_QUERY =
+    '{"your tickets" "ticket confirmation" "order confirmation" "e-ticket" "booking confirmed" "you\'re going to" "your order"}';
+
+  const copy = (txt, which) => {
+    try {
+      if (navigator.clipboard) navigator.clipboard.writeText(txt);
+    } catch (e) {}
+    setCopied(which);
+    setTimeout(() => setCopied(""), 1600);
+  };
+
+  const card = {
+    background: "#0c0c0c",
+    border: "1px solid #1e1e1e",
+    borderRadius: 10,
+    padding: 18,
+    marginBottom: 14,
+  };
+  const num = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 24,
+    height: 24,
+    borderRadius: "50%",
+    background: "#F5A623",
+    color: "#000",
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 12,
+    fontWeight: 700,
+    marginRight: 10,
+    flexShrink: 0,
+  };
+  const stepHead = {
+    display: "flex",
+    alignItems: "center",
+    fontFamily: "'Bebas Neue',sans-serif",
+    fontSize: 19,
+    letterSpacing: 0.5,
+    color: "#eee",
+    marginBottom: 10,
+  };
+  const body = {
+    fontFamily: "'Syne',sans-serif",
+    fontSize: 13,
+    lineHeight: 1.55,
+    color: "#aaa",
+    margin: "0 0 12px 34px",
+  };
+  const ghost = {
+    display: "inline-block",
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "#F5A623",
+    border: "1px solid #2a2a2a",
+    borderRadius: 6,
+    padding: "8px 12px",
+    textDecoration: "none",
+    marginLeft: 34,
+  };
+  const copyBox = {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginLeft: 34,
+    marginBottom: 12,
+  };
+  const codeBox = {
+    flex: 1,
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 12,
+    background: "#000",
+    border: "1px solid #1e1e1e",
+    borderRadius: 6,
+    padding: "10px 12px",
+    wordBreak: "break-all",
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 200,
+        background: "#070707",
+        overflowY: "auto",
+      }}
+    >
+      <div
+        style={{ maxWidth: 560, margin: "0 auto", padding: "32px 18px 60px" }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 8,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 10,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: "#F5A623",
+            }}
+          >
+            Auto-tracking
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#666",
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 11,
+              cursor: "pointer",
+            }}
+          >
+            I'll do this later ✕
+          </button>
+        </div>
+
+        <h1
+          style={{
+            fontFamily: "'Bebas Neue',sans-serif",
+            fontSize: 38,
+            letterSpacing: 1,
+            color: "#fff",
+            margin: "0 0 6px",
+            lineHeight: 1,
+          }}
+        >
+          Track shows on autopilot
+        </h1>
+        <p
+          style={{
+            fontFamily: "'Syne',sans-serif",
+            fontSize: 14,
+            color: "#999",
+            margin: "0 0 24px",
+            lineHeight: 1.5,
+          }}
+        >
+          Set this up once and your concerts add themselves — every time you buy
+          a ticket, it just shows up. Takes about a minute, and you'll never tap
+          "add" again.
+        </p>
+
+        <div style={card}>
+          <div style={stepHead}>
+            <span style={num}>1</span> Copy your private Encore address
+          </div>
+          <div style={copyBox}>
+            <code style={{ ...codeBox, color: "#F5A623" }}>{addr}</code>
+            <button
+              onClick={() => copy(addr, "addr")}
+              className="btn-sm btn-amber"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              {copied === "addr" ? "Copied ✓" : "Copy"}
+            </button>
+          </div>
+          <p style={body}>
+            This one's yours alone. It isn't an inbox you check — just a private
+            drop box where Gmail tucks your ticket emails so Encore can read
+            them.
+          </p>
+        </div>
+
+        <div style={card}>
+          <div style={stepHead}>
+            <span style={num}>2</span> Paste it into Gmail
+          </div>
+          <p style={body}>
+            Open Gmail's forwarding settings, click{" "}
+            <b style={{ color: "#ccc" }}>Add a forwarding address</b>, paste your
+            address, and hit Next → Proceed.
+          </p>
+          <a
+            href="https://mail.google.com/mail/u/0/#settings/fwdandpop"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={ghost}
+          >
+            Open Gmail forwarding ↗
+          </a>
+          <div
+            style={{
+              marginLeft: 34,
+              marginTop: 14,
+              fontFamily: "'Syne',sans-serif",
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            {verified ? (
+              <span style={{ color: "#5cc46a" }}>
+                ✓ Verified — Gmail's all set.
+              </span>
+            ) : confirmCode ? (
+              <span style={{ color: "#aaa" }}>
+                Almost there — if Gmail still says "pending," paste this code
+                into that forwarding screen:{" "}
+                <b
+                  style={{
+                    color: "#F5A623",
+                    fontFamily: "'DM Mono',monospace",
+                  }}
+                >
+                  {confirmCode}
+                </b>
+              </span>
+            ) : (
+              <span style={{ color: "#888" }}>
+                Gmail will ask to verify it — but you don't have to hunt for a
+                code. Encore catches the confirmation and approves it for you in
+                a few seconds.
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div style={card}>
+          <div style={stepHead}>
+            <span style={num}>3</span> Choose what forwards
+          </div>
+          <p style={body}>
+            One filter keeps it to ticket emails only — nothing else leaves your
+            inbox. In Gmail filters, click{" "}
+            <b style={{ color: "#ccc" }}>Create a new filter</b> and paste this
+            into the <b style={{ color: "#ccc" }}>Has the words</b> box:
+          </p>
+          <div style={copyBox}>
+            <code style={{ ...codeBox, color: "#ccc", fontSize: 11.5 }}>
+              {FILTER_QUERY}
+            </code>
+            <button
+              onClick={() => copy(FILTER_QUERY, "q")}
+              className="btn-sm btn-amber"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              {copied === "q" ? "Copied ✓" : "Copy"}
+            </button>
+          </div>
+          <p style={body}>
+            Then <b style={{ color: "#ccc" }}>Create filter</b> → check{" "}
+            <b style={{ color: "#ccc" }}>Forward it to</b> → pick your Encore
+            address → <b style={{ color: "#ccc" }}>Create filter</b>. That's it.
+          </p>
+          <a
+            href="https://mail.google.com/mail/u/0/#settings/filters"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={ghost}
+          >
+            Open Gmail filters ↗
+          </a>
+        </div>
+
+        <div
+          style={{
+            background: verified ? "rgba(92,196,106,0.08)" : "#0c0c0c",
+            border:
+              "1px solid " + (verified ? "rgba(92,196,106,0.4)" : "#1e1e1e"),
+            borderRadius: 10,
+            padding: 16,
+            textAlign: "center",
+            fontFamily: "'Syne',sans-serif",
+            fontSize: 13,
+            color: verified ? "#9fd9a0" : "#888",
+            margin: "4px 0 20px",
+          }}
+        >
+          {verified
+            ? "✓ Connected. New tickets land here on their own from now on."
+            : "Once Gmail's set, new ticket emails flow in automatically — even when Encore is closed."}
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <button
+            onClick={onClose}
+            className="btn-amber"
+            style={{ padding: "12px 28px" }}
+          >
+            {verified ? "Done" : "Got it"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── ONBOARDING WALKTHROUGH ───────────────────────────────────────────────────
 // Shown once, right after a new user signs in, before they reach the app.
 // name + handle are required; location, genres, artists are optional.
@@ -3652,6 +4050,8 @@ function App() {
   const [detail, setDetail] = useState(null);
   const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported
   const [pushHidden, setPushHidden] = useState(false);
+  const [mailConnect, setMailConnect] = useState(false); // forwarding walkthrough overlay
+  const [mailDismissed, setMailDismissed] = useState(false);
   const [showAddC, setShowAddC] = useState(false);
   const [showAddF, setShowAddF] = useState(false); // desktop add friend
   const [newFN, setNewFN] = useState("");
@@ -3703,6 +4103,33 @@ function App() {
       .catch(() => setPushState("unsupported"));
   }, []);
 
+  // Live auto-popup: when a show is inserted (e.g. a forwarded ticket lands, or
+  // another device adds one), slide it into the feed without a refresh.
+  useEffect(() => {
+    if (typeof supabase.channel !== "function") return;
+    const ch = supabase
+      .channel("concerts-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "concerts" },
+        (payload) => {
+          const c = payload.new;
+          if (!c || !c.id) return;
+          const mine = session?.user?.id && c.owner_id === session.user.id;
+          setDbConcerts((p) =>
+            p.some((x) => x.id === c.id)
+              ? p
+              : [...p, { ...c, attendees: mine ? [c.owner_id] : [] }],
+          );
+          if (mine) toast("🎟️ Added from your inbox — " + (c.artist || "show"));
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [session]);
+
   // ── EARLY AUTH RETURNS (after all hooks) ──
   if (authLoading || (session && !profileChecked))
     return (
@@ -3741,7 +4168,10 @@ function App() {
       <Onboarding
         session={session}
         profile={profile}
-        onComplete={(p) => setProfile(p)}
+        onComplete={(p) => {
+          setProfile(p);
+          if (FORWARDING_ENABLED) setMailConnect(true);
+        }}
       />
     );
 
@@ -4445,6 +4875,52 @@ function App() {
                   </div>
                 </div>
               )}
+              {FORWARDING_ENABLED &&
+                !isGuest &&
+                !profile?.forward_verified &&
+                !mailDismissed &&
+                (pushState !== "prompt" || pushHidden) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      background: "#111",
+                      border: "1px solid #1e1e1e",
+                      borderRadius: 8,
+                      padding: "12px 14px",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "'Syne',sans-serif",
+                        fontSize: 13,
+                        color: "#ccc",
+                      }}
+                    >
+                      📥 Add your shows automatically from email — about a
+                      minute to set up.
+                    </span>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        className="btn-sm btn-amber"
+                        onClick={() => setMailConnect(true)}
+                      >
+                        Set up
+                      </button>
+                      <button
+                        className="btn-sm"
+                        onClick={() => setMailDismissed(true)}
+                        style={{ color: "#777" }}
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  </div>
+                )}
               <div className="pg-head">
                 <div className="pg-title">
                   {filter === "all"
@@ -4570,6 +5046,17 @@ function App() {
             <div className="scn">Reading Gmail…</div>
           </div>
         </div>
+      )}
+
+      {FORWARDING_ENABLED && mailConnect && (
+        <MailConnect
+          session={session}
+          profile={profile}
+          onTokenReady={(t) =>
+            setProfile((p) => ({ ...(p || {}), forward_token: t }))
+          }
+          onClose={() => setMailConnect(false)}
+        />
       )}
 
       {/* ADD CONCERT SHEET */}
