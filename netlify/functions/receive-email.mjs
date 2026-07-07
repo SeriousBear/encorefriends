@@ -135,50 +135,24 @@ export default async (req) => {
 
   const bodyText = text || (html ? html.replace(/<[^>]+>/g, " ") : "");
 
-  const _lc = bodyText.toLowerCase();
-  const _i = _lc.indexOf("confirmation code");
-  const _dbg =
-    _i >= 0
-      ? "CODECTX: " +
-        bodyText.slice(_i, _i + 90).replace(/https?:\/\/\S+/g, "[url]")
-      : "NOCODE len=" +
-        bodyText.length +
-        " has_confirm=" +
-        _lc.includes("confirm") +
-        " sample=" +
-        bodyText.slice(2000, 2200).replace(/https?:\/\/\S+/g, "[url]");
-  await sb
-    .from("profiles")
-    .update({ forward_confirm_code: _dbg })
-    .eq("id", userId);
-  return json({ ok: true, kind: "debug2" });
-
-
   // ── Gmail's forwarding-confirmation email ──
+  // This email carries no numeric code — only a confirmation LINK that must be
+  // clicked in a real browser (a server GET can't finalize it). Extract the
+  // link and store it so the user can finish verifying in one click.
   if (
     /forwarding-noreply@google\.com/i.test(from) ||
     /forwarding confirmation/i.test(subject)
   ) {
-    const code =
-      (subject.match(/#\s*(\d{8,10})/) || [])[1] ||
-      (bodyText.match(/confirmation code[\s\S]{0,80}?(\d{6,10})/i) || [])[1] ||
-      (bodyText.match(/\b(\d{9})\b/) || [])[1] ||
-      null;
-    // TEMP debug: if no code parsed, capture what we actually received so the
-    // extraction can be corrected, then remove this.
-    const value =
-      code ||
-      "DBG subj=" +
-        String(subject || "").slice(0, 90) +
-        " ||body=" +
-        String(bodyText || "")
-          .replace(/\s+/g, " ")
-          .slice(0, 400);
-    await sb
-      .from("profiles")
-      .update({ forward_confirm_code: value })
-      .eq("id", userId);
-    return json({ ok: true, kind: "gmail-confirm", code: !!code });
+    const linkM = bodyText.match(
+      /https:\/\/mail(?:-settings)?\.google\.com\/[^\s"'<>]+/i,
+    );
+    const link = linkM ? linkM[0].replace(/[)\]>.,"']+$/, "") : null;
+    if (link)
+      await sb
+        .from("profiles")
+        .update({ forward_confirm_code: link })
+        .eq("id", userId);
+    return json({ ok: true, kind: "gmail-confirm", link: !!link });
   }
 
   // ── A real forwarded email → forwarding is working. ──
