@@ -21,7 +21,7 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const FORWARD_DOMAIN = "in.encorefriends.com";
+const FORWARD_DOMAIN = "encorefriends.com";
 
 // Same extraction contract as the in-app scan (js/app.js doScan).
 const PARSE_SYSTEM = `You are an expert MUSIC concert ticket email parser. Your job is to extract ONLY confirmed ticket PURCHASES for MUSIC events.
