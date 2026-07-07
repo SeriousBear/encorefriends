@@ -142,28 +142,24 @@ export default async (req) => {
   ) {
     const code =
       (subject.match(/#\s*(\d{8,10})/) || [])[1] ||
-      (bodyText.match(/confirmation code[\s\S]{0,60}?(\d{8,10})/i) || [])[1] ||
+      (bodyText.match(/confirmation code[\s\S]{0,80}?(\d{6,10})/i) || [])[1] ||
       (bodyText.match(/\b(\d{9})\b/) || [])[1] ||
       null;
-    const linkM = bodyText.match(
-      /https:\/\/mail(?:-settings)?\.google\.com\/\S+/i,
-    );
-    let confirmed = false;
-    if (linkM) {
-      try {
-        const link = linkM[0].replace(/[)>."'\]]+$/, "");
-        const r = await fetch(link, { redirect: "follow" });
-        confirmed = r.ok;
-      } catch (e) {
-        /* leave confirmed=false; the code fallback covers it */
-      }
-    }
-    const upd = {};
-    if (code) upd.forward_confirm_code = code;
-    if (confirmed) upd.forward_verified = true;
-    if (Object.keys(upd).length)
-      await sb.from("profiles").update(upd).eq("id", userId);
-    return json({ ok: true, kind: "gmail-confirm", confirmed, code: !!code });
+    // TEMP debug: if no code parsed, capture what we actually received so the
+    // extraction can be corrected, then remove this.
+    const value =
+      code ||
+      "DBG subj=" +
+        String(subject || "").slice(0, 90) +
+        " ||body=" +
+        String(bodyText || "")
+          .replace(/\s+/g, " ")
+          .slice(0, 400);
+    await sb
+      .from("profiles")
+      .update({ forward_confirm_code: value })
+      .eq("id", userId);
+    return json({ ok: true, kind: "gmail-confirm", code: !!code });
   }
 
   // ── A real forwarded email → forwarding is working. ──
