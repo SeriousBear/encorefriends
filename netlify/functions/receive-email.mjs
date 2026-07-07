@@ -140,8 +140,11 @@ export default async (req) => {
     /forwarding-noreply@google\.com/i.test(from) ||
     /forwarding confirmation/i.test(subject)
   ) {
-    const codeM = bodyText.match(/\b(\d{9,10})\b/);
-    const code = codeM ? codeM[1] : null;
+    const code =
+      (subject.match(/#\s*(\d{8,10})/) || [])[1] ||
+      (bodyText.match(/confirmation code[\s\S]{0,60}?(\d{8,10})/i) || [])[1] ||
+      (bodyText.match(/\b(\d{9})\b/) || [])[1] ||
+      null;
     const linkM = bodyText.match(
       /https:\/\/mail(?:-settings)?\.google\.com\/\S+/i,
     );
