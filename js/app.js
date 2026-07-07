@@ -3165,6 +3165,9 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
   const [confirmCode, setConfirmCode] = useState(
     (profile && profile.forward_confirm_code) || "",
   );
+  const [confirmLink, setConfirmLink] = useState(
+    (profile && profile.forward_confirm_link) || "",
+  );
   const [copied, setCopied] = useState("");
 
   // Mint a private, unguessable token once, and save it to the profile.
@@ -3191,11 +3194,13 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     const iv = setInterval(async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("forward_verified, forward_confirm_code")
+        .select("forward_verified, forward_confirm_code, forward_confirm_link")
         .eq("id", session.user.id)
         .single();
       if (data && data.forward_confirm_code)
         setConfirmCode(data.forward_confirm_code);
+      if (data && data.forward_confirm_link)
+        setConfirmLink(data.forward_confirm_link);
       if (data && data.forward_verified) {
         setVerified(true);
         clearInterval(iv);
@@ -3214,6 +3219,14 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     } catch (e) {}
     setCopied(which);
     setTimeout(() => setCopied(""), 1600);
+  };
+
+  // Copy what they'll need to paste, then drop them on the right Gmail screen.
+  const openWith = (txt, url) => {
+    try {
+      if (navigator.clipboard && txt) navigator.clipboard.writeText(txt);
+    } catch (e) {}
+    window.open(url, "_blank", "noopener");
   };
 
   const card = {
@@ -3388,14 +3401,18 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             <b style={{ color: "#ccc" }}>Add a forwarding address</b>, paste your
             address, and hit Next → Proceed.
           </p>
-          <a
-            href="https://mail.google.com/mail/u/0/#settings/fwdandpop"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={ghost}
+          <button
+            type="button"
+            onClick={() =>
+              openWith(
+                addr,
+                "https://mail.google.com/mail/u/0/#settings/fwdandpop",
+              )
+            }
+            style={{ ...ghost, background: "none", cursor: "pointer" }}
           >
-            Open Gmail forwarding ↗
-          </a>
+            Open Gmail forwarding — address copied ↗
+          </button>
           <div
             style={{
               marginLeft: 34,
@@ -3409,10 +3426,25 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               <span style={{ color: "#5cc46a" }}>
                 ✓ Verified — Gmail's all set.
               </span>
+            ) : confirmLink ? (
+              <div>
+                <div style={{ color: "#aaa", marginBottom: 8 }}>
+                  Gmail sent its confirmation — one tap to finish. This opens
+                  Google; just hit <b style={{ color: "#ccc" }}>Confirm</b>:
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.open(confirmLink, "_blank", "noopener")
+                  }
+                  className="btn-sm btn-amber"
+                >
+                  Finish verifying in Gmail →
+                </button>
+              </div>
             ) : confirmCode ? (
               <span style={{ color: "#aaa" }}>
-                Almost there — if Gmail still says "pending," paste this code
-                into that forwarding screen:{" "}
+                Almost there — enter this code on Gmail's forwarding screen:{" "}
                 <b
                   style={{
                     color: "#F5A623",
@@ -3424,9 +3456,9 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               </span>
             ) : (
               <span style={{ color: "#888" }}>
-                Gmail will ask to verify it — but you don't have to hunt for a
-                code. Encore catches the confirmation and approves it for you in
-                a few seconds.
+                <span style={{ opacity: 0.7 }}>◌</span> Waiting for Gmail's
+                confirmation… once you add the address above, a "Finish
+                verifying" button shows up here within a few seconds.
               </span>
             )}
           </div>
@@ -3459,14 +3491,18 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             <b style={{ color: "#ccc" }}>Forward it to</b> → pick your Encore
             address → <b style={{ color: "#ccc" }}>Create filter</b>. That's it.
           </p>
-          <a
-            href="https://mail.google.com/mail/u/0/#settings/filters"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={ghost}
+          <button
+            type="button"
+            onClick={() =>
+              openWith(
+                FILTER_QUERY,
+                "https://mail.google.com/mail/u/0/#settings/filters",
+              )
+            }
+            style={{ ...ghost, background: "none", cursor: "pointer" }}
           >
-            Open Gmail filters ↗
-          </a>
+            Open Gmail filters — filter text copied ↗
+          </button>
         </div>
 
         <div

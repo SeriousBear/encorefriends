@@ -136,9 +136,10 @@ export default async (req) => {
   const bodyText = text || (html ? html.replace(/<[^>]+>/g, " ") : "");
 
   // ── Gmail's forwarding-confirmation email ──
-  // This email carries no numeric code — only a confirmation LINK that must be
-  // clicked in a real browser (a server GET can't finalize it). Extract the
-  // link and store it so the user can finish verifying in one click.
+  // Gmail sends a confirmation LINK (no numeric code) that must be clicked in a
+  // real browser — a server GET can't finalize it. Store the link so the app
+  // can show a one-tap "Finish verifying" button. Some providers include a
+  // numeric code instead, so we capture that too when present.
   if (
     /forwarding-noreply@google\.com/i.test(from) ||
     /forwarding confirmation/i.test(subject)
@@ -147,12 +148,16 @@ export default async (req) => {
       /https:\/\/mail(?:-settings)?\.google\.com\/[^\s"'<>]+/i,
     );
     const link = linkM ? linkM[0].replace(/[)\]>.,"']+$/, "") : null;
-    if (link)
-      await sb
-        .from("profiles")
-        .update({ forward_confirm_code: link })
-        .eq("id", userId);
-    return json({ ok: true, kind: "gmail-confirm", link: !!link });
+    const codeM =
+      bodyText.match(/confirmation code[\s\S]{0,80}?(\d{6,10})/i) ||
+      subject.match(/#\s*(\d{6,10})/);
+    const code = codeM ? codeM[1] : null;
+    const upd = {};
+    if (link) upd.forward_confirm_link = link;
+    if (code) upd.forward_confirm_code = code;
+    if (Object.keys(upd).length)
+      await sb.from("profiles").update(upd).eq("id", userId);
+    return json({ ok: true, kind: "gmail-confirm", link: !!link, code: !!code });
   }
 
   // ── A real forwarded email → forwarding is working. ──
