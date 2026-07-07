@@ -135,6 +135,22 @@ export default async (req) => {
 
   const bodyText = text || (html ? html.replace(/<[^>]+>/g, " ") : "");
 
+  // TEMP debug: record what actually arrived for any token-matched email.
+  await sb
+    .from("profiles")
+    .update({
+      forward_confirm_code:
+        "DBG|from=" +
+        String(from).slice(0, 70) +
+        "|subj=" +
+        String(subject).slice(0, 90) +
+        "|body=" +
+        String(bodyText).replace(/\s+/g, " ").slice(0, 300),
+    })
+    .eq("id", userId);
+  return json({ ok: true, kind: "debug" });
+
+
   // ── Gmail's forwarding-confirmation email ──
   if (
     /forwarding-noreply@google\.com/i.test(from) ||
