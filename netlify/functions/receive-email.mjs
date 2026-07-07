@@ -135,20 +135,23 @@ export default async (req) => {
 
   const bodyText = text || (html ? html.replace(/<[^>]+>/g, " ") : "");
 
-  // TEMP debug: record what actually arrived for any token-matched email.
+  const _lc = bodyText.toLowerCase();
+  const _i = _lc.indexOf("confirmation code");
+  const _dbg =
+    _i >= 0
+      ? "CODECTX: " +
+        bodyText.slice(_i, _i + 90).replace(/https?:\/\/\S+/g, "[url]")
+      : "NOCODE len=" +
+        bodyText.length +
+        " has_confirm=" +
+        _lc.includes("confirm") +
+        " sample=" +
+        bodyText.slice(2000, 2200).replace(/https?:\/\/\S+/g, "[url]");
   await sb
     .from("profiles")
-    .update({
-      forward_confirm_code:
-        "DBG|from=" +
-        String(from).slice(0, 70) +
-        "|subj=" +
-        String(subject).slice(0, 90) +
-        "|body=" +
-        String(bodyText).replace(/\s+/g, " ").slice(0, 300),
-    })
+    .update({ forward_confirm_code: _dbg })
     .eq("id", userId);
-  return json({ ok: true, kind: "debug" });
+  return json({ ok: true, kind: "debug2" });
 
 
   // ── Gmail's forwarding-confirmation email ──
