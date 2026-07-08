@@ -3229,6 +3229,12 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     window.open(url, "_blank", "noopener");
   };
 
+  // Gmail only exposes forwarding rules/filters on desktop, so phones get a
+  // simpler path: just forward tickets manually (no setup, no verification).
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+
   const card = {
     background: "#0c0c0c",
     border: "1px solid #1e1e1e",
@@ -3366,9 +3372,9 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             lineHeight: 1.5,
           }}
         >
-          Set this up once and your concerts add themselves — every time you buy
-          a ticket, it just shows up. Takes about a minute, and you'll never tap
-          "add" again.
+          {isMobile
+            ? "Forward any ticket email to your private Encore address and it shows up here — no setup needed, right from the Gmail app."
+            : "Set this up once and your concerts add themselves — every time you buy a ticket, it just shows up. Takes about a minute, and you'll never tap \"add\" again."}
         </p>
 
         <div style={card}>
@@ -3392,9 +3398,40 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           </p>
         </div>
 
-        <div style={card}>
-          <div style={stepHead}>
-            <span style={num}>2</span> Paste it into Gmail
+        {isMobile ? (
+          <div style={card}>
+            <div style={stepHead}>
+              <span style={num}>2</span> Forward your tickets
+            </div>
+            <p style={body}>
+              In the Gmail app, open a ticket confirmation → tap the{" "}
+              <b style={{ color: "#ccc" }}>Forward</b> arrow → send it to the
+              address above. It shows up in your feed within a few seconds.
+            </p>
+            <div
+              style={{
+                marginLeft: 34,
+                marginTop: 4,
+                padding: "12px 14px",
+                background: "#0c0c0c",
+                border: "1px solid #1e1e1e",
+                borderRadius: 8,
+                fontFamily: "'Syne',sans-serif",
+                fontSize: 12.5,
+                color: "#888",
+                lineHeight: 1.5,
+              }}
+            >
+              Want it fully hands-off, with no manual forwarding? Gmail only
+              lets you set up auto-forwarding on a computer — open Encore on a
+              laptop anytime and we'll walk you through the one-minute setup.
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={card}>
+              <div style={stepHead}>
+                <span style={num}>2</span> Paste it into Gmail
           </div>
           <p style={body}>
             Open Gmail's forwarding settings, click{" "}
@@ -3503,7 +3540,9 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           >
             Open Gmail filters — filter text copied ↗
           </button>
-        </div>
+            </div>
+          </>
+        )}
 
         <div
           style={{
@@ -3521,7 +3560,9 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
         >
           {verified
             ? "✓ Connected. New tickets land here on their own from now on."
-            : "Once Gmail's set, new ticket emails flow in automatically — even when Encore is closed."}
+            : isMobile
+              ? "Forward a ticket to your address above and it'll appear here in seconds."
+              : "Once Gmail's set, new ticket emails flow in automatically — even when Encore is closed."}
         </div>
 
         <div style={{ textAlign: "center" }}>
