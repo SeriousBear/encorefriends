@@ -1,20 +1,20 @@
 // netlify/functions/receive-email.mjs
 //
-// Receives forwarded ticket emails (and Gmail's forwarding-confirmation email)
-// for the auto-tracking feature, matches them to a user by their private
-// forward token, and saves any concerts — using the SAME parser as the manual
-// scan so results are identical. Saving triggers the existing notify-new-show
-// webhook (followers get pushed) and the client's realtime auto-popup.
+// Receives forwarded ticket emails (and Gmail's forwarding-confirmation email),
+// matches them to a user by their private forward token, and saves any concerts
+// using the SAME parser as the manual scan. Saving triggers the notify-new-show
+// webhook (followers pushed) and the client's realtime auto-popup.
 //
-// Point an inbound-email service at this function. With SendGrid Inbound Parse:
-//   • Add an MX record on in.encorefriends.com  ->  mx.sendgrid.net (priority 10)
-//   • SendGrid → Inbound Parse → host in.encorefriends.com, URL:
-//       https://encorefriends.com/.netlify/functions/receive-email?key=YOUR_SECRET
+// The Cloudflare Email Worker forwards the RAW MIME message; we parse it here
+// with postal-mime so Claude only ever sees clean body text (no headers, no
+// HTML, no attachments) — better parses, far fewer tokens. Form-data inbound
+// providers (SendGrid/Mailgun) are still supported as a fallback.
 //
 // Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, URL (Netlify sets this),
 //      RECEIVE_SECRET (optional; if set, the ?key= query must match)
 
 import { createClient } from "@supabase/supabase-js";
+import PostalMime from "postal-mime";
 
 const sb = createClient(
   process.env.SUPABASE_URL,
@@ -22,6 +22,7 @@ const sb = createClient(
 );
 
 const FORWARD_DOMAIN = "encorefriends.com";
+const HOURLY_LIMIT = 40; // forwards processed per user per hour (abuse/cost cap)
 
 // Same extraction contract as the in-app scan (js/app.js doScan).
 const PARSE_SYSTEM = `You are an expert MUSIC concert ticket email parser. Your job is to extract ONLY confirmed ticket PURCHASES for MUSIC events.
@@ -70,6 +71,21 @@ function tokenFromAddress(addr) {
   return m ? m[1] : null;
 }
 
+// Audit log for every forward — powers debugging, health checks, and the
+// per-user rate limit. Best-effort: never let logging break processing.
+async function logEvent(userId, subject, result, detail) {
+  try {
+    await sb.from("forward_events").insert({
+      user_id: userId,
+      subject: String(subject || "").slice(0, 200),
+      result,
+      detail: detail == null ? null : String(detail).slice(0, 300),
+    });
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 export default async (req) => {
   // Optional shared secret in the query string.
   if (process.env.RECEIVE_SECRET) {
@@ -78,8 +94,10 @@ export default async (req) => {
       return new Response("forbidden", { status: 403 });
   }
 
-  // Inbound providers post form-data (SendGrid/Mailgun); allow JSON too.
-  let to = "",
+  // Cloudflare worker posts { raw, to, from, envelope } as JSON; form-data
+  // inbound providers post parsed fields. Support both.
+  let raw = "",
+    to = "",
     from = "",
     subject = "",
     text = "",
@@ -100,6 +118,7 @@ export default async (req) => {
       envelope = f.get("envelope") || "";
     } else {
       const j = await req.json();
+      raw = j.raw || "";
       to = j.to || "";
       from = j.from || "";
       subject = j.subject || "";
@@ -111,9 +130,24 @@ export default async (req) => {
     return new Response("bad payload", { status: 400 });
   }
 
-  // Which private mailbox did this land in? Prefer the envelope recipient
-  // (the real delivery address) over the To header (which Gmail preserves as
-  // the user's own address when it forwards).
+  // Parse the raw MIME properly: strips headers, decodes the body, drops HTML
+  // and attachments — Claude sees only clean text.
+  if (raw) {
+    try {
+      const email = await new PostalMime().parse(raw);
+      subject = email.subject || subject;
+      from = (email.from && email.from.address) || from;
+      text =
+        email.text ||
+        (email.html ? email.html.replace(/<[^>]+>/g, " ") : "") ||
+        text;
+    } catch (e) {
+      /* fall back to whatever fields we were given */
+    }
+  }
+  const body = text || (html ? html.replace(/<[^>]+>/g, " ") : "");
+
+  // Which private mailbox did this land in? Prefer the envelope recipient.
   let token = null;
   try {
     const env = envelope ? JSON.parse(envelope) : null;
@@ -133,23 +167,32 @@ export default async (req) => {
   if (!prof) return json({ ok: false, reason: "unknown token" });
   const userId = prof.id;
 
-  const bodyText = text || (html ? html.replace(/<[^>]+>/g, " ") : "");
+  // ── Rate limit: cap forwards processed per user per hour. ──
+  const since = new Date(Date.now() - 3600 * 1000).toISOString();
+  const { count } = await sb
+    .from("forward_events")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", since);
+  if ((count || 0) >= HOURLY_LIMIT) {
+    await logEvent(userId, subject, "rate_limited", null);
+    return json({ ok: false, reason: "rate limited" });
+  }
 
   // ── Gmail's forwarding-confirmation email ──
   // Gmail sends a confirmation LINK (no numeric code) that must be clicked in a
-  // real browser — a server GET can't finalize it. Store the link so the app
-  // can show a one-tap "Finish verifying" button. Some providers include a
-  // numeric code instead, so we capture that too when present.
+  // real browser. Store it so the app can show a one-tap "Finish verifying"
+  // button. Some providers send a numeric code instead — capture that too.
   if (
     /forwarding-noreply@google\.com/i.test(from) ||
     /forwarding confirmation/i.test(subject)
   ) {
-    const linkM = bodyText.match(
+    const linkM = body.match(
       /https:\/\/mail(?:-settings)?\.google\.com\/[^\s"'<>]+/i,
     );
     const link = linkM ? linkM[0].replace(/[)\]>.,"']+$/, "") : null;
     const codeM =
-      bodyText.match(/confirmation code[\s\S]{0,80}?(\d{6,10})/i) ||
+      body.match(/confirmation code[\s\S]{0,80}?(\d{6,10})/i) ||
       subject.match(/#\s*(\d{6,10})/);
     const code = codeM ? codeM[1] : null;
     const upd = {};
@@ -157,13 +200,14 @@ export default async (req) => {
     if (code) upd.forward_confirm_code = code;
     if (Object.keys(upd).length)
       await sb.from("profiles").update(upd).eq("id", userId);
+    await logEvent(userId, subject, "confirm", link ? "link captured" : "no link");
     return json({ ok: true, kind: "gmail-confirm", link: !!link, code: !!code });
   }
 
   // ── A real forwarded email → forwarding is working. ──
   await sb.from("profiles").update({ forward_verified: true }).eq("id", userId);
 
-  // Parse with the same model + prompt as the manual scan.
+  // Parse with the same model + prompt as the manual scan (now on clean text).
   let concerts = [];
   try {
     const ai = await fetch(
@@ -178,8 +222,7 @@ export default async (req) => {
           messages: [
             {
               role: "user",
-              content:
-                (subject ? "Subject: " + subject + "\n\n" : "") + bodyText,
+              content: (subject ? "Subject: " + subject + "\n\n" : "") + body,
             },
           ],
         }),
@@ -193,6 +236,7 @@ export default async (req) => {
     const mm = t.match(/\[[\s\S]*\]/);
     if (mm) concerts = JSON.parse(mm[0]);
   } catch (e) {
+    await logEvent(userId, subject, "error", "parse failed: " + e.message);
     return json({ ok: false, reason: "parse failed", error: String(e) });
   }
 
@@ -200,41 +244,57 @@ export default async (req) => {
   for (const c of concerts) {
     if (!c || !c.artist || !c.date) continue;
     try {
-      const { data: existing } = await sb
-        .from("concerts")
-        .select("id")
-        .eq("owner_id", userId)
-        .eq("artist", c.artist)
-        .eq("date", c.date)
-        .maybeSingle();
-      if (existing) continue;
-
+      // Insert; the unique index on (owner_id, artist, date) makes dedup atomic.
       const { data } = await sb
         .from("concerts")
-        .insert({
-          owner_id: userId,
-          artist: c.artist,
-          venue: c.venue || "",
-          city: c.city || "",
-          date: c.date,
-          end_date: c.end_date || c.date,
-          source: c.source || "Email",
-          ticket_url: c.ticket_url || "",
-          is_festival: !!c.is_festival,
-          genres: [],
-          scanned_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-      if (data) {
+        .upsert(
+          {
+            owner_id: userId,
+            artist: c.artist,
+            venue: c.venue || "",
+            city: c.city || "",
+            date: c.date,
+            end_date: c.end_date || c.date,
+            source: c.source || "Email",
+            ticket_url: c.ticket_url || "",
+            is_festival: !!c.is_festival,
+            genres: [],
+            scanned_at: new Date().toISOString(),
+          },
+          { onConflict: "owner_id,artist,date", ignoreDuplicates: true },
+        )
+        .select();
+      const row = data && data[0];
+      if (row && row.id) {
         await sb
           .from("concert_attendees")
-          .insert({ concert_id: data.id, user_id: userId });
+          .insert({ concert_id: row.id, user_id: userId });
         saved++;
       }
     } catch (e) {
       /* skip individual failures */
     }
+  }
+
+  // ── Silent-failure feedback (#2): nothing parsed → tell the user. ──
+  if (saved === 0) {
+    await logEvent(
+      userId,
+      subject,
+      "no_show",
+      "parsed " + concerts.length + " item(s), 0 saved",
+    );
+    try {
+      await sb.from("notifications").insert({
+        user_id: userId,
+        type: "forward_no_show",
+        read: false,
+      });
+    } catch (e) {
+      /* notifications schema may differ; ignore */
+    }
+  } else {
+    await logEvent(userId, subject, "saved", saved + " show(s)");
   }
 
   return json({ ok: true, kind: "ticket", saved });
