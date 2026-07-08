@@ -3453,6 +3453,20 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           <div
             style={{
               marginLeft: 34,
+              marginTop: 6,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 11,
+              color: "#666",
+              lineHeight: 1.5,
+            }}
+          >
+            Panel didn't fully load? Click the ⚙ gear → See all settings →
+            Forwarding and POP/IMAP → Add a forwarding address, then paste
+            (your address is already copied).
+          </div>
+          <div
+            style={{
+              marginLeft: 34,
               marginTop: 14,
               fontFamily: "'Syne',sans-serif",
               fontSize: 13,
@@ -3540,6 +3554,19 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           >
             Open Gmail filters — filter text copied ↗
           </button>
+          <div
+            style={{
+              marginLeft: 34,
+              marginTop: 6,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 11,
+              color: "#666",
+              lineHeight: 1.5,
+            }}
+          >
+            Not showing? ⚙ gear → See all settings → Filters and Blocked
+            Addresses → Create a new filter (the filter text is copied).
+          </div>
             </div>
           </>
         )}
