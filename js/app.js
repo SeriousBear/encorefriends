@@ -8,8 +8,6 @@ const enc = encodeURIComponent;
 
 // ── CONFIGg ──────────────────────────────────────────────────────────────────
 const ANTHROPIC_API_KEY = "YOUR_ANTHROPIC_API_KEY_HERE";
-const GOOGLE_CLIENT_ID =
-  "534883382276-a4n9v88cgj5ob8i989hgukucpkkdka53.apps.googleusercontent.com";
 const SUPABASE_URL = "https://zfcehcqklrrfncihjwkk.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_LhcC2ZeRoWsD3eAGNIUfwg_iSJyJqip";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -461,441 +459,6 @@ const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
 // ── STYLES ──────────────────────────────────────────────────────────────────
 // Styles loaded from css/app.css
-
-// ── GMAIL SCAN ──────────────────────────────────────────────────────────────
-// Make sure Google Identity Services is loaded. Injects the script on demand
-// and waits for it, so the scan works even if the host page didn't include the
-// tag, or the user clicked Scan before it finished loading.
-function ensureGsi() {
-  return new Promise((resolve, reject) => {
-    if (window.google?.accounts?.oauth2) return resolve();
-    const poll = () => {
-      let tries = 0;
-      const iv = setInterval(() => {
-        if (window.google?.accounts?.oauth2) {
-          clearInterval(iv);
-          resolve();
-        } else if (++tries > 50) {
-          clearInterval(iv);
-          reject(
-            new Error(
-              "Google sign-in is blocked. If you have an ad blocker or privacy extension on, turn it off for this site (or try an incognito window) and scan again.",
-            ),
-          );
-        }
-      }, 100);
-    };
-    const existing = document.querySelector(
-      'script[src*="accounts.google.com/gsi/client"]',
-    );
-    if (existing) {
-      poll();
-      return;
-    }
-    const s = document.createElement("script");
-    s.src = "https://accounts.google.com/gsi/client";
-    s.async = true;
-    s.defer = true;
-    s.onload = poll;
-    s.onerror = () =>
-      reject(
-        new Error(
-          "Google sign-in is blocked. An ad blocker or privacy extension is the likely cause — turn it off for this site (or use an incognito window) and try again.",
-        ),
-      );
-    document.head.appendChild(s);
-  });
-}
-
-async function doScan(setSt, setPr, userId) {
-  setSt("Connecting to Google…");
-  await ensureGsi();
-  const tc = window.google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: "https://www.googleapis.com/auth/gmail.readonly",
-    callback: () => {},
-  });
-  const token = await new Promise((res, rej) => {
-    // Backstop: if the consent popup is closed or abandoned, the success
-    // callback never fires — so reject on error_callback and on a timeout,
-    // otherwise the scan would hang on "Connecting to Google…" forever.
-    const timer = setTimeout(
-      () => rej(new Error("Timed out connecting to Google.")),
-      120000,
-    );
-    tc.callback = (r) => {
-      clearTimeout(timer);
-      r.error ? rej(r) : res(r.access_token);
-    };
-    tc.error_callback = (e) => {
-      clearTimeout(timer);
-      rej(new Error((e && e.type) || "Google sign-in was cancelled."));
-    };
-    tc.requestAccessToken({ prompt: "consent" });
-  });
-
-  setPr(10);
-  setSt("Searching inbox…");
-
-  // Multiple search passes to maximize coverage across ALL ticket platforms
-  const searches = [
-    // Vendor domain passes are generated from TICKET_VENDORS just below this
-    // array, so adding a vendor to that registry also extends inbox coverage.
-    // Catch-all for noreply addresses from ticket senders
-    "from:(noreply OR no-reply OR notifications OR tickets OR orders) (ticket OR ticketing OR event OR concert OR booking OR admission)",
-    // RA specifically by domain
-    "from:ra.co OR from:residentadvisor.net",
-    // See Tickets specifically
-    "from:seetickets.us OR from:seetickets.com",
-    // Subject patterns — any sender
-    'subject:("your tickets" OR "your ticket" OR "ticket confirmation" OR "e-ticket" OR "order confirmation" OR "purchase confirmation")',
-    // Booking/order patterns
-    'subject:("booking confirmation" OR "your order" OR "your booking" OR "order #" OR "you\'re going")',
-    // Receipt-style — catches small venues and local promoters
-    "subject:(receipt OR confirmation) (ticket OR admission OR pass OR entry OR show OR concert OR event OR festival OR party)",
-    // Wide net — any ticket email in last 2 years
-    "subject:(ticket OR tickets OR admission) newer_than:2y",
-    // Payment plan emails — specifically targets Movement-style subjects
-    "from:seetickets.us subject:(payment OR order OR receipt)",
-    "subject:(payment plan) (festival OR concert OR show OR event OR ticket)",
-  ];
-
-  // Generate a domain-based search pass for every vendor in the registry,
-  // chunked so each Gmail query stays short. Adding a vendor above is enough
-  // to have its emails scanned here — no need to edit this list by hand.
-  for (let i = 0; i < TICKET_VENDORS.length; i += 6) {
-    const domains = TICKET_VENDORS.slice(i, i + 6).flatMap((v) => v.domains);
-    searches.push("from:(" + domains.map((d) => "@" + d).join(" OR ") + ")");
-  }
-
-  // Run all searches and deduplicate by message id
-  const seen = new Set();
-  const allMsgs = [];
-  console.log("=== ENCORE GMAIL SCAN START ===");
-  console.log(
-    "Got OAuth token:",
-    token ? "YES (" + token.substring(0, 20) + "...)" : "NO",
-  );
-  for (let s = 0; s < searches.length; s++) {
-    setPr(10 + Math.round((s / searches.length) * 25));
-    console.log("Search " + (s + 1) + "/" + searches.length + ":", searches[s]);
-    try {
-      const res = await fetch(
-        "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=" +
-          enc(searches[s]) +
-          "&maxResults=30",
-        { headers: { Authorization: "Bearer " + token } },
-      );
-      const data = await res.json();
-      console.log(
-        "  → Returned " +
-          (data.messages?.length || 0) +
-          " messages | Estimate: " +
-          (data.resultSizeEstimate || 0),
-      );
-      if (data.error) console.error("  → GMAIL API ERROR:", data.error);
-      for (const msg of data.messages || []) {
-        if (!seen.has(msg.id)) {
-          seen.add(msg.id);
-          allMsgs.push(msg);
-        }
-      }
-    } catch (e) {
-      console.error("  → Search failed:", e);
-    }
-  }
-  console.log("=== TOTAL UNIQUE EMAILS: " + allMsgs.length + " ===");
-
-  setPr(35);
-  setSt("Reading " + allMsgs.length + " emails…");
-
-  // Decode a base64url-encoded Gmail body part to a UTF-8 string
-  const b64urlDecode = (data) => {
-    try {
-      const bin = atob(data.replace(/-/g, "+").replace(/_/g, "/"));
-      // Handle UTF-8 multi-byte characters correctly
-      const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-      return new TextDecoder("utf-8").decode(bytes);
-    } catch (e) {
-      return "";
-    }
-  };
-
-  // Walk the MIME tree and return the best body source.
-  // Prefers text/html (richest content); falls back to text/plain.
-  const extractRawBody = (payload) => {
-    if (!payload) return { html: "", text: "" };
-    let html = "";
-    let text = "";
-    const walk = (part) => {
-      if (!part) return;
-      const mime = part.mimeType || "";
-      if (part.body?.data) {
-        if (mime === "text/html" && !html) html = b64urlDecode(part.body.data);
-        else if (mime === "text/plain" && !text)
-          text = b64urlDecode(part.body.data);
-      }
-      if (part.parts) part.parts.forEach(walk);
-    };
-    walk(payload);
-    return { html, text };
-  };
-
-  // Convert an HTML email body to clean plain text using the browser's own
-  // parser. Strips style/script/head content (not just tags), collapses
-  // whitespace, and caps length to keep token usage predictable.
-  const cleanEmailBody = (html) => {
-    try {
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      doc.querySelectorAll("style, script, head, title").forEach((el) =>
-        el.remove(),
-      );
-      const txt = doc.body?.innerText || doc.body?.textContent || "";
-      return txt.replace(/\s{2,}/g, " ").trim();
-    } catch (e) {
-      // Fallback: naive tag strip if DOMParser somehow fails
-      return html
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s{2,}/g, " ")
-        .trim();
-    }
-  };
-
-  // Find direct event-page links by scanning the RAW email (HTML + plain-text
-  // parts, lightly URL-decoded so links buried inside tracking redirects are
-  // still found) for each vendor's canonical event-URL pattern, then rebuilding
-  // a clean link. Robust to "View event" buttons whose href is a click-tracker,
-  // as long as the real event URL appears somewhere in the email.
-  const extractEventLinks = (html, text) => {
-    let raw = (html || "") + "\n" + (text || "");
-    raw += "\n" + raw.replace(/%2F/gi, "/").replace(/%3A/gi, ":");
-    const found = [];
-    for (const v of TICKET_VENDORS) {
-      if (!v.eventRx) continue;
-      const rx = new RegExp(v.eventRx.source, "ig");
-      let m;
-      while ((m = rx.exec(raw))) found.push(v.eventUrl(m[1]));
-    }
-    return [...new Set(found)].slice(0, 4);
-  };
-
-  // For festivals we link to the festival's own website (which then routes the
-  // buyer wherever they need). Collect external homepage links from the email —
-  // excluding ticket vendors (handled above) and obvious social/tracking/infra
-  // domains — and normalize to the site origin so the link is stable.
-  const SITE_DENY = [
-    "facebook.", "instagram.", "twitter.", "x.com", "youtube.", "youtu.be",
-    "spotify.", "soundcloud.", "tiktok.", "apple.com", "google.", "linkedin.",
-    "threads.net", "mailchimp", "list-manage", "sendgrid", "unsubscribe",
-  ];
-  const extractSiteLinks = (html) => {
-    try {
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      const origins = [];
-      for (const a of doc.querySelectorAll("a[href]")) {
-        const href = a.getAttribute("href") || "";
-        if (!/^https?:\/\//i.test(href)) continue;
-        const low = href.toLowerCase();
-        if (TICKET_VENDORS.some((v) => v.domains.some((d) => low.includes(d))))
-          continue;
-        if (SITE_DENY.some((d) => low.includes(d))) continue;
-        try {
-          const o = new URL(href).origin;
-          if (!origins.includes(o)) origins.push(o);
-        } catch (e) {}
-      }
-      return origins.slice(0, 4);
-    } catch (e) {
-      return [];
-    }
-  };
-
-  // Accept a ticket_url only if it's real: a proper URL that actually appeared
-  // in a scanned email (guards against the model inventing one). For regular
-  // shows it must sit on the known vendor's domain; for festivals it's the
-  // festival's own site, so the vendor-domain check doesn't apply.
-  const validTicketUrl = (url, source, isFestival) => {
-    if (!url || !/^https?:\/\//i.test(url)) return "";
-    if (!bodies.some((b) => b.includes(url))) return "";
-    if (isFestival) return url;
-    const v = findVendor(source);
-    if (v && !v.domains.some((d) => url.includes(d))) return "";
-    return url;
-  };
-
-  const BODY_CHAR_CAP = 800;
-
-  // Fetch full content for top 75 unique emails and extract clean body text
-  const bodies = [];
-  const toFetch = allMsgs.slice(0, 75);
-  for (let i = 0; i < toFetch.length; i++) {
-    try {
-      const m = await (
-        await fetch(
-          "https://gmail.googleapis.com/gmail/v1/users/me/messages/" +
-            toFetch[i].id +
-            "?format=full",
-          { headers: { Authorization: "Bearer " + token } },
-        )
-      ).json();
-      const subj =
-        (m.payload?.headers?.find((h) => h.name === "Subject") || {}).value ||
-        "";
-      const from =
-        (m.payload?.headers?.find((h) => h.name === "From") || {}).value || "";
-      const date =
-        (m.payload?.headers?.find((h) => h.name === "Date") || {}).value || "";
-
-      // Universal body extraction: decode the full body, clean it to plain
-      // text, and cap it. Fall back to the snippet if extraction is empty.
-      const { html, text } = extractRawBody(m.payload);
-      let bodyText = "";
-      if (html) bodyText = cleanEmailBody(html);
-      if (!bodyText && text) bodyText = text.replace(/\s{2,}/g, " ").trim();
-      if (!bodyText) bodyText = m.snippet || "";
-      bodyText = bodyText.slice(0, BODY_CHAR_CAP);
-
-      const eventLinks = extractEventLinks(html, text);
-      const siteLinks = extractSiteLinks(html);
-      bodies.push(
-        "From: " +
-          from +
-          "\nSubject: " +
-          subj +
-          "\nDate: " +
-          date +
-          "\nBody: " +
-          bodyText +
-          (eventLinks.length ? "\nLinks: " + eventLinks.join(" ") : "") +
-          (siteLinks.length ? "\nSite: " + siteLinks.join(" ") : ""),
-      );
-    } catch (e) {
-      /* skip failed fetches */
-    }
-    setPr(35 + Math.round((i / toFetch.length) * 40));
-  }
-
-  if (bodies.length === 0) return [];
-
-  setPr(78);
-  setSt("Parsing " + bodies.length + " emails with AI…");
-
-  const ai = await fetch("/.netlify/functions/claude", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-5",
-      max_tokens: 8000,
-      system: `You are an expert MUSIC concert ticket email parser. Your job is to extract ONLY confirmed ticket PURCHASES for MUSIC events.
-
-STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
-
-1. CONFIRMED PURCHASES ONLY — the user must have actually bought a ticket. Look for phrases like:
-   ✓ "Your order", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Order #", "Payment plan", "Installment payment"
-   ✗ DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Don't miss", "Just announced", "Save the date", advertisements, presale invites, refund/cancel notices, waitlist emails, "we thought you'd like"
-
-2. MUSIC EVENTS ONLY:
-   ✓ Concerts, DJ sets, festivals, club nights, raves, after-parties, music tours
-   ✗ DO NOT INCLUDE: comedy shows, sports events, theater, conferences, sporting events, podcasts, talks, speaking events, museum tickets, movies, food events
-
-3. MULTI-DAY FESTIVALS — return BOTH start_date and end_date. For single-day events, end_date equals start_date.
-
-4. PAYMENT PLAN DEDUPLICATION — if multiple payment confirmation emails reference the same event/order, include the EVENT only ONCE.
-
-Return ONLY a valid JSON array. Each object:
-{"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean}
-
-- artist: performer/band/DJ name. For festivals, use the festival name (e.g. "Movement Festival")
-- venue: the venue name from the email. If the venue is shown as "TBA", "To be announced", "secret location", or is missing, scan the email body for an explicit address or a "LOCATION:" line and use the place or address found there.
-- city: "City, State" — taken ONLY from a location, address, or city explicitly written somewhere in this email (header, ticket, or body text). If only a street address is given, use that address's city and state. NEVER guess or infer the city from the promoter, sender, artist, or your own knowledge. If no location is stated anywhere in the email, use "".
-- date: start date — REQUIRED
-- end_date: end date — for single-day shows equals date
-- source: ticketing platform (Ticketmaster, SeatGeek, RA, See Tickets, etc.)
-- ticket_url: the direct link for THIS show, copied EXACTLY from this email — never invented. For a FESTIVAL, use the festival's official website from this email's "Site:" line. For a regular show, use the matching event URL from the "Links:" line. If neither has a suitable link, use "".
-- is_festival: true if multi-day festival
-
-Deduplicate aggressively. Return [] if no qualifying purchases found.`,
-      messages: [{ role: "user", content: bodies.join("\n\n---EMAIL---\n\n") }],
-    }),
-  });
-
-  const d = await ai.json();
-  console.log("=== AI RESPONSE ===", d);
-  if (d.error) console.error("AI ERROR:", d.error);
-  const t = (d.content || [])
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("");
-  console.log("AI extracted text:", t);
-  const match = t.match(/\[[\s\S]*\]/);
-  if (!match) {
-    console.warn("No JSON array found in AI response");
-    return [];
-  }
-
-  const parsed = JSON.parse(match[0]);
-  console.log("=== PARSED CONCERTS:", parsed.length, "===", parsed);
-  setPr(92);
-  setSt("Saving to your account…");
-
-  // Save to Supabase if we have a userId
-  const saved = [];
-  if (userId) {
-    for (const c of parsed) {
-      try {
-        // Check if this concert already exists (artist+date for this user)
-        const { data: existing } = await supabase
-          .from("concerts")
-          .select("id")
-          .eq("owner_id", userId)
-          .eq("artist", c.artist)
-          .eq("date", c.date)
-          .maybeSingle();
-        if (existing) continue; // skip duplicate (same event across emails)
-
-        const { data, error } = await supabase
-          .from("concerts")
-          .insert({
-            owner_id: userId,
-            artist: c.artist,
-            venue: c.venue || "",
-            city: c.city || "",
-            date: c.date,
-            end_date: c.end_date || c.date,
-            source: findVendor(c.source)?.name || c.source || "Unknown",
-            ticket_url: validTicketUrl(c.ticket_url, c.source, c.is_festival),
-            is_festival: c.is_festival || false,
-            genres: [],
-            scanned_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-        if (data) {
-          await supabase.from("concert_attendees").insert({
-            concert_id: data.id,
-            user_id: userId,
-          });
-          saved.push({ ...data, attendees: [userId] });
-        }
-      } catch (e) {
-        /* skip errors */
-      }
-    }
-    return saved;
-  }
-
-  // Fallback — return without saving
-  return parsed.map((c, i) => ({
-    ...c,
-    ticket_url: validTicketUrl(c.ticket_url, c.source, c.is_festival),
-    id: Date.now() + i,
-    attendees: [0],
-  }));
-}
 
 // ── CONCERT CARD ─────────────────────────────────────────────────────────────
 function CCard({
@@ -1508,7 +1071,7 @@ function ProfilePage({
               <div className="empty-t">No Upcoming Shows</div>
               <div className="empty-s">
                 {isSelf
-                  ? "Add shows or scan Gmail."
+                  ? "Add a show or forward a ticket to track it."
                   : user.name + " hasn't tagged any upcoming shows yet."}
               </div>
             </div>
@@ -4786,9 +4349,6 @@ function App() {
     date: "",
     source: "Ticketmaster",
   });
-  const [scanning, setScanning] = useState(false);
-  const [scanSt, setScanSt] = useState("");
-  const [scanPr, setScanPr] = useState(0);
   const [notif, setNotif] = useState(null);
   const [errMsg, setErrMsg] = useState(null);
   const [pastShows] = useState([]);
@@ -5248,47 +4808,6 @@ function App() {
     setGenreView(null);
   };
 
-  const scanGmail = async () => {
-    if (!requireAuth()) return;
-    if (GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE") {
-      toast(
-        "Add your Google Client ID to app.js to enable Gmail scanning.",
-        true,
-      );
-      return;
-    }
-    setScanning(true);
-    setScanPr(0);
-    try {
-      const userId = session?.user?.id || null;
-      const r = await doScan(setScanSt, setScanPr, userId);
-      setScanPr(100);
-      setScanSt(
-        r.length
-          ? `Found ${r.length} show${r.length !== 1 ? "s" : ""}!`
-          : "No new shows found.",
-      );
-      if (userId) {
-        // Source of truth: re-pull from the DB so the dashboard shows every
-        // saved show — including ones a re-scan skipped as duplicates.
-        await reloadConcerts();
-      } else if (r.length) {
-        // Not signed in (legacy path): merge into the local view only.
-        const ex = new Set(liveConcerts.map((c) => c.artist + c.date));
-        setLiveConcerts((p) => [
-          ...p,
-          ...r.filter((x) => !ex.has(x.artist + x.date)),
-        ]);
-      }
-    } catch (e) {
-      setScanPr(100);
-      setScanSt("Scan failed.");
-      toast("Error: " + (e.message || e), true);
-    } finally {
-      setTimeout(() => setScanning(false), 900);
-    }
-  };
-
   const clearMyShows = async () => {
     if (!requireAuth()) return;
     if (!window.confirm("Delete ALL your shows? This can't be undone.")) return;
@@ -5517,16 +5036,8 @@ function App() {
                     + Add
                   </button>
                   <button
-                    className="btn-sm btn-primary"
-                    onClick={scanGmail}
-                    disabled={scanning}
-                  >
-                    {scanning ? "Scanning…" : "⟲ Scan Gmail"}
-                  </button>
-                  <button
                     className="btn-sm"
                     onClick={clearMyShows}
-                    disabled={scanning}
                     title="Delete all your shows"
                   >
                     ⌫ Clear
@@ -5842,7 +5353,8 @@ function App() {
                   <div className="empty-i">🎵</div>
                   <div className="empty-t">No Shows Yet</div>
                   <div className="empty-s">
-                    Scan Gmail or add a show manually to get started.
+                    Add a show manually, or forward a ticket to track it
+                    automatically.
                   </div>
                 </div>
               ) : filtered.length === 0 ? (
@@ -5922,19 +5434,6 @@ function App() {
       </div>
 
       {/* SCAN OVERLAY */}
-      {scanning && (
-        <div className="scov">
-          <div className="scbx">
-            <div className="sct pulse">SCANNING</div>
-            <div className="scs">{scanSt}</div>
-            <div className="pb">
-              <div className="pf" style={{ width: scanPr + "%" }} />
-            </div>
-            <div className="scn">Reading Gmail…</div>
-          </div>
-        </div>
-      )}
-
       {FORWARDING_ENABLED && mailConnect && (
         <MailConnect
           session={session}
