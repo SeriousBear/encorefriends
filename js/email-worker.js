@@ -1,42 +1,26 @@
-// email-worker.js — Cloudflare Email Worker
+// email-worker.js — Cloudflare Email Worker (paste into "Create my own")
 //
-// Runs on the Cloudflare zone that owns in.encorefriends.com. When a forwarded
-// ticket email arrives, it parses the MIME and POSTs clean JSON to Encore's
-// receive-email Netlify function (which matches the user, auto-confirms Gmail,
-// parses, and saves). Free: the first 100k email triggers/day are included.
+// Forwards the RAW email to Encore's receive-email function, which parses the
+// MIME properly (postal-mime) so the parser only sees clean text. No imports,
+// so it pastes straight into the Cloudflare dashboard editor.
 //
-// Setup:
-//   1. Your domain's DNS must be on Cloudflare, with Email Routing enabled.
-//   2. npm i postal-mime
-//   3. In wrangler.toml add:
-//        name = "encore-email"
-//        main = "email-worker.js"
-//        compatibility_date = "2026-01-01"
-//        [vars]
-//        RECEIVER_URL = "https://encorefriends.com/.netlify/functions/receive-email?key=YOUR_RECEIVE_SECRET"
-//   4. wrangler deploy
-//   5. Cloudflare dashboard → Email → Email Routing → route all of
-//      in.encorefriends.com (a catch-all) to this Worker.
-
-import PostalMime from "postal-mime";
+// After deploying, add a Worker Secret named RECEIVER_URL:
+//   https://encorefriends.com/.netlify/functions/receive-email?key=YOUR_RECEIVE_SECRET
 
 export default {
   async email(message, env) {
-    let parsed = {};
+    let raw = "";
     try {
-      parsed = await PostalMime.parse(message.raw);
-    } catch (e) {
-      /* fall back to headers only */
-    }
+      raw = await new Response(message.raw).text();
+    } catch (e) {}
+
     const payload = {
-      // message.to is the envelope recipient — i.e. <token>@in.encorefriends.com
-      to: message.to,
+      raw, // full MIME — the receiver parses it with a real library
+      to: message.to, // envelope recipient = <token>@encorefriends.com
       from: message.from,
-      subject: parsed.subject || message.headers.get("subject") || "",
-      text: parsed.text || "",
-      html: parsed.html || "",
       envelope: { to: [message.to], from: message.from },
     };
+
     try {
       await fetch(env.RECEIVER_URL, {
         method: "POST",

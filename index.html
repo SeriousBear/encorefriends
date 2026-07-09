@@ -4,6 +4,15 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
+  <!-- ── GOOGLE ANALYTICS (GA4) ── -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4SG8J3LL9M"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4SG8J3LL9M');
+  </script>
+
   <!-- ── PRIMARY SEO ── -->
   <title>Encore — Never Miss a Show | Concert Tracker & Social App</title>
   <meta name="description" content="Encore scans your Gmail for concert tickets, shows what your friends are going to, and alerts you before shows sell out. The social concert tracker built for people who actually go to shows."/>
@@ -343,6 +352,131 @@
         <p class="pf-body">No app store required. Load it on any server, open it on any browser. Add to your home screen on iOS or Android for a native app feel.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     PRIVACY
+══════════════════════════════════════════ -->
+<section class="enc-priv" aria-labelledby="enc-priv-heading">
+  <style>
+    .enc-priv{
+      --gold:#F5A623; --ink:#070707; --card:#111; --line:#1e1e1e;
+      background:var(--ink); color:#eaeaea; padding:96px 22px;
+      font-family:'Syne',sans-serif;
+    }
+    .enc-priv *{ box-sizing:border-box; }
+    .enc-priv .wrap{ max-width:940px; margin:0 auto; }
+    .enc-priv .eyebrow{
+      font-family:'DM Mono',monospace; font-size:11px; letter-spacing:4px;
+      text-transform:uppercase; color:var(--gold); margin:0 0 18px;
+    }
+    .enc-priv h2{
+      font-family:'Bebas Neue',sans-serif; font-weight:400;
+      font-size:clamp(44px,8vw,88px); line-height:.92; letter-spacing:1px;
+      margin:0 0 20px; color:#fff;
+    }
+    .enc-priv h2 em{ color:var(--gold); font-style:normal; }
+    .enc-priv .lede{
+      font-size:clamp(15px,2.2vw,19px); line-height:1.55; color:#a6a6a6;
+      max-width:560px; margin:0 0 44px;
+    }
+    .enc-priv .stub{
+      display:flex; background:var(--card); border:1px solid var(--line);
+      border-radius:14px; overflow:hidden; position:relative;
+    }
+    .enc-priv .stub .side{ flex:1; padding:30px 30px 32px; min-width:0; }
+    .enc-priv .stub .side .tag{
+      font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2.5px;
+      text-transform:uppercase; margin:0 0 14px;
+    }
+    .enc-priv .stub .seen .tag{ color:var(--gold); }
+    .enc-priv .stub .unseen .tag{ color:#5a5a5a; }
+    .enc-priv .stub .glyph{ font-size:30px; line-height:1; margin-bottom:12px; }
+    .enc-priv .stub .unseen .glyph{ filter:grayscale(1) opacity(.5); }
+    .enc-priv .stub .big{
+      font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:.5px;
+      line-height:1; margin:0 0 6px;
+    }
+    .enc-priv .stub .seen .big{ color:#fff; }
+    .enc-priv .stub .unseen .big{ color:#6a6a6a; }
+    .enc-priv .stub .small{ font-size:13px; color:#8a8a8a; line-height:1.45; margin:0; }
+    .enc-priv .stub .unseen .small{ color:#5a5a5a; }
+    .enc-priv .stub .unseen{ background:#0d0d0d; }
+    .enc-priv .perf{
+      width:0; border-left:2px dashed #2b2b2b; margin:18px 0; position:relative;
+    }
+    .enc-priv .perf::before,.enc-priv .perf::after{
+      content:""; position:absolute; left:-9px; width:18px; height:18px;
+      border-radius:50%; background:var(--ink); border:1px solid var(--line);
+    }
+    .enc-priv .perf::before{ top:-27px; }
+    .enc-priv .perf::after{ bottom:-27px; }
+    .enc-priv .steps{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:22px;
+    }
+    .enc-priv .step{ padding:22px 20px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+    .enc-priv .step .st{ font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:.5px; color:#fff; margin:10px 0 5px; }
+    .enc-priv .step .sg{ font-size:22px; }
+    .enc-priv .step p{ font-size:13px; color:#8a8a8a; line-height:1.45; margin:0; }
+    .enc-priv .fine{
+      font-family:'DM Mono',monospace; font-size:12px; color:#6a6a6a;
+      letter-spacing:.5px; margin:34px 0 0;
+    }
+    .enc-priv .fine b{ color:#bdbdbd; font-weight:500; }
+    @media (prefers-reduced-motion:no-preference){
+      .enc-priv .reveal{ opacity:0; transform:translateY(18px); animation:encUp .7s cubic-bezier(.2,.8,.2,1) forwards; }
+      .enc-priv .d2{ animation-delay:.12s } .enc-priv .d3{ animation-delay:.22s } .enc-priv .d4{ animation-delay:.32s }
+      @keyframes encUp{ to{ opacity:1; transform:none; } }
+    }
+    @media (max-width:640px){
+      .enc-priv{ padding:64px 18px; }
+      .enc-priv .stub{ flex-direction:column; }
+      .enc-priv .perf{ width:auto; height:0; border-left:0; border-top:2px dashed #2b2b2b; margin:0 18px; }
+      .enc-priv .perf::before{ top:-9px; left:-27px; } .enc-priv .perf::after{ bottom:auto; top:-9px; left:auto; right:-27px; }
+      .enc-priv .steps{ grid-template-columns:1fr; }
+    }
+  </style>
+  <div class="wrap">
+    <p class="eyebrow reveal">Privacy, by design</p>
+    <h2 id="enc-priv-heading" class="reveal">Your inbox<br/>stays <em>yours.</em></h2>
+    <p class="lede reveal d2">
+      Encore never asks to read your whole inbox. You forward the ticket emails
+      you want tracked — and that's the only thing it ever sees.
+    </p>
+    <div class="stub reveal d3">
+      <div class="side seen">
+        <p class="tag">Encore sees</p>
+        <div class="glyph">🎟️</div>
+        <p class="big">One ticket</p>
+        <p class="small">The confirmation you chose to forward. Nothing more.</p>
+      </div>
+      <div class="perf"></div>
+      <div class="side unseen">
+        <p class="tag">Encore never sees</p>
+        <div class="glyph">📥</div>
+        <p class="big">The rest of your inbox</p>
+        <p class="small">No mailbox access. No scanning. No permissions to regret.</p>
+      </div>
+    </div>
+    <div class="steps reveal d4">
+      <div class="step">
+        <div class="sg">📨</div>
+        <div class="st">Forward a ticket</div>
+        <p>Automatically, or by hand — from any inbox, any device.</p>
+      </div>
+      <div class="step">
+        <div class="sg">🎶</div>
+        <div class="st">Encore reads it</div>
+        <p>Artist, venue and date, pulled out and sorted for you.</p>
+      </div>
+      <div class="step">
+        <div class="sg">👯</div>
+        <div class="st">Your crew sees it</div>
+        <p>Friends who follow you get a heads-up you're going.</p>
+      </div>
+    </div>
+    <p class="fine reveal d4">You forward only your tickets. <b>Everything else stays between you and your inbox.</b></p>
   </div>
 </section>
 

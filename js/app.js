@@ -363,6 +363,14 @@ const getUrgency = (ds) => {
 const daysUntil = (ds) =>
   Math.ceil((new Date(ds + "T00:00:00") - now0()) / 86400000);
 // Short, human relative time for shows that have already happened.
+// short relative time for a timestamp (notifications)
+const timeAgo = (ts) => {
+  const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return Math.floor(s / 60) + "m ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago";
+  return Math.floor(s / 86400) + "d ago";
+};
 const agoLabel = (dy) => {
   const a = Math.abs(dy);
   if (a <= 1) return "yesterday";
@@ -4043,6 +4051,612 @@ const btnNext = {
   cursor: "pointer",
 };
 
+// ── ADMIN DASHBOARD (gated to profile.is_admin) ──────────────────────────────
+function AdminPage({ onBack }) {
+  const [loading, setLoading] = useState(true);
+  const [counts, setCounts] = useState({});
+  const [users, setUsers] = useState([]);
+  const [uq, setUq] = useState("");
+  const [bugs, setBugs] = useState([]);
+  const [fwd, setFwd] = useState({
+    saved: 0,
+    no_show: 0,
+    error: 0,
+    rate_limited: 0,
+    confirm: 0,
+    failures: [],
+  });
+  const [taste, setTaste] = useState({ artists: [], venues: [] });
+  const [health, setHealth] = useState({ spotify: "…", places: "…" });
+  const [growth, setGrowth] = useState({
+    dau: 0,
+    wau: 0,
+    newWeek: 0,
+    verified: 0,
+    series: [],
+    sources: [],
+  });
+
+  const load = async () => {
+    setLoading(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+    const [prof, con, fol, be, fe] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select(
+          "id,name,handle,location,total_shows,created_at,onboarded,last_active,forward_verified",
+        )
+        .order("created_at", { ascending: false }),
+      supabase.from("concerts").select("artist,venue,date,source"),
+      supabase.from("follows").select("follower_id", { count: "exact", head: true }),
+      supabase
+        .from("bug_reports")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(25),
+      supabase
+        .from("forward_events")
+        .select("result,subject,created_at")
+        .gte("created_at", weekAgo)
+        .order("created_at", { ascending: false })
+        .limit(1000),
+    ]);
+    const profs = prof.data || [];
+    const cons = con.data || [];
+    setUsers(profs);
+    setCounts({
+      users: profs.length,
+      onboarded: profs.filter((p) => p.onboarded).length,
+      shows: cons.length,
+      upcoming: cons.filter((c) => c.date >= today).length,
+      follows: fol.count || 0,
+    });
+    const t = {
+      saved: 0,
+      no_show: 0,
+      error: 0,
+      rate_limited: 0,
+      confirm: 0,
+      failures: [],
+    };
+    (fe.data || []).forEach((e) => {
+      if (t[e.result] != null) t[e.result]++;
+      if (e.result === "no_show" || e.result === "error") t.failures.push(e);
+    });
+    setFwd(t);
+    setBugs(be.data || []);
+    const tally = (arr, key) => {
+      const m = {};
+      arr.forEach((c) => {
+        const v = (c[key] || "").trim();
+        if (v) m[v] = (m[v] || 0) + 1;
+      });
+      return Object.entries(m)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+    };
+    setTaste({ artists: tally(cons, "artist"), venues: tally(cons, "venue") });
+
+    // growth + engagement
+    const now = Date.now();
+    const dayMs = 864e5;
+    const within = (ts, days) =>
+      ts && now - new Date(ts).getTime() < days * dayMs;
+    const series = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now - i * dayMs).toISOString().slice(0, 10);
+      series.push({
+        d,
+        n: profs.filter((p) => (p.created_at || "").slice(0, 10) === d).length,
+      });
+    }
+    const sm = {};
+    cons.forEach((c) => {
+      const s = (c.source || "Other").trim() || "Other";
+      sm[s] = (sm[s] || 0) + 1;
+    });
+    setGrowth({
+      dau: profs.filter((p) => within(p.last_active, 1)).length,
+      wau: profs.filter((p) => within(p.last_active, 7)).length,
+      newWeek: profs.filter((p) => within(p.created_at, 7)).length,
+      verified: profs.filter((p) => p.forward_verified).length,
+      series,
+      sources: Object.entries(sm).sort((a, b) => b[1] - a[1]),
+    });
+    setLoading(false);
+    const ping = async (url) => {
+      try {
+        const r = await fetch(url);
+        return r.ok ? "ok" : "err " + r.status;
+      } catch (e) {
+        return "down";
+      }
+    };
+    setHealth({
+      spotify: await ping("/.netlify/functions/spotify-artist-search?q=test"),
+      places: await ping("/.netlify/functions/place-search?q=test"),
+    });
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const delUser = async (u) => {
+    if (
+      !window.confirm(
+        "Delete " +
+          (u.name || u.handle || "user") +
+          "? This removes their profile and shows. Can't be undone.",
+      )
+    )
+      return;
+    await supabase.from("profiles").delete().eq("id", u.id);
+    setUsers((p) => p.filter((x) => x.id !== u.id));
+  };
+
+  const shownUsers = users.filter((u) => {
+    const q = uq.trim().toLowerCase();
+    if (!q) return true;
+    return ((u.name || "") + " " + (u.handle || "") + " " + (u.location || ""))
+      .toLowerCase()
+      .includes(q);
+  });
+
+  const card = {
+    background: "#0c0c0c",
+    border: "1px solid #1e1e1e",
+    borderRadius: 10,
+    padding: 16,
+  };
+  const sectionTitle = {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 11,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    color: "#F5A623",
+    margin: "26px 0 12px",
+  };
+  const mono = { fontFamily: "'DM Mono',monospace" };
+  const pill = (state) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 12,
+    color: state === "ok" ? "#5cc46a" : state === "…" ? "#888" : "#e0674f",
+  });
+
+  const Stat = ({ label, value, sub }) => (
+    <div style={card}>
+      <div
+        style={{
+          fontFamily: "'Bebas Neue',sans-serif",
+          fontSize: 34,
+          color: "#fff",
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </div>
+      <div
+        style={{
+          ...mono,
+          fontSize: 10,
+          letterSpacing: 1.5,
+          textTransform: "uppercase",
+          color: "#888",
+          marginTop: 6,
+        }}
+      >
+        {label}
+      </div>
+      {sub && (
+        <div style={{ ...mono, fontSize: 10, color: "#555", marginTop: 2 }}>
+          {sub}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 210,
+        background: "#070707",
+        overflowY: "auto",
+      }}
+    >
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 18px 70px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 4,
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: "'Bebas Neue',sans-serif",
+              fontSize: 34,
+              color: "#fff",
+              letterSpacing: 1,
+              margin: 0,
+            }}
+          >
+            Admin
+          </h1>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn-sm" onClick={load} style={{ color: "#888" }}>
+              ⟲ Refresh
+            </button>
+            <button className="btn-sm btn-amber" onClick={onBack}>
+              Close
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ ...mono, color: "#666", padding: "40px 0" }}>
+            Loading…
+          </div>
+        ) : (
+          <>
+            {/* COUNTS */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit,minmax(112px,1fr))",
+                gap: 10,
+                marginTop: 16,
+              }}
+            >
+              <Stat
+                label="Users"
+                value={counts.users}
+                sub={counts.onboarded + " onboarded"}
+              />
+              <Stat label="Active today" value={growth.dau} />
+              <Stat label="Active 7d" value={growth.wau} />
+              <Stat label="New 7d" value={growth.newWeek} />
+              <Stat
+                label="Shows"
+                value={counts.shows}
+                sub={counts.upcoming + " upcoming"}
+              />
+              <Stat label="Follows" value={counts.follows} />
+              <Stat label="Forwarding on" value={growth.verified} />
+            </div>
+
+            {/* SIGNUPS CHART */}
+            <div style={sectionTitle}>Signups — last 30 days</div>
+            <div
+              style={{
+                ...card,
+                display: "flex",
+                alignItems: "flex-end",
+                gap: 2,
+                height: 96,
+              }}
+            >
+              {(() => {
+                const max = Math.max(1, ...growth.series.map((p) => p.n));
+                return growth.series.map((pt, i) => (
+                  <div
+                    key={i}
+                    title={pt.d + ": " + pt.n}
+                    style={{
+                      flex: 1,
+                      height: (pt.n / max) * 66 + 2,
+                      minHeight: 2,
+                      borderRadius: 2,
+                      background: pt.n ? "#F5A623" : "#191919",
+                    }}
+                  />
+                ));
+              })()}
+            </div>
+
+            {/* SOURCE BREAKDOWN */}
+            <div style={sectionTitle}>How shows get added</div>
+            <div style={card}>
+              {growth.sources.length === 0 ? (
+                <div style={{ ...mono, fontSize: 11, color: "#555" }}>—</div>
+              ) : (
+                (() => {
+                  const total =
+                    growth.sources.reduce((a, [, x]) => a + x, 0) || 1;
+                  return growth.sources.map(([s, n]) => (
+                    <div
+                      key={s}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "4px 0",
+                      }}
+                    >
+                      <div style={{ width: 96, ...mono, fontSize: 11, color: "#aaa" }}>
+                        {s}
+                      </div>
+                      <div
+                        style={{
+                          flex: 1,
+                          height: 8,
+                          background: "#141414",
+                          borderRadius: 4,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: (n / total) * 100 + "%",
+                            height: "100%",
+                            background: "#F5A623",
+                          }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          ...mono,
+                          fontSize: 11,
+                          color: "#666",
+                          width: 40,
+                          textAlign: "right",
+                        }}
+                      >
+                        {n}
+                      </div>
+                    </div>
+                  ));
+                })()
+              )}
+            </div>
+
+            {/* HEALTH */}
+            <div style={sectionTitle}>Health</div>
+            <div style={{ ...card, display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <span style={pill(health.spotify)}>
+                {health.spotify === "ok" ? "●" : "○"} Spotify proxy:{" "}
+                {health.spotify}
+              </span>
+              <span style={pill(health.places)}>
+                {health.places === "ok" ? "●" : "○"} Places proxy:{" "}
+                {health.places}
+              </span>
+              <span style={pill("ok")}>● Supabase: ok</span>
+            </div>
+
+            {/* FORWARDING */}
+            <div style={sectionTitle}>Forwarding — last 7 days</div>
+            <div style={card}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 20,
+                  flexWrap: "wrap",
+                  marginBottom: fwd.failures.length ? 14 : 0,
+                }}
+              >
+                {[
+                  ["saved", "#5cc46a"],
+                  ["no_show", "#e0a13f"],
+                  ["error", "#e0674f"],
+                  ["rate_limited", "#888"],
+                  ["confirm", "#888"],
+                ].map(([k, c]) => (
+                  <div key={k}>
+                    <span
+                      style={{
+                        fontFamily: "'Bebas Neue',sans-serif",
+                        fontSize: 26,
+                        color: c,
+                      }}
+                    >
+                      {fwd[k]}
+                    </span>
+                    <span
+                      style={{
+                        ...mono,
+                        fontSize: 10,
+                        color: "#777",
+                        marginLeft: 6,
+                      }}
+                    >
+                      {k}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {fwd.failures.length > 0 && (
+                <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 10 }}>
+                  <div
+                    style={{ ...mono, fontSize: 10, color: "#888", marginBottom: 6 }}
+                  >
+                    RECENT FAILURES
+                  </div>
+                  {fwd.failures.slice(0, 8).map((f, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        ...mono,
+                        fontSize: 11,
+                        color: "#aaa",
+                        padding: "3px 0",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: f.result === "error" ? "#e0674f" : "#e0a13f",
+                        }}
+                      >
+                        [{f.result}]
+                      </span>{" "}
+                      {f.subject || "(no subject)"}{" "}
+                      <span style={{ color: "#555" }}>· {timeAgo(f.created_at)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* BUG REPORTS */}
+            <div style={sectionTitle}>Bug reports ({bugs.length})</div>
+            <div style={card}>
+              {bugs.length === 0 ? (
+                <div style={{ ...mono, color: "#555", fontSize: 12 }}>
+                  None yet.
+                </div>
+              ) : (
+                bugs.map((b) => (
+                  <div
+                    key={b.id}
+                    style={{
+                      padding: "10px 0",
+                      borderBottom: "1px solid #141414",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: "'Syne',sans-serif",
+                        fontSize: 13,
+                        color: "#ddd",
+                      }}
+                    >
+                      {b.message}
+                    </div>
+                    <div style={{ ...mono, fontSize: 10, color: "#555", marginTop: 3 }}>
+                      {timeAgo(b.created_at)}
+                      {b.context && b.context.view
+                        ? " · view:" + b.context.view
+                        : ""}
+                      {b.context && b.context.userAgent
+                        ? " · " +
+                          (/Mobi|iPhone|Android/i.test(b.context.userAgent)
+                            ? "mobile"
+                            : "desktop")
+                        : ""}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* TASTE */}
+            <div style={sectionTitle}>Top taste</div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 10,
+              }}
+            >
+              {[
+                ["Artists", taste.artists],
+                ["Venues", taste.venues],
+              ].map(([label, list]) => (
+                <div key={label} style={card}>
+                  <div
+                    style={{ ...mono, fontSize: 10, color: "#888", marginBottom: 8 }}
+                  >
+                    {label.toUpperCase()}
+                  </div>
+                  {list.length === 0 ? (
+                    <div style={{ ...mono, fontSize: 11, color: "#555" }}>—</div>
+                  ) : (
+                    list.map(([name, n]) => (
+                      <div
+                        key={name}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          fontFamily: "'Syne',sans-serif",
+                          fontSize: 12.5,
+                          color: "#ccc",
+                          padding: "2px 0",
+                        }}
+                      >
+                        <span
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {name}
+                        </span>
+                        <span style={{ ...mono, color: "#666" }}>{n}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* USERS */}
+            <div style={sectionTitle}>Users ({users.length})</div>
+            <input
+              className="form-inp"
+              placeholder="Search name, handle, city…"
+              value={uq}
+              onChange={(e) => setUq(e.target.value)}
+              style={{ width: "100%", marginBottom: 10 }}
+            />
+            <div style={card}>
+              {shownUsers.slice(0, 100).map((u) => (
+                <div
+                  key={u.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "8px 0",
+                    borderBottom: "1px solid #141414",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontFamily: "'Syne',sans-serif",
+                        fontSize: 13,
+                        color: "#ddd",
+                      }}
+                    >
+                      {u.name || "—"}{" "}
+                      <span style={{ color: "#666" }}>@{u.handle}</span>
+                      {!u.onboarded && (
+                        <span style={{ color: "#e0a13f", fontSize: 10 }}>
+                          {" "}
+                          (not onboarded)
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ ...mono, fontSize: 10, color: "#555" }}>
+                      {u.location || "no location"} · joined{" "}
+                      {timeAgo(u.created_at)}
+                    </div>
+                  </div>
+                  <button
+                    className="btn-sm"
+                    onClick={() => delUser(u)}
+                    style={{ color: "#e0674f", borderColor: "#3a1e1e" }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -4154,6 +4768,12 @@ function App() {
   const [detail, setDetail] = useState(null);
   const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported
   const [pushHidden, setPushHidden] = useState(false);
+  const [notifs, setNotifs] = useState([]);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [showBug, setShowBug] = useState(false);
+  const [bugText, setBugText] = useState("");
+  const [bugSending, setBugSending] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [mailConnect, setMailConnect] = useState(false); // forwarding walkthrough overlay
   const [mailDismissed, setMailDismissed] = useState(false);
   const [showAddC, setShowAddC] = useState(false);
@@ -4232,6 +4852,60 @@ function App() {
     return () => {
       supabase.removeChannel(ch);
     };
+  }, [session]);
+
+  // Load this user's notifications and keep the bell live.
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setNotifs([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (!cancelled && data) setNotifs(data);
+    })();
+    let ch;
+    if (typeof supabase.channel === "function") {
+      ch = supabase
+        .channel("notifs-" + session.user.id)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: "user_id=eq." + session.user.id,
+          },
+          (payload) => {
+            if (payload.new)
+              setNotifs((p) =>
+                p.some((n) => n.id === payload.new.id)
+                  ? p
+                  : [payload.new, ...p].slice(0, 30),
+              );
+          },
+        )
+        .subscribe();
+    }
+    return () => {
+      cancelled = true;
+      if (ch) supabase.removeChannel(ch);
+    };
+  }, [session]);
+
+  // Track "last active" for DAU/WAU (one lightweight write per app load).
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    supabase
+      .from("profiles")
+      .update({ last_active: new Date().toISOString() })
+      .eq("id", session.user.id);
   }, [session]);
 
   // ── EARLY AUTH RETURNS (after all hooks) ──
@@ -4318,6 +4992,7 @@ function App() {
         ratings: {},
       };
   const isGuest = !session;
+  const isAdmin = !!(profile && profile.is_admin);
   // Any write action by a guest opens the sign-in screen instead.
   const requireAuth = () => {
     if (isGuest) {
@@ -4333,6 +5008,70 @@ function App() {
     } else {
       setNotif(m);
       setTimeout(() => setNotif(null), 3500);
+    }
+  };
+
+  // Open the notifications panel and mark everything read.
+  const openNotifs = async () => {
+    setShowNotifs(true);
+    const unread = notifs.filter((n) => !n.read);
+    if (unread.length && session?.user?.id) {
+      setNotifs((p) => p.map((n) => ({ ...n, read: true })));
+      await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", session.user.id)
+        .eq("read", false);
+    }
+  };
+
+  // Human-readable text for a notification row.
+  const notifMsg = (n) => {
+    const d = n.data || {};
+    if (n.type === "forward_no_show")
+      return {
+        icon: "📭",
+        text:
+          "We got a forwarded email but couldn't read a show from it" +
+          (d.subject ? " (“" + d.subject + "”)" : "."),
+        action: "no_show",
+      };
+    if (n.type === "new_show")
+      return {
+        icon: "🎟️",
+        text:
+          (d.actor || "Someone you follow") +
+          " added a show" +
+          (d.artist ? " — " + d.artist : ""),
+      };
+    return { icon: "🔔", text: "New activity" };
+  };
+
+  // Submit a bug report with auto-captured context.
+  const submitBug = async () => {
+    if (!bugText.trim() || bugSending) return;
+    setBugSending(true);
+    try {
+      await supabase.from("bug_reports").insert({
+        user_id: session?.user?.id || null,
+        message: bugText.trim(),
+        context: {
+          view,
+          filter,
+          isGuest,
+          userAgent:
+            typeof navigator !== "undefined" ? navigator.userAgent : "",
+          url: typeof location !== "undefined" ? location.href : "",
+          ts: new Date().toISOString(),
+        },
+      });
+      setBugText("");
+      setShowBug(false);
+      toast("Thanks — your report was sent. 🐛");
+    } catch (e) {
+      toast("Couldn't send the report — try again.", true);
+    } finally {
+      setBugSending(false);
     }
   };
 
@@ -4686,6 +5425,41 @@ function App() {
                 </button>
               ) : (
                 <>
+                  <button
+                    className="icon-btn"
+                    onClick={openNotifs}
+                    title="Notifications"
+                    style={{ position: "relative" }}
+                  >
+                    🔔
+                    {notifs.some((n) => !n.read) && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: -3,
+                          right: -3,
+                          minWidth: 15,
+                          height: 15,
+                          padding: "0 3px",
+                          borderRadius: 8,
+                          background: "#F5A623",
+                          color: "#000",
+                          fontSize: 9,
+                          fontWeight: 700,
+                          fontFamily: "'DM Mono',monospace",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {(() => {
+                          const u = notifs.filter((n) => !n.read).length;
+                          return u > 9 ? "9+" : u;
+                        })()}
+                      </span>
+                    )}
+                  </button>
                   <div
                     className="my-avatar"
                     style={{ background: curUser.color }}
@@ -4694,6 +5468,15 @@ function App() {
                   >
                     {curUser.name.slice(0, 2).toUpperCase()}
                   </div>
+                  {isAdmin && (
+                    <button
+                      className="icon-btn"
+                      onClick={() => setShowAdmin(true)}
+                      title="Admin"
+                    >
+                      ⚙
+                    </button>
+                  )}
                   <button
                     onClick={() => supabase.auth.signOut()}
                     style={{
@@ -5161,6 +5944,210 @@ function App() {
           }
           onClose={() => setMailConnect(false)}
         />
+      )}
+
+      {/* NOTIFICATIONS PANEL */}
+      {showNotifs && (
+        <div className="mwrap" onClick={() => setShowNotifs(false)}>
+          <div
+            className="sheet"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 460 }}
+          >
+            <div className="sheet-bar" style={{ background: "#F5A623" }} />
+            <div style={{ padding: "10px 18px 22px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 10,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "'Bebas Neue',sans-serif",
+                    fontSize: 24,
+                    color: "#fff",
+                    letterSpacing: 1,
+                  }}
+                >
+                  Notifications
+                </div>
+                <button
+                  onClick={() => {
+                    setShowNotifs(false);
+                    setShowBug(true);
+                  }}
+                  style={{
+                    background: "none",
+                    border: "1px solid #1e1e1e",
+                    color: "#888",
+                    fontSize: 11,
+                    fontFamily: "'DM Mono',monospace",
+                    padding: "5px 10px",
+                    borderRadius: 5,
+                    cursor: "pointer",
+                  }}
+                >
+                  🐛 Report a bug
+                </button>
+              </div>
+              {notifs.length === 0 ? (
+                <div
+                  style={{
+                    color: "#666",
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 13,
+                    padding: "24px 0",
+                    textAlign: "center",
+                  }}
+                >
+                  Nothing yet.
+                </div>
+              ) : (
+                notifs.map((n) => {
+                  const m = notifMsg(n);
+                  return (
+                    <div
+                      key={n.id}
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        padding: "12px 0",
+                        borderBottom: "1px solid #141414",
+                      }}
+                    >
+                      <div style={{ fontSize: 17 }}>{m.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontFamily: "'Syne',sans-serif",
+                            fontSize: 13,
+                            color: "#ddd",
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          {m.text}
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: "'DM Mono',monospace",
+                            fontSize: 10,
+                            color: "#555",
+                            marginTop: 3,
+                          }}
+                        >
+                          {timeAgo(n.created_at)}
+                        </div>
+                        {m.action === "no_show" && (
+                          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                            <button
+                              className="btn-sm btn-amber"
+                              onClick={() => {
+                                setShowNotifs(false);
+                                setShowAddC(true);
+                              }}
+                            >
+                              Add manually
+                            </button>
+                            <button
+                              className="btn-sm"
+                              onClick={() => {
+                                setShowNotifs(false);
+                                setShowBug(true);
+                              }}
+                              style={{ color: "#888" }}
+                            >
+                              Report
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BUG REPORT */}
+      {showBug && (
+        <div className="mwrap" onClick={() => setShowBug(false)}>
+          <div
+            className="sheet"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 460 }}
+          >
+            <div className="sheet-bar" style={{ background: "#F5A623" }} />
+            <div style={{ padding: "10px 18px 22px" }}>
+              <div
+                style={{
+                  fontFamily: "'Bebas Neue',sans-serif",
+                  fontSize: 24,
+                  color: "#fff",
+                  letterSpacing: 1,
+                  marginBottom: 6,
+                }}
+              >
+                Report a bug
+              </div>
+              <div
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontSize: 12.5,
+                  color: "#888",
+                  marginBottom: 12,
+                  lineHeight: 1.5,
+                }}
+              >
+                Hit something weird? Tell us what happened — we grab the
+                technical details automatically.
+              </div>
+              <textarea
+                value={bugText}
+                onChange={(e) => setBugText(e.target.value)}
+                placeholder="What went wrong, and what were you doing?"
+                rows={5}
+                className="form-inp"
+                style={{
+                  width: "100%",
+                  resize: "vertical",
+                  fontFamily: "'Syne',sans-serif",
+                }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  marginTop: 12,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  className="btn-sm"
+                  onClick={() => setShowBug(false)}
+                  style={{ color: "#888" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn-sm btn-amber"
+                  onClick={submitBug}
+                  disabled={bugSending || !bugText.trim()}
+                >
+                  {bugSending ? "Sending…" : "Send report"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAdmin && showAdmin && (
+        <AdminPage onBack={() => setShowAdmin(false)} />
       )}
 
       {/* ADD CONCERT SHEET */}

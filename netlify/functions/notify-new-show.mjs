@@ -64,15 +64,14 @@ export default async (req) => {
 
   // In-app notification rows (best-effort — never block the push send).
   try {
-    await sb
-      .from("notifications")
-      .insert(
-        followerIds.map((uid) => ({
-          user_id: uid,
-          type: "new_show",
-          read: false,
-        })),
-      );
+    await sb.from("notifications").insert(
+      followerIds.map((uid) => ({
+        user_id: uid,
+        type: "new_show",
+        read: false,
+        data: { actor: ownerName, artist: row.artist || "" },
+      })),
+    );
   } catch (e) {
     /* notifications table shape may differ; ignore */
   }

@@ -289,6 +289,7 @@ export default async (req) => {
         user_id: userId,
         type: "forward_no_show",
         read: false,
+        data: { subject: String(subject || "").slice(0, 120) },
       });
     } catch (e) {
       /* notifications schema may differ; ignore */
