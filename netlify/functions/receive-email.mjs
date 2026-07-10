@@ -41,19 +41,23 @@ STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
 
 4. DEDUPLICATION — if multiple emails reference the same event/order, include the EVENT only ONCE.
 
-Return ONLY a valid JSON array. Each object:
+Return ONLY a valid JSON object of this exact shape:
+{"is_ticket": boolean, "shows": [ ... ]}
+
+- is_ticket: true if this email is a confirmed order/ticket for a live MUSIC event (concert, festival, DJ set, club night, tour) — even if you could not extract clean details. false for EVERYTHING else: retail orders, food/travel receipts, newsletters, promos, on-sale announcements, and non-music events (sports, comedy, theater).
+- shows: an array of the qualifying music purchases. Each show object:
 {"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean}
 
 - artist: performer/band/DJ name. For festivals, use the festival name.
 - venue: the venue name from the email. If shown as "TBA"/missing, scan the body for an explicit address or "LOCATION:" line and use that.
 - city: "City, State" — taken ONLY from a location/address/city explicitly written in this email. If only an address is given, use its city/state. NEVER guess the city. If none is stated, use "".
-- date: start date — REQUIRED.
+- date: start date — REQUIRED for a show to appear in "shows".
 - end_date: end date — equals date for single-day shows.
 - source: ticketing platform (Ticketmaster, SeatGeek, RA, DICE, See Tickets, etc.).
 - ticket_url: the direct link for THIS show copied exactly from the email, or "" if none.
 - is_festival: true if multi-day festival.
 
-Deduplicate aggressively. Return [] if no qualifying purchases found.`;
+Deduplicate aggressively. If the email is not a music ticket at all, return {"is_ticket": false, "shows": []}.`;
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -209,6 +213,7 @@ export default async (req) => {
 
   // Parse with the same model + prompt as the manual scan (now on clean text).
   let concerts = [];
+  let isTicket = false;
   try {
     const ai = await fetch(
       (process.env.URL || "") + "/.netlify/functions/claude",
@@ -233,8 +238,12 @@ export default async (req) => {
       .filter((b) => b.type === "text")
       .map((b) => b.text)
       .join("");
-    const mm = t.match(/\[[\s\S]*\]/);
-    if (mm) concerts = JSON.parse(mm[0]);
+    const mm = t.match(/\{[\s\S]*\}/);
+    if (mm) {
+      const parsed = JSON.parse(mm[0]);
+      isTicket = !!parsed.is_ticket;
+      concerts = Array.isArray(parsed.shows) ? parsed.shows : [];
+    }
   } catch (e) {
     await logEvent(userId, subject, "error", "parse failed: " + e.message);
     return json({ ok: false, reason: "parse failed", error: String(e) });
@@ -276,14 +285,12 @@ export default async (req) => {
     }
   }
 
-  // ── Silent-failure feedback (#2): nothing parsed → tell the user. ──
-  if (saved === 0) {
-    await logEvent(
-      userId,
-      subject,
-      "no_show",
-      "parsed " + concerts.length + " item(s), 0 saved",
-    );
+  // ── Feedback logic ──
+  if (saved > 0) {
+    await logEvent(userId, subject, "saved", saved + " show(s)");
+  } else if (isTicket) {
+    // Looked like a real music ticket but we couldn't extract it → worth a nudge.
+    await logEvent(userId, subject, "no_show", "music ticket, 0 parsed");
     try {
       await sb.from("notifications").insert({
         user_id: userId,
@@ -295,7 +302,9 @@ export default async (req) => {
       /* notifications schema may differ; ignore */
     }
   } else {
-    await logEvent(userId, subject, "saved", saved + " show(s)");
+    // Not a music ticket at all (receipt, newsletter, non-music event) →
+    // silently ignore. Logged for the admin view, but no user notification.
+    await logEvent(userId, subject, "ignored", "not a music ticket");
   }
 
   return json({ ok: true, kind: "ticket", saved });

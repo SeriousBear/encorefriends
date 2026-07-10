@@ -2782,7 +2782,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
 
   const addr = token ? token + "@" + FORWARD_DOMAIN : "generating…";
   const FILTER_QUERY =
-    '{"your tickets" "ticket confirmation" "order confirmation" "e-ticket" "booking confirmed" "you\'re going to" "your order"}';
+    '{from:(ticketmaster OR livenation OR seatgeek OR axs.com OR dice.fm OR ra.co OR residentadvisor OR eventbrite OR seetickets OR ticketweb OR etix OR tixr OR bandsintown OR songkick OR stubhub OR vividseats OR frontgatetickets OR eventim OR moshtix OR ticketek) "your tickets" "e-ticket" "general admission" "doors open" "will call" "your seats" "the lineup" "set times" "live music" concert festival}';
 
   const copy = (txt, which) => {
     try {
