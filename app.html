@@ -11,7 +11,7 @@
         <title>Encore App — Concert Tracker & Social Feed</title>
         <meta
             name="description"
-            content="Track your concerts, follow friends, scan Gmail for tickets, and discover shows by genre. The social concert tracker app."
+            content="Track your concerts, follow friends, forward your tickets to add shows automatically, and discover music by genre. The social concert tracker app."
         />
         <meta name="robots" content="noindex, follow" />
         <link rel="canonical" href="https://encorefriends.com/app.html" />
@@ -20,7 +20,7 @@
         <meta property="og:title" content="Encore — Concert Tracker App" />
         <meta
             property="og:description"
-            content="Scan tickets, follow friends, never miss a show."
+            content="Forward your tickets, follow friends, never miss a show."
         />
         <meta
             property="og:image"
@@ -55,20 +55,11 @@
         <!-- ── App Stylesheet ── -->
         <link rel="stylesheet" href="css/app.css" />
 
-        <!-- ── Supabase + Google GSI + React + Babel (CDN) — order matters ── -->
+        <!-- ── Supabase + React + Babel (CDN) — order matters ── -->
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-        <script
-            src="https://accounts.google.com/gsi/client"
-            async
-            defer
-        ></script>
         <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
         <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-        <!-- Pinned to Babel 7: Babel 8 (June 2026) defaults preset-react to the
-             automatic JSX runtime, which emits `import ... from "react/jsx-runtime"`.
-             That breaks in a non-module <script type="text/babel"> with global UMD
-             React (blank page). Babel 7 keeps the classic React.createElement runtime. -->
-        <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
         <!-- ── Base styles only ── -->
         <style>
@@ -102,11 +93,10 @@
             }
         </style>
 
-        <!-- ── Favicon ── -->
-        <link
-            rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>"
-        />
+        <!-- ── Icons (apple-touch-icon is what iOS uses on the home screen) ── -->
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     </head>
     <body>
         <div id="root"></div>
