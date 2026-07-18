@@ -587,6 +587,21 @@ function CCard({
             zIndex: 2,
           }}
         >
+          {c.hidden && c.owner_id === curUser.id && (
+            <div
+              title="Going quietly — only you can see this show"
+              style={{
+                padding: "2px 7px",
+                background: "rgba(255,255,255,.05)",
+                border: "1px solid #2a2a2a",
+                borderRadius: 3,
+                fontSize: 9,
+                lineHeight: 1.4,
+              }}
+            >
+              🤫
+            </div>
+          )}
           {isNew && (
             <div
               style={{
@@ -863,6 +878,8 @@ function InboxSheet({
   onViewProfile,
   onReportBug,
   onMarkActivityRead,
+  myBlocks,
+  onBlock,
 }) {
   const [draft, setDraft] = useState("");
   const listRef = useRef(null);
@@ -874,14 +891,18 @@ function InboxSheet({
       listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [msgs.length, activeThread]);
 
-  const unreadM = msgs.filter(
+  const vMsgs = msgs.filter((m) => {
+    const o = m.sender_id === curUser.id ? m.recipient_id : m.sender_id;
+    return !(myBlocks || []).includes(o);
+  });
+  const unreadM = vMsgs.filter(
     (m) => m.recipient_id === curUser.id && !m.read,
   ).length;
   const unreadN = notifs.filter((n) => !n.read).length;
 
   // Threads grouped by the other participant, newest first.
   const threads = {};
-  msgs.forEach((m) => {
+  vMsgs.forEach((m) => {
     const other = m.sender_id === curUser.id ? m.recipient_id : m.sender_id;
     if (!threads[other]) threads[other] = { last: m, unread: 0 };
     else if (
@@ -896,8 +917,20 @@ function InboxSheet({
       new Date(threads[a].last.created_at),
   );
 
+  const isConnected = (id) => {
+    const u2 = users.find((u) => u.id === id);
+    return (
+      (curUser.following || []).includes(id) ||
+      (u2 && (u2.following || []).includes(curUser.id))
+    );
+  };
+  // A request = a stranger wrote first and you've never replied.
+  const isRequest = (id) =>
+    !isConnected(id) &&
+    !vMsgs.some((m) => m.sender_id === curUser.id && m.recipient_id === id);
+
   const threadMsgs = activeThread
-    ? msgs
+    ? vMsgs
         .filter(
           (m) =>
             m.sender_id === activeThread || m.recipient_id === activeThread,
@@ -1073,6 +1106,19 @@ function InboxSheet({
                           }}
                         >
                           {u2 ? u2.name : "Member"}
+                          {isRequest(tid) && (
+                            <span
+                              style={{
+                                fontFamily: "'DM Mono',monospace",
+                                fontSize: 9,
+                                color: "#F5A623",
+                                marginLeft: 6,
+                                letterSpacing: 1,
+                              }}
+                            >
+                              · REQUEST
+                            </span>
+                          )}
                         </div>
                         <div
                           style={{
@@ -1137,6 +1183,45 @@ function InboxSheet({
                   {other ? other.name : "Member"}
                 </span>
               </div>
+              {isRequest(activeThread) && (
+                <div
+                  style={{
+                    padding: "8px 10px",
+                    marginBottom: 10,
+                    background: "rgba(245,166,35,.05)",
+                    border: "1px solid rgba(245,166,35,.2)",
+                    borderRadius: 6,
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 10,
+                    color: "#888",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                  }}
+                >
+                  <span>
+                    {(other ? other.name : "Someone") +
+                      " wants to connect — reply to accept."}
+                  </span>
+                  <button
+                    onClick={() => onBlock(activeThread)}
+                    style={{
+                      background: "none",
+                      border: "1px solid #442222",
+                      color: "#ff6b6b",
+                      fontFamily: "'DM Mono',monospace",
+                      fontSize: 10,
+                      padding: "4px 9px",
+                      borderRadius: 5,
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                  >
+                    Block
+                  </button>
+                </div>
+              )}
               <div
                 ref={listRef}
                 style={{
@@ -1359,6 +1444,7 @@ function CDetail({
   onViewProfile,
   onGenreClick,
   onShare,
+  onToggleHidden,
 }) {
   const u = getUrgency(c.date),
     dy = daysUntil(c.date),
@@ -1464,6 +1550,29 @@ function CDetail({
               }}
             >
               ✉ SHARE WITH A FRIEND
+            </button>
+          )}
+          {c.owner_id === curUser.id && onToggleHidden && (
+            <button
+              onClick={() => onToggleHidden(c)}
+              title="Hidden shows never appear to anyone else — not friends, not matches."
+              style={{
+                margin: "8px 0 2px",
+                width: "100%",
+                padding: "10px 0",
+                background: c.hidden ? "rgba(255,255,255,.04)" : "transparent",
+                border: "1px solid " + (c.hidden ? "#3a3a3a" : "#2a2a2a"),
+                borderRadius: 6,
+                color: c.hidden ? "#ddd" : "#666",
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 10,
+                letterSpacing: 1,
+                cursor: "pointer",
+              }}
+            >
+              {c.hidden
+                ? "🤫 GOING QUIETLY — ONLY YOU SEE THIS. TAP TO UNHIDE"
+                : "👁 VISIBLE TO FRIENDS & MATCHES. TAP TO GO QUIETLY"}
             </button>
           )}
           <div className="sh-lbl nb">Get Tickets</div>
@@ -1721,10 +1830,18 @@ function ProfilePage({
   const [connModal, setConnModal] = useState(null); // null | "followers" | "following"
   const isSelf = user.id === curUser.id;
   const isFollowing = curUser.following.includes(user.id);
-  const upcoming = concerts.filter((c) =>
+  // Shows this user attends, split by date (festivals count as upcoming
+  // until their end_date passes). History = real past concerts + legacy seed.
+  const attending = concerts.filter((c) =>
     (c.attendees || []).includes(user.id),
   );
-  const past = pastShows.filter((p) => user.past?.includes(p.id));
+  const upcoming = attending
+    .filter((c) => daysUntil(c.end_date || c.date) >= 0)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const past = [
+    ...attending.filter((c) => daysUntil(c.end_date || c.date) < 0),
+    ...pastShows.filter((p) => user.past?.includes(p.id)),
+  ];
   const mutualUpcoming = upcoming.filter(
     (c) => (c.attendees || []).includes(curUser.id) && user.id !== curUser.id,
   );
@@ -5646,6 +5763,27 @@ function App() {
     };
   }, [session]);
 
+  // People I've blocked — their messages and requests disappear everywhere.
+  const [myBlocks, setMyBlocks] = useState([]);
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setMyBlocks([]);
+      return;
+    }
+    supabase
+      .from("blocks")
+      .select("blocked_id")
+      .then(({ data }) => setMyBlocks((data || []).map((b) => b.blocked_id)));
+  }, [session]);
+  const blockUser = async (id) => {
+    setMyBlocks((p) => (p.includes(id) ? p : [...p, id]));
+    setActiveThread(null);
+    await supabase
+      .from("blocks")
+      .insert({ blocker_id: session.user.id, blocked_id: id });
+    toast("Blocked. They can't message you anymore.");
+  };
+
   // Track "last active" for DAU/WAU (one lightweight write per app load).
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -5788,7 +5926,10 @@ function App() {
 
   // ── Inbox: unread counts, sending, read receipts ──
   const unreadMsgCount = msgs.filter(
-    (m) => m.recipient_id === session?.user?.id && !m.read,
+    (m) =>
+      m.recipient_id === session?.user?.id &&
+      !m.read &&
+      !myBlocks.includes(m.sender_id),
   ).length;
 
   const sendMessage = async (toId, body, show) => {
@@ -6093,6 +6234,16 @@ function App() {
       }));
     }
     setView("profile");
+  };
+  // Per-show privacy: hidden shows are owner-only (enforced by RLS too).
+  const toggleHidden = async (c) => {
+    const v = !c.hidden;
+    setDbConcerts((p) =>
+      p.map((x) => (x.id === c.id ? { ...x, hidden: v } : x)),
+    );
+    setDetail((d) => (d && d.id === c.id ? { ...d, hidden: v } : d));
+    await supabase.from("concerts").update({ hidden: v }).eq("id", c.id);
+    toast(v ? "Going quietly 🤫" : "Show visible again 👁");
   };
   const openGenre = (genre) => {
     setPrevView(view);
@@ -6804,6 +6955,8 @@ function App() {
             setShowBug(true);
           }}
           onMarkActivityRead={markNotifsRead}
+          myBlocks={myBlocks}
+          onBlock={blockUser}
         />
       )}
 
@@ -6983,6 +7136,7 @@ function App() {
             openGenre(g);
           }}
           onShare={(cc) => setShareShow(cc)}
+          onToggleHidden={toggleHidden}
         />
       )}
       {shareShow && (

@@ -73,6 +73,8 @@ export default async (req) => {
   const row = body.record || body;
   const ownerId = row.owner_id;
   if (!ownerId) return ok({ skipped: "no owner_id" });
+  // Quiet shows never notify anyone.
+  if (row.hidden) return ok({ skipped: "hidden" });
 
   const { data: owner } = await sb
     .from("profiles")
