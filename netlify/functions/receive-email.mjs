@@ -15,6 +15,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import PostalMime from "postal-mime";
+import { GENRE_PROMPT_LIST, canonicalizeGenres } from "./genre-taxonomy.mjs";
 
 const sb = createClient(
   process.env.SUPABASE_URL,
@@ -46,7 +47,7 @@ Return ONLY a valid JSON object of this exact shape:
 
 - is_ticket: true if this email is a confirmed order/ticket for a live MUSIC event (concert, festival, DJ set, club night, tour) — even if you could not extract clean details. false for EVERYTHING else: retail orders, food/travel receipts, newsletters, promos, on-sale announcements, and non-music events (sports, comedy, theater).
 - shows: an array of the qualifying music purchases. Each show object:
-{"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean}
+{"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean, "genres": string[]}
 
 - artist: performer/band/DJ name. For festivals, use the festival name.
 - venue: the venue name from the email. If shown as "TBA"/missing, scan the body for an explicit address or "LOCATION:" line and use that.
@@ -56,6 +57,10 @@ Return ONLY a valid JSON object of this exact shape:
 - source: ticketing platform (Ticketmaster, SeatGeek, RA, DICE, See Tickets, etc.).
 - ticket_url: the direct link for THIS show copied exactly from the email, or "" if none.
 - is_festival: true if multi-day festival.
+- genres: 1-3 genres describing the artist/festival, chosen ONLY from the GENRE LIST below — copy the strings EXACTLY as written. Use your own knowledge of the artist. Prefer the most specific subgenre you are confident about (e.g. "Riddim" over "Dubstep", "Melodic Techno" over "Techno"); fall back to a broad genre when unsure. Always give your best guess — use [] only if you have absolutely no idea.
+
+GENRE LIST (the only allowed values for "genres"):
+${GENRE_PROMPT_LIST}
 
 Deduplicate aggressively. If the email is not a music ticket at all, return {"is_ticket": false, "shows": []}.`;
 
@@ -267,7 +272,7 @@ export default async (req) => {
             source: c.source || "Email",
             ticket_url: c.ticket_url || "",
             is_festival: !!c.is_festival,
-            genres: [],
+            genres: canonicalizeGenres(c.genres),
             scanned_at: new Date().toISOString(),
           },
           { onConflict: "owner_id,artist,date", ignoreDuplicates: true },

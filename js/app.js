@@ -191,132 +191,153 @@ const MONTHS = [
   "Nov",
   "Dec",
 ];
+// ── GENRE TAXONOMY ───────────────────────────────────────────────────────────
+// Parent genre -> subgenres. Matching happens at the family level: a genre
+// page shows anything tagged with the genre itself, its subgenres, or its
+// parent. Keep this in sync with netlify/functions/genre-taxonomy.mjs (the
+// parser + backfill use the same list).
+const GENRE_TAXONOMY = {
+  "Techno": [
+    "Minimal Techno", "Melodic Techno", "Hard Techno", "Industrial Techno", "Acid Techno", "Dub Techno",
+    "Detroit Techno", "Peak Time Techno", "Hypnotic Techno", "Hard Groove", "Schranz", "Broken Techno",
+  ],
+  "House": [
+    "Deep House", "Tech House", "Progressive House", "Acid House", "Afro House", "Bass House",
+    "Chicago House", "Disco House", "Electro House", "French House", "Funky House", "Future House",
+    "Ghetto House", "Jackin House", "Latin House", "Lo-Fi House", "Melodic House", "Microhouse",
+    "Organic House", "Piano House", "Soulful House", "Tribal House", "Tropical House", "Vocal House",
+  ],
+  "Trance": [
+    "Psytrance", "Progressive Trance", "Uplifting Trance", "Vocal Trance", "Goa Trance", "Hard Trance",
+    "Tech Trance", "Full-On Psytrance", "Dark Psytrance", "Forest Psytrance", "Hi-Tech Psytrance", "Acid Trance",
+  ],
+  "Drum & Bass": [
+    "Jungle", "Liquid DnB", "Neurofunk", "Jump Up", "Techstep", "Darkstep",
+    "Halftime", "Minimal DnB", "Ragga Jungle", "Drumstep", "Rollers", "Dancefloor DnB",
+  ],
+  "Bass": [
+    "Dubstep", "Riddim", "Brostep", "Melodic Dubstep", "Deep Dubstep", "Tearout",
+    "Deathstep", "Colour Bass", "Future Bass", "Glitch Hop", "Wave", "Trap (EDM)",
+    "Hybrid Trap", "Moombahton", "Jersey Club", "Baltimore Club", "Footwork", "Juke",
+    "Midtempo",
+  ],
+  "UK Garage": [
+    "2-Step", "Speed Garage", "Bassline", "Future Garage", "UK Funky", "Garage House",
+    "Breakbeat", "Breaks", "Big Beat", "Nu Skool Breaks",
+  ],
+  "Hard Dance": [
+    "Hardstyle", "Rawstyle", "Euphoric Hardstyle", "Hardcore", "Gabber", "Happy Hardcore",
+    "Frenchcore", "Uptempo", "Speedcore", "Terrorcore", "Hard House", "Donk",
+    "Jumpstyle", "Makina",
+  ],
+  "EDM": [
+    "Big Room", "Mainstage", "Complextro", "Melbourne Bounce", "Slap House", "Future Rave",
+  ],
+  "Electronica": [
+    "Ambient", "IDM", "Downtempo", "Trip-Hop", "Glitch", "Drone",
+    "Electro", "Chillwave", "Chillout", "Psybient", "Psydub", "Dark Ambient",
+    "Berlin School", "Leftfield", "Synthwave", "Vaporwave", "Future Funk", "New Age",
+    "Lo-Fi",
+  ],
+  "Disco & Funk": [
+    "Disco", "Nu-Disco", "Italo Disco", "Funk", "Boogie", "French Touch",
+    "Hi-NRG",
+  ],
+  "Hip-Hop": [
+    "Rap", "Trap", "Drill", "UK Drill", "Boom Bap", "Cloud Rap",
+    "Grime", "Phonk", "Rage", "Plugg", "Emo Rap", "Conscious Hip-Hop",
+    "Gangsta Rap", "G-Funk", "Crunk", "Hyphy", "Horrorcore", "Underground Hip-Hop",
+    "East Coast Hip-Hop", "West Coast Hip-Hop", "Southern Hip-Hop", "Abstract Hip-Hop",
+  ],
+  "R&B & Soul": [
+    "R&B", "Soul", "Neo-Soul", "Motown", "Alternative R&B", "Contemporary R&B",
+    "Quiet Storm", "New Jack Swing", "Gospel", "Doo-Wop",
+  ],
+  "Pop": [
+    "Indie Pop", "Synth-Pop", "Dream Pop", "Hyperpop", "Electropop", "Art Pop",
+    "Bedroom Pop", "Dance Pop", "Power Pop", "Chamber Pop", "Baroque Pop", "Bubblegum Pop",
+    "K-Pop", "J-Pop", "City Pop", "Mandopop", "Cantopop", "Europop",
+  ],
+  "Rock": [
+    "Classic Rock", "Indie Rock", "Alternative Rock", "Psychedelic Rock", "Garage Rock", "Math Rock",
+    "Post-Rock", "Prog Rock", "Stoner Rock", "Grunge", "Shoegaze", "Hard Rock",
+    "Blues Rock", "Glam Rock", "Surf Rock", "Southern Rock", "Krautrock", "New Wave",
+    "Noise Rock", "Art Rock", "Britpop", "Rockabilly",
+  ],
+  "Punk": [
+    "Post-Punk", "Hardcore Punk", "Pop Punk", "Emo", "Midwest Emo", "Screamo",
+    "Post-Hardcore", "Ska Punk", "Crust Punk", "Skate Punk", "Street Punk", "Oi!",
+    "Egg Punk", "Folk Punk",
+  ],
+  "Metal": [
+    "Heavy Metal", "Death Metal", "Black Metal", "Metalcore", "Deathcore", "Thrash Metal",
+    "Doom Metal", "Sludge Metal", "Power Metal", "Progressive Metal", "Nu Metal", "Djent",
+    "Grindcore", "Folk Metal", "Symphonic Metal", "Industrial Metal", "Melodic Death Metal",
+  ],
+  "Jazz": [
+    "Smooth Jazz", "Bebop", "Jazz Fusion", "Swing", "Big Band", "Free Jazz",
+    "Hard Bop", "Cool Jazz", "Latin Jazz", "Nu Jazz", "Jazz-Funk", "Spiritual Jazz",
+    "Vocal Jazz", "Gypsy Jazz",
+  ],
+  "Blues": [
+    "Soul Blues", "Delta Blues", "Chicago Blues", "Electric Blues", "Country Blues", "Jump Blues",
+  ],
+  "Folk & Country": [
+    "Folk", "Indie Folk", "Singer-Songwriter", "Country", "Americana", "Bluegrass",
+    "Folk Rock", "Alt-Country", "Outlaw Country", "Country Pop", "Honky Tonk", "Celtic",
+    "Freak Folk", "Roots",
+  ],
+  "Latin": [
+    "Reggaeton", "Latin Trap", "Latin Pop", "Salsa", "Cumbia", "Bachata",
+    "Merengue", "Bossa Nova", "Samba", "Flamenco", "Regional Mexican", "Corridos Tumbados",
+    "Banda", "Norte\u00f1o", "Mariachi", "Dembow", "Baile Funk", "Tango",
+    "Tejano",
+  ],
+  "Caribbean": [
+    "Reggae", "Dancehall", "Dub", "Ska", "Rocksteady", "Soca",
+    "Calypso", "Zouk", "Kompa", "Lovers Rock",
+  ],
+  "African": [
+    "Afrobeats", "Afrobeat", "Amapiano", "Highlife", "Gqom", "Kwaito",
+    "3-Step", "Alt\u00e9", "Bongo Flava", "Soukous",
+  ],
+  "Classical": [
+    "Opera", "Contemporary Classical", "Film Score", "Soundtrack", "Baroque", "Chamber Music",
+    "Neoclassical", "Minimalism", "Choral",
+  ],
+  "Experimental": [
+    "Noise", "Industrial", "EBM", "Darkwave", "Coldwave", "Minimal Wave",
+    "Witch House", "Deconstructed Club", "Avant-Garde", "Power Electronics", "Musique Concr\u00e8te", "Sound Collage",
+    "No Wave",
+  ],
+  "World": [
+    "Spoken Word", "Klezmer", "Balkan", "Bhangra", "Bollywood", "Arabic Pop",
+    "Turkish Psych", "Fado",
+  ],
+};
+const GENRE_PARENTS = Object.keys(GENRE_TAXONOMY);
+const GENRE_PARENT_OF = {};
+GENRE_PARENTS.forEach((p) =>
+  GENRE_TAXONOMY[p].forEach((s) => {
+    GENRE_PARENT_OF[s] = p;
+  }),
+);
+// Flat list (parents first) — used everywhere the old GENRES array was.
 const GENRES = [
-  "Techno",
-  "House",
-  "Deep House",
-  "Tech House",
-  "Minimal Techno",
-  "Melodic Techno",
-  "Progressive House",
-  "Trance",
-  "Psytrance",
-  "Drum & Bass",
-  "Dubstep",
-  "UK Garage",
-  "2-Step",
-  "Breakbeat",
-  "Bass",
-  "Future Bass",
-  "Ambient",
-  "IDM",
-  "Electro",
-  "EDM",
-  "Big Room",
-  "Hardstyle",
-  "Hardcore",
-  "Gabber",
-  "Jungle",
-  "Footwork",
-  "Downtempo",
-  "Trip-Hop",
-  "Synthwave",
-  "Vaporwave",
-  "Disco",
-  "Nu-Disco",
-  "Italo Disco",
-  "Acid House",
-  "Electronica",
-  "Glitch",
-  "Drone",
-  "Hip-Hop",
-  "Rap",
-  "Trap",
-  "Drill",
-  "Boom Bap",
-  "Cloud Rap",
-  "Grime",
-  "R&B",
-  "Neo-Soul",
-  "Soul",
-  "Funk",
-  "Motown",
-  "Afrobeats",
-  "Amapiano",
-  "Rock",
-  "Classic Rock",
-  "Indie Rock",
-  "Alternative Rock",
-  "Punk",
-  "Post-Punk",
-  "Hardcore Punk",
-  "Pop Punk",
-  "Emo",
-  "Metal",
-  "Heavy Metal",
-  "Death Metal",
-  "Black Metal",
-  "Metalcore",
-  "Grunge",
-  "Shoegaze",
-  "Psychedelic Rock",
-  "Garage Rock",
-  "Math Rock",
-  "Post-Rock",
-  "Prog Rock",
-  "Stoner Rock",
-  "Industrial",
-  "Pop",
-  "Indie Pop",
-  "Synth-Pop",
-  "Dream Pop",
-  "Hyperpop",
-  "K-Pop",
-  "J-Pop",
-  "Electropop",
-  "Art Pop",
-  "Bedroom Pop",
-  "Jazz",
-  "Smooth Jazz",
-  "Bebop",
-  "Jazz Fusion",
-  "Swing",
-  "Blues",
-  "Soul Blues",
-  "Folk",
-  "Indie Folk",
-  "Singer-Songwriter",
-  "Country",
-  "Americana",
-  "Bluegrass",
-  "Folk Rock",
-  "Latin",
-  "Reggaeton",
-  "Salsa",
-  "Cumbia",
-  "Bossa Nova",
-  "Samba",
-  "Flamenco",
-  "Afrobeat",
-  "Highlife",
-  "Dancehall",
-  "Reggae",
-  "Dub",
-  "Ska",
-  "Soca",
-  "Classical",
-  "Opera",
-  "Contemporary Classical",
-  "Film Score",
-  "Soundtrack",
-  "Gospel",
-  "World",
-  "Experimental",
-  "Noise",
-  "New Age",
-  "Lo-Fi",
-  "Spoken Word",
+  ...GENRE_PARENTS,
+  ...GENRE_PARENTS.flatMap((p) => GENRE_TAXONOMY[p]),
 ];
+// All names a genre page covers: itself + its subgenres + its parent.
+const genreFamily = (g) => {
+  const fam = new Set([g]);
+  (GENRE_TAXONOMY[g] || []).forEach((s) => fam.add(s));
+  if (GENRE_PARENT_OF[g]) fam.add(GENRE_PARENT_OF[g]);
+  return fam;
+};
+const genreHit = (tags, g) => {
+  const fam = genreFamily(g);
+  return (tags || []).some((t) => fam.has(t));
+};
 
 const ARTIST_SUGG = [
   "Subtronics",
@@ -504,6 +525,7 @@ function CCard({
   onToggleGoing,
   onViewProfile,
   onDelete,
+  onGenreClick,
 }) {
   const d = fmt(c.date),
     u = getUrgency(c.date),
@@ -632,6 +654,25 @@ function CCard({
         </div>
         <div className="dven">{c.venue}</div>
         <div className="dcit">{c.city}</div>
+        {(c.genres || []).length > 0 && (
+          <div
+            style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 7 }}
+          >
+            {(c.genres || []).slice(0, 3).map((g) => (
+              <span
+                key={g}
+                className="uc-genre"
+                title={"Explore " + g}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onGenreClick && onGenreClick(g);
+                }}
+              >
+                {g}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div className="cfoot" onClick={(e) => e.stopPropagation()}>
         <div className="ftags">
@@ -675,6 +716,7 @@ function CDetail({
   onClose,
   onToggleAttendee,
   onViewProfile,
+  onGenreClick,
 }) {
   const u = getUrgency(c.date),
     dy = daysUntil(c.date),
@@ -705,6 +747,26 @@ function CDetail({
           <div className="sh-date">
             {c.city} · {dateStr}
           </div>
+          {(c.genres || []).length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 5,
+                marginTop: 8,
+              }}
+            >
+              {(c.genres || []).map((g) => (
+                <span
+                  key={g}
+                  className="genre-tag"
+                  onClick={() => onGenreClick && onGenreClick(g)}
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
           <div className={"sh-daybdg " + bc}>
             <span
               style={{
@@ -1121,6 +1183,7 @@ function ProfilePage({
                   onOpen={onOpenConcert}
                   onToggleGoing={() => {}}
                   onViewProfile={onViewProfile}
+                  onGenreClick={onGenreClick}
                 />
               ))}
             </div>
@@ -1388,13 +1451,17 @@ function GenrePage({
   onFollowToggle,
   onViewProfile,
   onArtistClick,
+  onGenreClick,
 }) {
-  const people = users.filter((u) => (u.genres || []).includes(genre));
-  const shows = concerts.filter((c) => (c.genres || []).includes(genre));
+  // Family matching: this genre + its subgenres + its parent.
+  const people = users.filter((u) => genreHit(u.genres, genre));
+  const shows = concerts.filter((c) => genreHit(c.genres, genre));
+  const parent = GENRE_PARENT_OF[genre];
+  const subgenres = GENRE_TAXONOMY[genre] || [];
   // all artists mentioned across shows + user favorites for this genre
   const artistSet = new Set();
   users.forEach((u) => {
-    if ((u.genres || []).includes(genre)) {
+    if (genreHit(u.genres, genre)) {
       (u.artists || []).forEach((a) => artistSet.add(a));
       (u.bucketList || []).forEach((a) => artistSet.add(a));
     }
@@ -1409,8 +1476,38 @@ function GenrePage({
           ←
         </button>
         <span className="genre-hdr-name">{genre.toUpperCase()}</span>
+        {parent && onGenreClick && (
+          <button
+            className="uc-genre"
+            style={{ marginLeft: 10 }}
+            onClick={() => onGenreClick(parent)}
+          >
+            part of {parent} ↗
+          </button>
+        )}
       </div>
       <div className="genre-content">
+        {/* Subgenre navigation for parent genres */}
+        {subgenres.length > 0 && onGenreClick && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 5,
+              marginBottom: 18,
+            }}
+          >
+            {subgenres.map((s) => (
+              <button
+                key={s}
+                className="uc-genre"
+                onClick={() => onGenreClick(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
         {/* Artists for this genre */}
         {relatedArtists.length > 0 && (
           <div className="genre-sec">
@@ -5378,6 +5475,7 @@ function App() {
               onFollowToggle={toggleFollow}
               onViewProfile={viewProfile}
               onArtistClick={openArtist}
+              onGenreClick={openGenre}
             />
           )}
           {view === "feed" && (
@@ -5551,6 +5649,7 @@ function App() {
                             onToggleGoing={toggleGoing}
                             onViewProfile={viewProfile}
                             onDelete={deleteConcert}
+                            onGenreClick={openGenre}
                           />
                         ))}
                       </div>
@@ -5593,6 +5692,7 @@ function App() {
                               onToggleGoing={toggleGoing}
                               onViewProfile={viewProfile}
                               onDelete={deleteConcert}
+                              onGenreClick={openGenre}
                             />
                           ))}
                         </div>
@@ -5916,6 +6016,10 @@ function App() {
           onClose={() => setDetail(null)}
           onToggleAttendee={toggleAttendee}
           onViewProfile={viewProfile}
+          onGenreClick={(g) => {
+            setDetail(null);
+            openGenre(g);
+          }}
         />
       )}
       {artistModal && (
