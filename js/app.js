@@ -3,7 +3,7 @@
    app.js  (React + Babel via CDN)
    ============================================================ */
 
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 const enc = encodeURIComponent;
 
 // ── CONFIGg ──────────────────────────────────────────────────────────────────
@@ -337,6 +337,35 @@ const genreFamily = (g) => {
 const genreHit = (tags, g) => {
   const fam = genreFamily(g);
   return (tags || []).some((t) => fam.has(t));
+};
+// Match strength between two users. Strongest signal first: shows you're both
+// going to, shows you both attended, shared favorite artists, shared genres.
+const matchInfo = (me, u2, concerts) => {
+  if (!me || !u2 || u2.id === me.id || !me.id) return { score: 0, line: null };
+  const both = (c) =>
+    (c.attendees || []).includes(me.id) && (c.attendees || []).includes(u2.id);
+  const up = concerts.filter((c) => both(c) && daysUntil(c.date) >= 0);
+  const past = concerts.filter((c) => both(c) && daysUntil(c.date) < 0);
+  const arts = (me.artists || []).filter((a) =>
+    (u2.artists || []).includes(a),
+  );
+  const gens = (me.genres || []).filter((g) => (u2.genres || []).includes(g));
+  const score =
+    up.length * 10 + past.length * 5 + arts.length * 2 + gens.length;
+  let line = null;
+  if (up.length)
+    line =
+      up.length === 1
+        ? "🎟 You're both going to " + up[0].artist
+        : "🎟 " + up.length + " upcoming shows together";
+  else if (past.length)
+    line =
+      "🤝 You were both at " +
+      past[0].artist +
+      (past.length > 1 ? " +" + (past.length - 1) + " more" : "");
+  else if (arts.length) line = "♪ Both into " + arts.slice(0, 2).join(", ");
+  else if (gens.length) line = "◈ Shared: " + gens.slice(0, 3).join(", ");
+  return { score, line };
 };
 
 const ARTIST_SUGG = [
@@ -708,6 +737,618 @@ function CCard({
   );
 }
 
+// ── SHARE PICKER (send a show to a friend as a message) ──────────────────────
+function SharePicker({ c, users, curUser, onClose, onSend }) {
+  const friends = users.filter(
+    (u) =>
+      u.id !== curUser.id &&
+      ((curUser.following || []).includes(u.id) ||
+        (u.following || []).includes(curUser.id)),
+  );
+  return (
+    <div className="mwrap" onClick={onClose} style={{ zIndex: 60 }}>
+      <div
+        className="sheet"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: 420 }}
+      >
+        <div className="sheet-bar" style={{ background: "#F5A623" }} />
+        <div style={{ padding: "10px 18px 22px" }}>
+          <div
+            style={{
+              fontFamily: "'Bebas Neue',sans-serif",
+              fontSize: 22,
+              letterSpacing: 1,
+              marginBottom: 2,
+            }}
+          >
+            Share {c.artist}
+          </div>
+          <div
+            style={{
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 10,
+              color: "#666",
+              marginBottom: 12,
+            }}
+          >
+            Sends the show as a message.
+          </div>
+          {friends.length === 0 ? (
+            <div
+              style={{
+                color: "#666",
+                fontFamily: "'Syne',sans-serif",
+                fontSize: 13,
+                padding: "18px 0",
+                textAlign: "center",
+              }}
+            >
+              Follow some people first — then you can share shows with them.
+            </div>
+          ) : (
+            friends.map((u2) => (
+              <div
+                key={u2.id}
+                onClick={() => onSend(u2.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "10px 6px",
+                  borderBottom: "1px solid #141414",
+                  cursor: "pointer",
+                  borderRadius: 6,
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = "rgba(245,166,35,.05)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "";
+                }}
+              >
+                <div
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    background: u2.color,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "#000",
+                  }}
+                >
+                  {u2.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14 }}>
+                  {u2.name}
+                </div>
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 10,
+                    color: "#F5A623",
+                  }}
+                >
+                  Send ▸
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── INBOX (Messages + Activity tabs) ─────────────────────────────────────────
+function InboxSheet({
+  curUser,
+  users,
+  msgs,
+  notifs,
+  notifMsg,
+  tab,
+  setTab,
+  activeThread,
+  setActiveThread,
+  actFilter,
+  setActFilter,
+  onSend,
+  onClose,
+  onViewProfile,
+  onReportBug,
+  onMarkActivityRead,
+}) {
+  const [draft, setDraft] = useState("");
+  const listRef = useRef(null);
+  useEffect(() => {
+    if (tab === "activity") onMarkActivityRead();
+  }, [tab]);
+  useEffect(() => {
+    if (listRef.current)
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [msgs.length, activeThread]);
+
+  const unreadM = msgs.filter(
+    (m) => m.recipient_id === curUser.id && !m.read,
+  ).length;
+  const unreadN = notifs.filter((n) => !n.read).length;
+
+  // Threads grouped by the other participant, newest first.
+  const threads = {};
+  msgs.forEach((m) => {
+    const other = m.sender_id === curUser.id ? m.recipient_id : m.sender_id;
+    if (!threads[other]) threads[other] = { last: m, unread: 0 };
+    else if (
+      new Date(m.created_at) > new Date(threads[other].last.created_at)
+    )
+      threads[other].last = m;
+    if (m.recipient_id === curUser.id && !m.read) threads[other].unread++;
+  });
+  const threadIds = Object.keys(threads).sort(
+    (a, b) =>
+      new Date(threads[b].last.created_at) -
+      new Date(threads[a].last.created_at),
+  );
+
+  const threadMsgs = activeThread
+    ? msgs
+        .filter(
+          (m) =>
+            m.sender_id === activeThread || m.recipient_id === activeThread,
+        )
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    : [];
+  const other = activeThread
+    ? users.find((u) => u.id === activeThread)
+    : null;
+
+  const send = async () => {
+    const t = draft.trim();
+    if (!t || !activeThread) return;
+    setDraft("");
+    await onSend(activeThread, t, null);
+  };
+
+  const filteredNotifs = notifs.filter((n) =>
+    actFilter === "all"
+      ? true
+      : actFilter === "shows"
+        ? n.type === "new_show" || n.type === "taste_match"
+        : n.type !== "new_show" && n.type !== "taste_match",
+  );
+
+  const mono = {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 10,
+    color: "#666",
+  };
+  const tabStyle = (on) => ({
+    flex: 1,
+    padding: "8px 0",
+    background: "transparent",
+    border: "none",
+    borderBottom: "2px solid " + (on ? "#F5A623" : "transparent"),
+    color: on ? "#F5A623" : "#666",
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 11,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    cursor: "pointer",
+  });
+  const chip = (on) => ({
+    padding: "4px 10px",
+    borderRadius: 12,
+    background: on ? "rgba(245,166,35,.1)" : "transparent",
+    border: "1px solid " + (on ? "rgba(245,166,35,.4)" : "#222"),
+    color: on ? "#F5A623" : "#666",
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 10,
+    cursor: "pointer",
+  });
+
+  return (
+    <div className="mwrap" onClick={onClose}>
+      <div
+        className="sheet"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: 460 }}
+      >
+        <div className="sheet-bar" style={{ background: "#F5A623" }} />
+        <div style={{ padding: "10px 18px 22px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'Bebas Neue',sans-serif",
+                fontSize: 24,
+                color: "#fff",
+                letterSpacing: 1,
+              }}
+            >
+              Inbox
+            </div>
+            <button
+              onClick={onReportBug}
+              style={{
+                background: "none",
+                border: "1px solid #1e1e1e",
+                color: "#888",
+                fontSize: 11,
+                fontFamily: "'DM Mono',monospace",
+                padding: "5px 10px",
+                borderRadius: 5,
+                cursor: "pointer",
+              }}
+            >
+              🐛 Report a bug
+            </button>
+          </div>
+
+          <div style={{ display: "flex", marginBottom: 14 }}>
+            <button
+              style={tabStyle(tab === "messages")}
+              onClick={() => setTab("messages")}
+            >
+              Messages{unreadM > 0 ? " (" + unreadM + ")" : ""}
+            </button>
+            <button
+              style={tabStyle(tab === "activity")}
+              onClick={() => setTab("activity")}
+            >
+              Activity{unreadN > 0 ? " (" + unreadN + ")" : ""}
+            </button>
+          </div>
+
+          {/* ── MESSAGES ── */}
+          {tab === "messages" && !activeThread && (
+            <div>
+              {threadIds.length === 0 ? (
+                <div
+                  style={{
+                    color: "#666",
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 13,
+                    padding: "24px 0",
+                    textAlign: "center",
+                  }}
+                >
+                  No messages yet. Open a show and tap “Share with a friend”
+                  to start a chat.
+                </div>
+              ) : (
+                threadIds.map((tid) => {
+                  const u2 = users.find((u) => u.id === tid);
+                  const t = threads[tid];
+                  const preview = t.last.show
+                    ? "🎟 " + (t.last.show.artist || "a show")
+                    : t.last.body;
+                  return (
+                    <div
+                      key={tid}
+                      onClick={() => setActiveThread(tid)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "11px 4px",
+                        borderBottom: "1px solid #141414",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: "50%",
+                          background: u2 ? u2.color : "#333",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#000",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {(u2 ? u2.name : "??").slice(0, 2).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontFamily: "'Syne',sans-serif",
+                            fontSize: 14,
+                            fontWeight: t.unread ? 700 : 500,
+                          }}
+                        >
+                          {u2 ? u2.name : "Member"}
+                        </div>
+                        <div
+                          style={{
+                            ...mono,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            color: t.unread ? "#aaa" : "#555",
+                          }}
+                        >
+                          {t.last.sender_id === curUser.id ? "You: " : ""}
+                          {preview}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={mono}>{timeAgo(t.last.created_at)}</div>
+                        {t.unread > 0 && (
+                          <div
+                            style={{
+                              marginTop: 4,
+                              marginLeft: "auto",
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              background: "#F5A623",
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {tab === "messages" && activeThread && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 10,
+                }}
+              >
+                <button
+                  className="back-btn"
+                  onClick={() => setActiveThread(null)}
+                >
+                  ←
+                </button>
+                <span
+                  onClick={() => other && onViewProfile(other.id)}
+                  style={{
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {other ? other.name : "Member"}
+                </span>
+              </div>
+              <div
+                ref={listRef}
+                style={{
+                  maxHeight: "45vh",
+                  overflowY: "auto",
+                  padding: "4px 2px",
+                }}
+              >
+                {threadMsgs.map((m) => {
+                  const mine = m.sender_id === curUser.id;
+                  return (
+                    <div
+                      key={m.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: mine ? "flex-end" : "flex-start",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          maxWidth: "78%",
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          background: mine
+                            ? "rgba(245,166,35,.12)"
+                            : "#161616",
+                          border:
+                            "1px solid " +
+                            (mine ? "rgba(245,166,35,.3)" : "#222"),
+                          fontFamily: "'Syne',sans-serif",
+                          fontSize: 13,
+                          color: "#f0ede8",
+                        }}
+                      >
+                        {m.show && (
+                          <div
+                            style={{
+                              padding: "8px 10px",
+                              marginBottom: m.body ? 6 : 0,
+                              background: "#0c0c0c",
+                              border: "1px solid #2a2a2a",
+                              borderRadius: 6,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontFamily: "'Bebas Neue',sans-serif",
+                                fontSize: 16,
+                                letterSpacing: 1,
+                              }}
+                            >
+                              🎟 {m.show.artist}
+                            </div>
+                            <div style={mono}>
+                              {m.show.venue}
+                              {m.show.city ? " · " + m.show.city : ""}
+                              {m.show.date ? " · " + m.show.date : ""}
+                            </div>
+                          </div>
+                        )}
+                        {m.body}
+                        <div
+                          style={{
+                            ...mono,
+                            fontSize: 8,
+                            marginTop: 4,
+                            textAlign: mine ? "right" : "left",
+                          }}
+                        >
+                          {timeAgo(m.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") send();
+                  }}
+                  placeholder={
+                    "Message " + (other ? other.name : "") + "…"
+                  }
+                  style={{
+                    flex: 1,
+                    background: "#0c0c0c",
+                    border: "1px solid #1e1e1e",
+                    borderRadius: 6,
+                    color: "#f0ede8",
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 13,
+                    padding: "10px 12px",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  onClick={send}
+                  disabled={!draft.trim()}
+                  style={{
+                    padding: "0 16px",
+                    background: draft.trim()
+                      ? "#F5A623"
+                      : "rgba(245,166,35,.2)",
+                    border: "none",
+                    borderRadius: 6,
+                    color: "#000",
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: draft.trim() ? "pointer" : "default",
+                  }}
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── ACTIVITY ── */}
+          {tab === "activity" && (
+            <div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                {[
+                  ["all", "All"],
+                  ["shows", "Shows"],
+                  ["other", "Other"],
+                ].map(([id, label]) => (
+                  <button
+                    key={id}
+                    style={chip(actFilter === id)}
+                    onClick={() => setActFilter(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {filteredNotifs.length === 0 ? (
+                <div
+                  style={{
+                    color: "#666",
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 13,
+                    padding: "24px 0",
+                    textAlign: "center",
+                  }}
+                >
+                  Nothing yet.
+                </div>
+              ) : (
+                filteredNotifs.map((n) => {
+                  const m = notifMsg(n);
+                  return (
+                    <div
+                      key={n.id}
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        padding: "12px 0",
+                        borderBottom: "1px solid #141414",
+                      }}
+                    >
+                      <div style={{ fontSize: 17 }}>{m.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontFamily: "'Syne',sans-serif",
+                            fontSize: 13,
+                            color: "#ddd",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {m.text}
+                        </div>
+                        <div style={{ ...mono, marginTop: 3 }}>
+                          {timeAgo(n.created_at)}
+                        </div>
+                        {m.action === "no_show" && (
+                          <div style={{ marginTop: 6 }}>
+                            <button
+                              onClick={onReportBug}
+                              style={{
+                                background: "none",
+                                border: "1px solid #2a2a2a",
+                                color: "#888",
+                                fontSize: 10,
+                                fontFamily: "'DM Mono',monospace",
+                                padding: "4px 9px",
+                                borderRadius: 5,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Report
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── CONCERT DETAIL SHEET ──────────────────────────────────────────────────────
 function CDetail({
   c,
@@ -717,6 +1358,7 @@ function CDetail({
   onToggleAttendee,
   onViewProfile,
   onGenreClick,
+  onShare,
 }) {
   const u = getUrgency(c.date),
     dy = daysUntil(c.date),
@@ -733,6 +1375,13 @@ function CDetail({
     rc = u === "urgent" ? "#FF5555" : "#F5A623";
   const showR = u === "urgent" || u === "soon";
   const isFestival = c.is_festival && c.end_date && c.end_date !== c.date;
+  const tasteGoing = (c.attendees || []).filter((uid) => {
+    if (uid === curUser.id) return false;
+    const u2 = users.find((x) => x.id === uid);
+    return (
+      u2 && (u2.genres || []).some((g) => (curUser.genres || []).includes(g))
+    );
+  }).length;
   const dateStr = isFestival
     ? fmt(c.date).full + " – " + fmt(c.end_date).full
     : d.dow + ", " + d.full;
@@ -784,6 +1433,39 @@ function CDetail({
             />
             {dt}
           </div>
+          {tasteGoing > 0 && (
+            <div
+              style={{
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 11,
+                color: "#F5A623",
+                margin: "10px 0 2px",
+              }}
+            >
+              ⚡ {tasteGoing} {tasteGoing === 1 ? "person" : "people"} with
+              your taste {tasteGoing === 1 ? "is" : "are"} going
+            </div>
+          )}
+          {onShare && (
+            <button
+              onClick={() => onShare(c)}
+              style={{
+                margin: "10px 0 2px",
+                width: "100%",
+                padding: "10px 0",
+                background: "transparent",
+                border: "1px solid #2a2a2a",
+                borderRadius: 6,
+                color: "#aaa",
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 11,
+                letterSpacing: 1,
+                cursor: "pointer",
+              }}
+            >
+              ✉ SHARE WITH A FRIEND
+            </button>
+          )}
           <div className="sh-lbl nb">Get Tickets</div>
           {primaryUrl(c) ? (
             <a
@@ -1031,6 +1713,7 @@ function ProfilePage({
   onOpenConcert,
   onViewProfile,
   onEdit,
+  onMessage,
   onGenreClick,
   onArtistClick,
 }) {
@@ -1063,6 +1746,20 @@ function ProfilePage({
             onClick={() => onFollowToggle(user.id)}
           >
             {isFollowing ? "Following" : "Follow"}
+          </button>
+        )}
+        {!isSelf && onMessage && (
+          <button
+            className="prof-follow-btn pf-follow"
+            style={{
+              background: "transparent",
+              border: "1px solid #2a2a2a",
+              color: "#aaa",
+              marginLeft: 6,
+            }}
+            onClick={() => onMessage(user.id)}
+          >
+            ✉ Message
           </button>
         )}
         {isSelf && (
@@ -1780,13 +2477,15 @@ function GenrePage({
               </div>
             </div>
           ) : (
-            people.map((u2) => {
+            [...people]
+              .sort(
+                (a, b) =>
+                  matchInfo(curUser, b, concerts).score -
+                  matchInfo(curUser, a, concerts).score,
+              )
+              .map((u2) => {
               const isF = curUser.following.includes(u2.id);
-              const mc = concerts.filter(
-                (c) =>
-                  (c.attendees || []).includes(curUser.id) &&
-                  (c.attendees || []).includes(u2.id),
-              ).length;
+              const mi = matchInfo(curUser, u2, concerts);
               return (
                 <div
                   key={u2.id}
@@ -1818,10 +2517,8 @@ function GenrePage({
                         </span>
                       ))}
                     </div>
-                    {mc > 0 && (
-                      <div className="uc-mutual">
-                        🎟 {mc} mutual show{mc !== 1 ? "s" : ""}
-                      </div>
+                    {mi.line && (
+                      <div className="uc-mutual">{mi.line}</div>
                     )}
                   </div>
                   {u2.id !== curUser.id && (
@@ -4746,6 +5443,11 @@ function App() {
   const [pushHidden, setPushHidden] = useState(false);
   const [notifs, setNotifs] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [msgs, setMsgs] = useState([]);
+  const [inboxTab, setInboxTab] = useState("messages");
+  const [activeThread, setActiveThread] = useState(null); // other user's id
+  const [shareShow, setShareShow] = useState(null); // concert being shared
+  const [actFilter, setActFilter] = useState("all");
   const [showBug, setShowBug] = useState(false);
   const [bugText, setBugText] = useState("");
   const [bugSending, setBugSending] = useState(false);
@@ -4898,6 +5600,52 @@ function App() {
     };
   }, [session]);
 
+  // Load my messages and keep them live.
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setMsgs([]);
+      return;
+    }
+    let cancelled = false;
+    const uid = session.user.id;
+    (async () => {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .or("sender_id.eq." + uid + ",recipient_id.eq." + uid)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (!cancelled && data) setMsgs(data);
+    })();
+    let mch;
+    if (typeof supabase.channel === "function") {
+      mch = supabase
+        .channel("msgs-" + uid)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: "recipient_id=eq." + uid,
+          },
+          (payload) => {
+            if (payload.new)
+              setMsgs((p) =>
+                p.some((m) => m.id === payload.new.id)
+                  ? p
+                  : [payload.new, ...p],
+              );
+          },
+        )
+        .subscribe();
+    }
+    return () => {
+      cancelled = true;
+      if (mch) supabase.removeChannel(mch);
+    };
+  }, [session]);
+
   // Track "last active" for DAU/WAU (one lightweight write per app load).
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -5038,9 +5786,58 @@ function App() {
     }
   };
 
-  // Open the notifications panel and mark everything read.
-  const openNotifs = async () => {
+  // ── Inbox: unread counts, sending, read receipts ──
+  const unreadMsgCount = msgs.filter(
+    (m) => m.recipient_id === session?.user?.id && !m.read,
+  ).length;
+
+  const sendMessage = async (toId, body, show) => {
+    if (!session?.user?.id) return false;
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        sender_id: session.user.id,
+        recipient_id: toId,
+        body: body || "",
+        show: show || null,
+      })
+      .select()
+      .single();
+    if (error) {
+      toast("Couldn't send — " + error.message, true);
+      return false;
+    }
+    setMsgs((p) => [data, ...p]);
+    return true;
+  };
+
+  const markThreadRead = async (otherId) => {
+    if (!session?.user?.id) return;
+    const unread = msgs.some(
+      (m) => m.sender_id === otherId && !m.read && m.recipient_id === session.user.id,
+    );
+    if (!unread) return;
+    setMsgs((p) =>
+      p.map((m) => (m.sender_id === otherId && !m.read ? { ...m, read: true } : m)),
+    );
+    await supabase
+      .from("messages")
+      .update({ read: true })
+      .eq("recipient_id", session.user.id)
+      .eq("sender_id", otherId)
+      .eq("read", false);
+  };
+
+  const openThread = (id) => {
+    if (!requireAuth()) return;
+    setInboxTab("messages");
+    setActiveThread(id);
+    markThreadRead(id);
     setShowNotifs(true);
+  };
+
+  // Activity items are marked read when that tab is viewed (see InboxSheet).
+  const markNotifsRead = async () => {
     const unread = notifs.filter((n) => !n.read);
     if (unread.length && session?.user?.id) {
       setNotifs((p) => p.map((n) => ({ ...n, read: true })));
@@ -5050,6 +5847,10 @@ function App() {
         .eq("user_id", session.user.id)
         .eq("read", false);
     }
+  };
+  const openNotifs = () => {
+    setInboxTab(unreadMsgCount > 0 ? "messages" : "activity");
+    setShowNotifs(true);
   };
 
   // Human-readable text for a notification row.
@@ -5070,6 +5871,14 @@ function App() {
           (d.actor || "Someone you follow") +
           " added a show" +
           (d.artist ? " — " + d.artist : ""),
+      };
+    if (n.type === "taste_match")
+      return {
+        icon: "⚡",
+        text:
+          (d.artist || "A show") +
+          " just got added — right up your alley" +
+          (d.genres && d.genres[0] ? " (" + d.genres[0] + ")" : ""),
       };
     return { icon: "🔔", text: "New activity" };
   };
@@ -5439,7 +6248,8 @@ function App() {
                     style={{ position: "relative" }}
                   >
                     🔔
-                    {notifs.some((n) => !n.read) && (
+                    {(notifs.some((n) => !n.read) ||
+                      unreadMsgCount > 0) && (
                       <span
                         style={{
                           position: "absolute",
@@ -5461,7 +6271,9 @@ function App() {
                         }}
                       >
                         {(() => {
-                          const u = notifs.filter((n) => !n.read).length;
+                          const u =
+                            notifs.filter((n) => !n.read).length +
+                            unreadMsgCount;
                           return u > 9 ? "9+" : u;
                         })()}
                       </span>
@@ -5696,6 +6508,7 @@ function App() {
               onOpenConcert={setDetail}
               onViewProfile={viewProfile}
               onEdit={() => setView("edit")}
+              onMessage={openThread}
               onGenreClick={openGenre}
               onArtistClick={openArtist}
             />
@@ -5962,129 +6775,36 @@ function App() {
 
       {/* NOTIFICATIONS PANEL */}
       {showNotifs && (
-        <div className="mwrap" onClick={() => setShowNotifs(false)}>
-          <div
-            className="sheet"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 460 }}
-          >
-            <div className="sheet-bar" style={{ background: "#F5A623" }} />
-            <div style={{ padding: "10px 18px 22px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 10,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "'Bebas Neue',sans-serif",
-                    fontSize: 24,
-                    color: "#fff",
-                    letterSpacing: 1,
-                  }}
-                >
-                  Notifications
-                </div>
-                <button
-                  onClick={() => {
-                    setShowNotifs(false);
-                    setShowBug(true);
-                  }}
-                  style={{
-                    background: "none",
-                    border: "1px solid #1e1e1e",
-                    color: "#888",
-                    fontSize: 11,
-                    fontFamily: "'DM Mono',monospace",
-                    padding: "5px 10px",
-                    borderRadius: 5,
-                    cursor: "pointer",
-                  }}
-                >
-                  🐛 Report a bug
-                </button>
-              </div>
-              {notifs.length === 0 ? (
-                <div
-                  style={{
-                    color: "#666",
-                    fontFamily: "'Syne',sans-serif",
-                    fontSize: 13,
-                    padding: "24px 0",
-                    textAlign: "center",
-                  }}
-                >
-                  Nothing yet.
-                </div>
-              ) : (
-                notifs.map((n) => {
-                  const m = notifMsg(n);
-                  return (
-                    <div
-                      key={n.id}
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        padding: "12px 0",
-                        borderBottom: "1px solid #141414",
-                      }}
-                    >
-                      <div style={{ fontSize: 17 }}>{m.icon}</div>
-                      <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            fontFamily: "'Syne',sans-serif",
-                            fontSize: 13,
-                            color: "#ddd",
-                            lineHeight: 1.45,
-                          }}
-                        >
-                          {m.text}
-                        </div>
-                        <div
-                          style={{
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 10,
-                            color: "#555",
-                            marginTop: 3,
-                          }}
-                        >
-                          {timeAgo(n.created_at)}
-                        </div>
-                        {m.action === "no_show" && (
-                          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                            <button
-                              className="btn-sm btn-amber"
-                              onClick={() => {
-                                setShowNotifs(false);
-                                setShowAddC(true);
-                              }}
-                            >
-                              Add manually
-                            </button>
-                            <button
-                              className="btn-sm"
-                              onClick={() => {
-                                setShowNotifs(false);
-                                setShowBug(true);
-                              }}
-                              style={{ color: "#888" }}
-                            >
-                              Report
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
+        <InboxSheet
+          curUser={curUser}
+          users={users}
+          msgs={msgs}
+          notifs={notifs}
+          notifMsg={notifMsg}
+          tab={inboxTab}
+          setTab={setInboxTab}
+          activeThread={activeThread}
+          setActiveThread={(id) => {
+            setActiveThread(id);
+            if (id) markThreadRead(id);
+          }}
+          actFilter={actFilter}
+          setActFilter={setActFilter}
+          onSend={sendMessage}
+          onClose={() => {
+            setShowNotifs(false);
+            setActiveThread(null);
+          }}
+          onViewProfile={(id) => {
+            setShowNotifs(false);
+            viewProfile(id);
+          }}
+          onReportBug={() => {
+            setShowNotifs(false);
+            setShowBug(true);
+          }}
+          onMarkActivityRead={markNotifsRead}
+        />
       )}
 
       {/* BUG REPORT */}
@@ -6261,6 +6981,28 @@ function App() {
           onGenreClick={(g) => {
             setDetail(null);
             openGenre(g);
+          }}
+          onShare={(cc) => setShareShow(cc)}
+        />
+      )}
+      {shareShow && (
+        <SharePicker
+          c={shareShow}
+          users={users}
+          curUser={curUser}
+          onClose={() => setShareShow(null)}
+          onSend={async (uid) => {
+            const okd = await sendMessage(uid, "", {
+              artist: shareShow.artist,
+              venue: shareShow.venue || "",
+              city: shareShow.city || "",
+              date: shareShow.date,
+            });
+            if (okd) {
+              const u2 = users.find((x) => x.id === uid);
+              toast("Shared with " + (u2 ? u2.name : "friend") + " 🎟");
+            }
+            setShareShow(null);
           }}
         />
       )}
