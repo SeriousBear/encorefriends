@@ -925,6 +925,101 @@ function CDetail({
 }
 
 // ── PROFILE PAGE ─────────────────────────────────────────────────────────────
+// ── GENRE SEARCH (jump to any genre page) ────────────────────────────────────
+function GenreSearch({ onGenreClick }) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const matches = q.trim()
+    ? GENRES.filter((g) =>
+        g.toLowerCase().includes(q.trim().toLowerCase()),
+      ).slice(0, 12)
+    : [];
+  return (
+    <div style={{ position: "relative", margin: "14px 0 4px" }}>
+      <input
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="⌕ Search any genre — find your people"
+        style={{
+          width: "100%",
+          background: "#0c0c0c",
+          border: "1px solid #1e1e1e",
+          borderRadius: 6,
+          color: "#f0ede8",
+          fontFamily: "'DM Mono',monospace",
+          fontSize: 12,
+          padding: "10px 12px",
+          outline: "none",
+          boxSizing: "border-box",
+        }}
+      />
+      {open && matches.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            zIndex: 30,
+            marginTop: 4,
+            background: "#111",
+            border: "1px solid #222",
+            borderRadius: 6,
+            overflow: "hidden",
+            boxShadow: "0 8px 24px rgba(0,0,0,.5)",
+          }}
+        >
+          {matches.map((g) => (
+            <div
+              key={g}
+              onMouseDown={() => {
+                setQ("");
+                setOpen(false);
+                onGenreClick && onGenreClick(g);
+              }}
+              style={{
+                padding: "9px 12px",
+                fontFamily: "'Syne',sans-serif",
+                fontSize: 13,
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: "1px solid #1a1a1a",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = "rgba(245,166,35,.07)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = "";
+              }}
+            >
+              <span>{g}</span>
+              <span
+                style={{
+                  fontFamily: "'DM Mono',monospace",
+                  fontSize: 9,
+                  color: "#555",
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                }}
+              >
+                {GENRE_PARENT_OF[g] ||
+                  (GENRE_TAXONOMY[g] || []).length + " subgenres"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProfilePage({
   user,
   curUser,
@@ -1008,6 +1103,7 @@ function ProfilePage({
             </span>
           ))}
         </div>
+        {isSelf && <GenreSearch onGenreClick={onGenreClick} />}
         {(user.artists || []).length > 0 && (
           <div>
             <div className="prof-subsec">Favorite Artists</div>
@@ -1458,16 +1554,25 @@ function GenrePage({
   const shows = concerts.filter((c) => genreHit(c.genres, genre));
   const parent = GENRE_PARENT_OF[genre];
   const subgenres = GENRE_TAXONOMY[genre] || [];
-  // all artists mentioned across shows + user favorites for this genre
-  const artistSet = new Set();
+  // Artists ranked by presence in the app: shows (weighted by attendance)
+  // beat favorites, favorites beat bucket-list wishes.
+  const artistScore = {};
+  const bump = (a, n) => {
+    if (a) artistScore[a] = (artistScore[a] || 0) + n;
+  };
   users.forEach((u) => {
     if (genreHit(u.genres, genre)) {
-      (u.artists || []).forEach((a) => artistSet.add(a));
-      (u.bucketList || []).forEach((a) => artistSet.add(a));
+      (u.artists || []).forEach((a) => bump(a, 2));
+      (u.bucketList || []).forEach((a) => bump(a, 1));
     }
   });
-  shows.forEach((c) => artistSet.add(c.artist));
-  const relatedArtists = [...artistSet].filter(Boolean);
+  shows.forEach((c) => bump(c.artist, 3 + (c.attendees || []).length));
+  const relatedArtists = Object.keys(artistScore).sort(
+    (a, b) => artistScore[b] - artistScore[a],
+  );
+  const upcomingShows = shows
+    .filter((c) => daysUntil(c.date) >= 0)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return (
     <div className="genre-page">
@@ -1549,7 +1654,7 @@ function GenrePage({
         {/* Upcoming shows for this genre */}
         <div className="genre-sec">
           <div className="genre-sec-hdr">Upcoming Shows</div>
-          {shows.length === 0 ? (
+          {upcomingShows.length === 0 ? (
             <div className="empty" style={{ padding: "30px 0" }}>
               <div className="empty-i" style={{ fontSize: 24 }}>
                 🎵
@@ -1560,7 +1665,7 @@ function GenrePage({
             </div>
           ) : (
             <div className="grid">
-              {shows.map((c) => {
+              {upcomingShows.map((c) => {
                 const d = fmt(c.date),
                   u = getUrgency(c.date),
                   dy = daysUntil(c.date);
@@ -1658,6 +1763,16 @@ function GenrePage({
         {/* People into this genre */}
         <div className="genre-sec">
           <div className="genre-sec-hdr">People into {genre}</div>
+          <div
+            style={{
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 10,
+              color: "#555",
+              margin: "-6px 0 12px",
+            }}
+          >
+            Shows people who are Open to Connect, plus your friends.
+          </div>
           {people.length === 0 ? (
             <div className="empty" style={{ padding: "20px 0" }}>
               <div className="empty-s">
@@ -1829,6 +1944,7 @@ function EditProfilePage({ user, onBack, onSave }) {
     artists: [...(user.artists || [])],
     bucketList: [...(user.bucketList || [])],
     vibe: user.vibe || "both",
+    discoverable: !!user.discoverable,
     totalShows: user.totalShows || "",
     social: { instagram: "", ...(user.social || {}) },
   });
@@ -1991,6 +2107,71 @@ function EditProfilePage({ user, onBack, onSave }) {
       </div>
 
       {/* MUSIC TASTE */}
+      <div className="edit-section" style={{ marginTop: 20 }}>
+        <div className="edit-sec-title">Privacy</div>
+        <div
+          onClick={() => set("discoverable", !draft.discoverable)}
+          style={{
+            padding: "14px 15px",
+            background: draft.discoverable ? "rgba(245,166,35,.06)" : "#0c0c0c",
+            border:
+              "1px solid " +
+              (draft.discoverable ? "rgba(245,166,35,.35)" : "#1e1e1e"),
+            borderRadius: 8,
+            cursor: "pointer",
+            transition: "all .15s",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'Syne',sans-serif",
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              🔓 Open to Connect
+            </div>
+            <div
+              style={{
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: 1,
+                padding: "3px 10px",
+                borderRadius: 10,
+                color: draft.discoverable ? "#F5A623" : "#555",
+                border:
+                  "1px solid " +
+                  (draft.discoverable ? "rgba(245,166,35,.4)" : "#2a2a2a"),
+              }}
+            >
+              {draft.discoverable ? "ON" : "OFF"}
+            </div>
+          </div>
+          <div
+            style={{
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 10,
+              color: "#666",
+              marginTop: 8,
+              lineHeight: 1.6,
+            }}
+          >
+            {draft.discoverable
+              ? "Your profile, genres, and upcoming shows are visible to everyone. Strangers only ever see past shows you both attended."
+              : "Only friends and people you follow can see your profile. You won't appear in genre pages or search."}
+          </div>
+        </div>
+      </div>
+
       <div className="edit-section" style={{ marginTop: 20 }}>
         <div className="edit-sec-title">Music Taste</div>
 
@@ -3369,6 +3550,7 @@ function Onboarding({ session, profile, onComplete }) {
   const [phone, setPhone] = useState("");
   const [genres, setGenres] = useState(p.genres || []);
   const [artists, setArtists] = useState(p.artists || []);
+  const [discoverable, setDiscoverable] = useState(!!p.discoverable);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
   const [color] = useState(() => {
@@ -3418,6 +3600,7 @@ function Onboarding({ session, profile, onComplete }) {
       bio: p.bio || "",
       genres,
       artists,
+      discoverable,
       vibe: p.vibe || "both",
       total_shows: p.total_shows || 0,
       social: p.social || {},
@@ -3733,6 +3916,62 @@ function Onboarding({ session, profile, onComplete }) {
                 max={5}
                 placeholder="Search artists…"
               />
+            </div>
+
+            <div
+              onClick={() => setDiscoverable((d) => !d)}
+              style={{
+                marginTop: 24,
+                padding: "14px 15px",
+                background: discoverable ? "rgba(245,166,35,.06)" : "#0c0c0c",
+                border:
+                  "1px solid " +
+                  (discoverable ? "rgba(245,166,35,.35)" : "#1e1e1e"),
+                borderRadius: 8,
+                cursor: "pointer",
+                transition: "all .15s",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                >
+                  🔓 Open to Connect
+                </div>
+                <div
+                  style={{
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    padding: "3px 10px",
+                    borderRadius: 10,
+                    color: discoverable ? "#F5A623" : "#555",
+                    border:
+                      "1px solid " +
+                      (discoverable ? "rgba(245,166,35,.4)" : "#2a2a2a"),
+                  }}
+                >
+                  {discoverable ? "ON" : "OFF"}
+                </div>
+              </div>
+              <div style={{ ...help, marginTop: 8 }}>
+                Looking to make friends and hit shows together? Open your
+                profile so people who share your taste can find you. When off,
+                only friends and people you follow can see you. Change it
+                anytime in Edit Profile.
+              </div>
             </div>
 
             {err && (
@@ -4476,6 +4715,7 @@ function App() {
           bio: pr.bio || "",
           genres: pr.genres || [],
           artists: pr.artists || [],
+          discoverable: !!pr.discoverable,
           bucketList: pr.bucket_list || [],
           vibe: pr.vibe || "both",
           totalShows: pr.total_shows || 0,
@@ -4724,6 +4964,7 @@ function App() {
         genres: profile.genres || [],
         artists: profile.artists || [],
         bucketList: profile.bucket_list || [],
+        discoverable: !!profile.discoverable,
         vibe: profile.vibe || "both",
         totalShows: profile.total_shows || 0,
         social: profile.social || {},
@@ -5032,6 +5273,7 @@ function App() {
           vibe: draft.vibe,
           total_shows: draft.totalShows ? parseInt(draft.totalShows) : 0,
           social: draft.social,
+          discoverable: !!draft.discoverable,
         })
         .eq("id", session.user.id);
       setProfile((p) => ({
