@@ -18,6 +18,34 @@ const VAPID_PUBLIC_KEY =
   "BJKV6Lf06d8lTNYYOsFZxsenCLtkt3R45S1ZjFBXAvOsNYln8gg-n2C5gjmL9DaMS95klHtkIK0qA17eA49DAog";
 
 // VAPID keys are URL-safe base64; the browser's subscribe() wants a Uint8Array.
+// ── PLATFORM DETECTION (push support differs wildly by platform) ─────────────
+// iOS only delivers web push to apps installed on the home screen, and every
+// iOS browser is WebKit underneath — so Chrome/Firefox/etc on iOS can't do it.
+const isIOS = () =>
+  typeof navigator !== "undefined" &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+// Running from the home screen (installed) rather than a browser tab?
+const isStandalone = () =>
+  typeof window !== "undefined" &&
+  (window.navigator.standalone === true ||
+    (window.matchMedia &&
+      window.matchMedia("(display-mode: standalone)").matches));
+
+// On iOS, only Safari reliably offers "Add to Home Screen".
+const isIOSNonSafari = () =>
+  isIOS() && /CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent);
+
+// Brave ships with web push disabled by default — worth saying so explicitly.
+async function isBrave() {
+  try {
+    return !!(navigator.brave && (await navigator.brave.isBrave()));
+  } catch (e) {
+    return false;
+  }
+}
+
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -32,6 +60,13 @@ function urlBase64ToUint8Array(base64String) {
 // otherwise users forward mail to an address nothing is listening on.
 const FORWARDING_ENABLED = true;
 const FORWARD_DOMAIN = "encorefriends.com";
+
+// Social logins shown on the sign-in screen, in order.
+// ONLY list a provider after it's fully configured in
+// Supabase → Authentication → Providers — otherwise the button is a dead end.
+//   "apple"    → needs a paid Apple Developer account ($99/yr)
+//   "facebook" → needs a Meta app in Live mode
+const AUTH_PROVIDERS = ["google"];
 
 // ── RESELLERS ───────────────────────────────────────────────────────────────
 const RESELLERS = [
@@ -2115,19 +2150,19 @@ function SearchPage({
 
 // ── LOGIN PAGE ───────────────────────────────────────────────────────────────
 function LoginPage({ onBack }) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(null); // provider id while redirecting
   const [error, setError] = useState(null);
 
-  const signInWithGoogle = async () => {
-    setLoading(true);
+  const signIn = async (provider) => {
+    setLoading(provider);
     setError(null);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider,
       options: { redirectTo: "https://encorefriends.com/app.html" },
     });
     if (error) {
       setError(error.message);
-      setLoading(false);
+      setLoading(null);
     }
   };
 
@@ -2199,15 +2234,13 @@ function LoginPage({ onBack }) {
         >
           Sign in to track shows, follow friends, and never miss a concert.
         </div>
-        <button
-          onClick={signInWithGoogle}
-          disabled={loading}
-          style={{
+        {(() => {
+          const btn = (bg, fg, border) => ({
             width: "100%",
             padding: "13px 20px",
-            background: "#fff",
-            color: "#000",
-            border: "none",
+            background: bg,
+            color: fg,
+            border: border || "none",
             borderRadius: 6,
             fontFamily: "'Syne',sans-serif",
             fontSize: 14,
@@ -2218,30 +2251,71 @@ function LoginPage({ onBack }) {
             justifyContent: "center",
             gap: 10,
             opacity: loading ? 0.6 : 1,
-            marginBottom: 16,
+            marginBottom: 10,
             transition: "all .15s",
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            />
-          </svg>
-          {loading ? "Signing in…" : "Continue with Google"}
-        </button>
+          });
+          const marks = {
+            google: (
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+            ),
+            apple: (
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09z" />
+              </svg>
+            ),
+            facebook: (
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+              </svg>
+            ),
+          };
+          const skin = {
+            google: ["#fff", "#000", null],
+            apple: ["#000", "#fff", "1px solid #333"],
+            facebook: ["#1877F2", "#fff", null],
+          };
+          const name = { google: "Google", apple: "Apple", facebook: "Facebook" };
+          return AUTH_PROVIDERS.filter((p) => marks[p]).map((p) => (
+            <button
+              key={p}
+              onClick={() => signIn(p)}
+              disabled={!!loading}
+              style={btn(...skin[p])}
+            >
+              {marks[p]}
+              {loading === p ? "Signing in…" : "Continue with " + name[p]}
+            </button>
+          ));
+        })()}
         {error && (
           <div
             style={{
@@ -4329,7 +4403,9 @@ function App() {
   const [showAuth, setShowAuth] = useState(false); // guest -> sign-in screen
   const [showPast, setShowPast] = useState(false); // collapse past shows
   const [detail, setDetail] = useState(null);
-  const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported
+  const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported|ios-install
+  const [installPrompt, setInstallPrompt] = useState(null); // deferred beforeinstallprompt
+  const [installHidden, setInstallHidden] = useState(false);
   const [pushHidden, setPushHidden] = useState(false);
   const [notifs, setNotifs] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -4363,8 +4439,18 @@ function App() {
 
   // Detect push support + whether this browser is already subscribed.
   useEffect(() => {
+    if (typeof navigator === "undefined") {
+      setPushState("unsupported");
+      return;
+    }
+    // iOS only allows push once the app lives on the home screen. Before that
+    // the APIs simply aren't there, so tell them how to install instead of
+    // silently showing nothing.
+    if (isIOS() && !isStandalone()) {
+      setPushState("ios-install");
+      return;
+    }
     if (
-      typeof navigator === "undefined" ||
       !("serviceWorker" in navigator) ||
       !("PushManager" in window) ||
       typeof Notification === "undefined"
@@ -4385,6 +4471,22 @@ function App() {
         ),
       )
       .catch(() => setPushState("unsupported"));
+  }, []);
+
+  // Chrome/Edge/Brave fire this when the app is installable — stash it so we
+  // can offer a one-tap Install button instead of making people dig in menus.
+  useEffect(() => {
+    const onPrompt = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    const onInstalled = () => setInstallPrompt(null);
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
   // Live auto-popup: when a show is inserted (e.g. a forwarded ticket lands, or
@@ -4553,6 +4655,33 @@ function App() {
       };
   const isGuest = !session;
   const isAdmin = !!(profile && profile.is_admin);
+
+  // Shared look for the inline banners above the feed.
+  const bannerBox = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+    background: "#111",
+    border: "1px solid #1e1e1e",
+    borderRadius: 8,
+    padding: "12px 14px",
+    marginBottom: 16,
+  };
+  const bannerTxt = {
+    fontFamily: "'Syne',sans-serif",
+    fontSize: 13,
+    color: "#ccc",
+    flex: 1,
+    minWidth: 200,
+    lineHeight: 1.45,
+  };
+  // Only ever show one banner at a time.
+  const pushBannerShowing =
+    !isGuest &&
+    !pushHidden &&
+    (pushState === "prompt" || pushState === "ios-install");
   // Any write action by a guest opens the sign-in screen instead.
   const requireAuth = () => {
     if (isGuest) {
@@ -4667,8 +4796,28 @@ function App() {
       toast("Notifications on! 🔔");
     } catch (e) {
       setPushState("prompt");
-      toast("Couldn't enable notifications.", true);
+      // Brave disables web push unless the user turns it on themselves — say so
+      // rather than showing a dead-end error.
+      if (await isBrave()) {
+        toast(
+          "Brave blocks push by default. Open brave://settings/privacy, turn on “Use Google services for push messaging,” restart Brave, then try again.",
+          true,
+        );
+      } else {
+        toast("Couldn't enable notifications.", true);
+      }
     }
+  };
+
+  const doInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    try {
+      await installPrompt.userChoice;
+    } catch (e) {
+      /* dismissed */
+    }
+    setInstallPrompt(null);
   };
 
   const deleteConcert = async (cid) => {
@@ -5235,34 +5384,36 @@ function App() {
             <main className="main">
               {notif && <div className="toast-ok">🔔 {notif}</div>}
               {errMsg && <div className="toast-err">⚠ {errMsg}</div>}
-              {!isGuest && pushState === "prompt" && !pushHidden && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                    background: "#111",
-                    border: "1px solid #1e1e1e",
-                    borderRadius: 8,
-                    padding: "12px 14px",
-                    marginBottom: 16,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "'Syne',sans-serif",
-                      fontSize: 13,
-                      color: "#ccc",
-                    }}
+              {!isGuest && pushState === "ios-install" && !pushHidden && (
+                <div style={bannerBox}>
+                  <span style={bannerTxt}>
+                    {isIOSNonSafari()
+                      ? "🔔 To get show alerts on iPhone, open encorefriends.com in Safari, then tap Share → Add to Home Screen."
+                      : "🔔 Want a ping when friends add a show? Tap Share, then “Add to Home Screen” — iPhone only sends alerts to installed apps."}
+                  </span>
+                  <button
+                    className="btn-sm"
+                    onClick={() => setPushHidden(true)}
+                    style={{ color: "#777" }}
                   >
+                    Got it
+                  </button>
+                </div>
+              )}
+              {!isGuest && pushState === "prompt" && !pushHidden && (
+                <div style={bannerBox}>
+                  <span style={bannerTxt}>
                     🔔 Get a ping when people you follow add a show.
                   </span>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button className="btn-sm btn-amber" onClick={enablePush}>
                       Enable
                     </button>
+                    {installPrompt && (
+                      <button className="btn-sm" onClick={doInstall}>
+                        Install app
+                      </button>
+                    )}
                     <button
                       className="btn-sm"
                       onClick={() => setPushHidden(true)}
@@ -5273,11 +5424,33 @@ function App() {
                   </div>
                 </div>
               )}
+              {!isGuest &&
+                installPrompt &&
+                !installHidden &&
+                !pushBannerShowing && (
+                  <div style={bannerBox}>
+                    <span style={bannerTxt}>
+                      📲 Install Encore for quicker access and reliable alerts.
+                    </span>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="btn-sm btn-amber" onClick={doInstall}>
+                        Install
+                      </button>
+                      <button
+                        className="btn-sm"
+                        onClick={() => setInstallHidden(true)}
+                        style={{ color: "#777" }}
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  </div>
+                )}
               {FORWARDING_ENABLED &&
                 !isGuest &&
                 !profile?.forward_verified &&
                 !mailDismissed &&
-                (pushState !== "prompt" || pushHidden) && (
+                !pushBannerShowing && (
                   <div
                     style={{
                       display: "flex",
