@@ -1,0 +1,23 @@
+{
+  "platform": "ra",
+  "description": "SYNTHETIC — Resident Advisor ticket confirmation.",
+  "email": {
+    "subject": "Your tickets for Peggy Gou at Knockdown Center",
+    "from": "Resident Advisor <tickets@ra.co>",
+    "body": "TICKET CONFIRMATION\n\nPeggy Gou\nKnockdown Center, Queens, NY\nSaturday, November 7, 2026\nDoors 10 PM\n\n1 x GA2 — $55.00\nBooking ref: RA-88123642\n\nDownload the RA Guide app to store your ticket. https://ra.co/events/2098412"
+  },
+  "expected": {
+    "is_ticket": true,
+    "shows": [
+      {
+        "artist": "Peggy Gou",
+        "date": "2026-11-07",
+        "end_date": "2026-11-07",
+        "is_festival": false,
+        "genres": ["House", "Techno", "EDM", "Electronica", "Disco & Funk"],
+        "venue": "Knockdown Center",
+        "city": "Queens, NY"
+      }
+    ]
+  }
+}

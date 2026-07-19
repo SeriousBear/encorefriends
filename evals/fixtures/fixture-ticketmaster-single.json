@@ -1,0 +1,23 @@
+{
+  "platform": "ticketmaster",
+  "description": "SYNTHETIC — standard Ticketmaster order confirmation, single show. Replace/augment with real scrubbed emails.",
+  "email": {
+    "subject": "Your ticket order is confirmed! Order #45-23819/NY1",
+    "from": "Ticketmaster <customer_support@email.ticketmaster.com>",
+    "body": "Thanks, Kyle! Your order is confirmed.\n\nOrder #45-23819/NY1\n\nCharlotte de Witte\nAvant Gardner - The Brooklyn Mirage\nBrooklyn, NY\nSat, Sep 12, 2026, 9:00 PM\n\n2x General Admission — $89.50 each\nTotal: $196.40 (incl. fees)\n\nView your tickets: https://www.ticketmaster.com/orders/45-23819\n\nQuestions? Visit our Help Center."
+  },
+  "expected": {
+    "is_ticket": true,
+    "shows": [
+      {
+        "artist": "Charlotte de Witte",
+        "date": "2026-09-12",
+        "end_date": "2026-09-12",
+        "is_festival": false,
+        "genres": ["Techno", "Peak Time Techno", "Melodic Techno", "Hard Techno"],
+        "venue": "Brooklyn Mirage",
+        "city": "Brooklyn, NY"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "platform": "negative",
+  "description": "SYNTHETIC — confirmed purchase but SPORTS; must be rejected.",
+  "email": {
+    "subject": "Your StubHub order is confirmed — Pistons vs Knicks",
+    "from": "StubHub <orders@stubhub.com>",
+    "body": "Order confirmed!\n\nDetroit Pistons vs. New York Knicks\nLittle Caesars Arena, Detroit, MI\nFri, Jan 15, 2027, 7:00 PM\n\n2x Section 118 Row C — $86.00 each\nOrder #7712930\n\nYour mobile tickets will be ready 72 hours before the event."
+  },
+  "expected": { "is_ticket": false, "shows": [] }
+}

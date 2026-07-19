@@ -1,0 +1,23 @@
+{
+  "platform": "festival",
+  "description": "SYNTHETIC — payment-plan installment; still a confirmed purchase.",
+  "email": {
+    "subject": "Payment 3 of 4 received — EDC Las Vegas 2027",
+    "from": "Insomniac Events <noreply@insomniac.com>",
+    "body": "Payment received!\n\nWe've processed installment 3 of 4 for your EDC Las Vegas 2027 order.\n\nEvent: EDC Las Vegas\nLas Vegas Motor Speedway, Las Vegas, NV\nMay 14–16, 2027\n\n1x 3-Day GA+ Pass\nThis payment: $105.25 · Remaining balance: $105.25 (auto-charges Aug 1)\n\nManage your plan: https://insomniac.com/orders"
+  },
+  "expected": {
+    "is_ticket": true,
+    "shows": [
+      {
+        "artist": "EDC Las Vegas",
+        "date": "2027-05-14",
+        "end_date": "2027-05-16",
+        "is_festival": true,
+        "genres": ["EDM", "Big Room", "House", "Techno", "Bass", "Trance", "Electronica"],
+        "venue": "Las Vegas Motor Speedway",
+        "city": "Las Vegas, NV"
+      }
+    ]
+  }
+}

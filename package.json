@@ -2,9 +2,19 @@
   "name": "encorefriends",
   "private": true,
   "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "eval": "node evals/run-evals.mjs",
+    "eval:dry": "node evals/run-evals.mjs --dry",
+    "eval:strict": "node evals/run-evals.mjs --strict"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "postal-mime": "^2.2.7",
     "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
   }
 }

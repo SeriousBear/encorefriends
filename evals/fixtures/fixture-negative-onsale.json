@@ -1,0 +1,10 @@
+{
+  "platform": "negative",
+  "description": "SYNTHETIC — on-sale announcement. NOT a purchase; must be rejected.",
+  "email": {
+    "subject": "JUST ANNOUNCED: Fred again.. at Madison Square Garden — on sale Friday",
+    "from": "Ticketmaster <marketing@email.ticketmaster.com>",
+    "body": "Don't miss it!\n\nFred again.. is coming to Madison Square Garden on March 3, 2027.\n\nTickets on sale Friday at 10 AM local time. Presale starts Wednesday with code RORY.\n\nGet ready: https://www.ticketmaster.com/fredagain\n\nYou're receiving this because you opted into artist alerts."
+  },
+  "expected": { "is_ticket": false, "shows": [] }
+}

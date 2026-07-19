@@ -1,0 +1,23 @@
+{
+  "platform": "dice",
+  "description": "SYNTHETIC — DICE confirmation for a club night.",
+  "email": {
+    "subject": "You're going to Ben UFO (All Night Long)",
+    "from": "DICE <no-reply@dice.fm>",
+    "body": "Hey! Here's your ticket.\n\nBen UFO (All Night Long)\nNowadays\n56-06 Cooper Ave, Ridgewood, NY\nFri 16 Oct 2026, 10:00 PM – late\n\n1x Final Release — $35.00\n\nYour ticket QR will activate 2 hours before doors. Manage your ticket in the DICE app: https://dice.fm/event/benufo-nowadays"
+  },
+  "expected": {
+    "is_ticket": true,
+    "shows": [
+      {
+        "artist": "Ben UFO",
+        "date": "2026-10-16",
+        "end_date": "2026-10-16",
+        "is_festival": false,
+        "genres": ["Techno", "House", "UK Garage", "Bass", "Electronica", "Breakbeat"],
+        "venue": "Nowadays",
+        "city": "Ridgewood, NY"
+      }
+    ]
+  }
+}

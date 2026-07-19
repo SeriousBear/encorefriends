@@ -1,0 +1,10 @@
+{
+  "platform": "negative",
+  "description": "SYNTHETIC — venue newsletter listing multiple shows; no purchase.",
+  "email": {
+    "subject": "This month at Marble Bar",
+    "from": "Marble Bar Detroit <hello@marblebardetroit.com>",
+    "body": "Hey Detroit!\n\nComing up this month:\n\nOct 2 — Rolando (all night)\nOct 9 — Toasted w/ residents\nOct 16 — DJ Minx\nOct 23 — Halloween warehouse special (lineup TBA)\n\nTickets available at the door and on RA. See you on the floor.\n\nUnsubscribe | Update preferences"
+  },
+  "expected": { "is_ticket": false, "shows": [] }
+}

@@ -1,0 +1,23 @@
+{
+  "platform": "festival",
+  "description": "SYNTHETIC — multi-day festival pass; must set end_date + is_festival.",
+  "email": {
+    "subject": "Movement 2027 — Order Confirmed",
+    "from": "Movement Detroit <orders@movementfestival.com>",
+    "body": "You're in! Movement Music Festival 2027.\n\nOrder MVMT-2027-118803\n\n1x 3-Day GA Weekend Pass\nHart Plaza, Detroit, MI\nSaturday May 29 – Monday May 31, 2027\n\nTotal: $299.00\nWristband ships in May. Transfer or upgrade any time at movementfestival.com/orders."
+  },
+  "expected": {
+    "is_ticket": true,
+    "shows": [
+      {
+        "artist": "Movement Music Festival",
+        "date": "2027-05-29",
+        "end_date": "2027-05-31",
+        "is_festival": true,
+        "genres": ["Techno", "House", "Electronica"],
+        "venue": "Hart Plaza",
+        "city": "Detroit, MI"
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+# Parser evals — cost real API tokens, so they run weekly + on demand
+# (Actions tab -> parser-evals -> Run workflow), not on every push.
+# Setup: repo Settings -> Secrets -> Actions -> add ANTHROPIC_API_KEY.
+name: parser-evals
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 14 * * 1" # Mondays 14:00 UTC
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - run: npm run eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
