@@ -880,17 +880,86 @@ function InboxSheet({
   onMarkActivityRead,
   myBlocks,
   onBlock,
+  crews,
+  activeCrew,
+  setActiveCrew,
+  onLeaveCrew,
+  onCrewRead,
 }) {
   const [draft, setDraft] = useState("");
   const [showCompose, setShowCompose] = useState(false);
+  const [crewMsgs, setCrewMsgs] = useState([]);
   const listRef = useRef(null);
+
+  // Load + live-subscribe the open crew's messages; mark the crew read.
+  useEffect(() => {
+    if (!activeCrew) {
+      setCrewMsgs([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("thread_messages")
+        .select("*")
+        .eq("thread_id", activeCrew)
+        .order("created_at", { ascending: true })
+        .limit(200);
+      if (!cancelled && data) setCrewMsgs(data);
+    })();
+    onCrewRead && onCrewRead(activeCrew);
+    let cch;
+    if (typeof supabase.channel === "function") {
+      cch = supabase
+        .channel("crew-" + activeCrew)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "thread_messages",
+            filter: "thread_id=eq." + activeCrew,
+          },
+          (payload) => {
+            if (payload.new) {
+              setCrewMsgs((p) =>
+                p.some((m) => m.id === payload.new.id)
+                  ? p
+                  : [...p, payload.new],
+              );
+              onCrewRead && onCrewRead(activeCrew);
+            }
+          },
+        )
+        .subscribe();
+    }
+    return () => {
+      cancelled = true;
+      if (cch) supabase.removeChannel(cch);
+    };
+  }, [activeCrew]);
+
+  const sendCrew = async () => {
+    const t = draft.trim();
+    if (!t || !activeCrew) return;
+    setDraft("");
+    const { data, error } = await supabase
+      .from("thread_messages")
+      .insert({ thread_id: activeCrew, sender_id: curUser.id, body: t })
+      .select()
+      .single();
+    if (!error && data)
+      setCrewMsgs((p) =>
+        p.some((m) => m.id === data.id) ? p : [...p, data],
+      );
+  };
   useEffect(() => {
     if (tab === "activity") onMarkActivityRead();
   }, [tab]);
   useEffect(() => {
     if (listRef.current)
       listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [msgs.length, activeThread]);
+  }, [msgs.length, activeThread, crewMsgs.length, activeCrew]);
 
   const vMsgs = msgs.filter((m) => {
     const o = m.sender_id === curUser.id ? m.recipient_id : m.sender_id;
@@ -912,6 +981,20 @@ function InboxSheet({
       threads[other].last = m;
     if (m.recipient_id === curUser.id && !m.read) threads[other].unread++;
   });
+  const myCrews = (crews || []).filter((t) =>
+    (t.thread_members || []).some((m) => m.user_id === curUser.id),
+  );
+  const crewUnread = (t) => {
+    const me = (t.thread_members || []).find(
+      (m) => m.user_id === curUser.id,
+    );
+    return !!(
+      me &&
+      t.last_message_at &&
+      new Date(t.last_message_at) > new Date(me.last_read_at)
+    );
+  };
+  const crewUnreadTotal = myCrews.filter(crewUnread).length;
   const threadIds = Object.keys(threads).sort(
     (a, b) =>
       new Date(threads[b].last.created_at) -
@@ -1035,7 +1118,10 @@ function InboxSheet({
               style={tabStyle(tab === "messages")}
               onClick={() => setTab("messages")}
             >
-              Messages{unreadM > 0 ? " (" + unreadM + ")" : ""}
+              Messages
+              {unreadM + crewUnreadTotal > 0
+                ? " (" + (unreadM + crewUnreadTotal) + ")"
+                : ""}
             </button>
             <button
               style={tabStyle(tab === "activity")}
@@ -1046,7 +1132,7 @@ function InboxSheet({
           </div>
 
           {/* ── MESSAGES ── */}
-          {tab === "messages" && !activeThread && (
+          {tab === "messages" && !activeThread && !activeCrew && (
             <div>
               {!showCompose ? (
                 <button
@@ -1160,6 +1246,82 @@ function InboxSheet({
                         </div>
                       ))
                   )}
+                </div>
+              )}
+              {myCrews.length > 0 && (
+                <div style={{ margin: "2px 0 10px" }}>
+                  <div
+                    style={{
+                      fontFamily: "'DM Mono',monospace",
+                      fontSize: 9,
+                      letterSpacing: 2,
+                      color: "#555",
+                      textTransform: "uppercase",
+                      marginBottom: 4,
+                    }}
+                  >
+                    Crews
+                  </div>
+                  {myCrews.map((t) => (
+                    <div
+                      key={t.id}
+                      onClick={() => setActiveCrew(t.id)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "9px 4px",
+                        borderBottom: "1px solid #141414",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 8,
+                          background: "#1d1d1d",
+                          border: "1px solid #2a2a2a",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 14,
+                          flexShrink: 0,
+                        }}
+                      >
+                        👥
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontFamily: "'Syne',sans-serif",
+                            fontSize: 14,
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {t.show_artist}
+                        </div>
+                        <div style={mono}>
+                          {t.show_date} · {(t.thread_members || []).length} in
+                          the crew
+                        </div>
+                      </div>
+                      {crewUnread(t) && (
+                        <div
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            background: "#F5A623",
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
               {threadIds.length === 0 ? (
@@ -1459,6 +1621,186 @@ function InboxSheet({
             </div>
           )}
 
+          {tab === "messages" && activeCrew && (
+            <div>
+              {(() => {
+                const t = (crews || []).find((x) => x.id === activeCrew);
+                return (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <button
+                      className="back-btn"
+                      onClick={() => setActiveCrew(null)}
+                    >
+                      ←
+                    </button>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontFamily: "'Syne',sans-serif",
+                          fontSize: 15,
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        👥 {t ? t.show_artist : "Crew"}
+                      </div>
+                      <div style={mono}>
+                        {t
+                          ? t.show_date +
+                            " · " +
+                            (t.thread_members || []).length +
+                            " in the crew"
+                          : ""}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onLeaveCrew(activeCrew)}
+                      style={{
+                        background: "none",
+                        border: "1px solid #2a2a2a",
+                        color: "#666",
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 10,
+                        padding: "4px 9px",
+                        borderRadius: 5,
+                        cursor: "pointer",
+                        flexShrink: 0,
+                      }}
+                    >
+                      Leave
+                    </button>
+                  </div>
+                );
+              })()}
+              <div
+                ref={listRef}
+                style={{
+                  maxHeight: "45vh",
+                  overflowY: "auto",
+                  padding: "4px 2px",
+                }}
+              >
+                {crewMsgs.length === 0 && (
+                  <div
+                    style={{
+                      color: "#666",
+                      fontFamily: "'Syne',sans-serif",
+                      fontSize: 13,
+                      padding: "18px 0",
+                      textAlign: "center",
+                    }}
+                  >
+                    No messages yet — say hi to the crew 👋
+                  </div>
+                )}
+                {crewMsgs.map((m) => {
+                  const mine = m.sender_id === curUser.id;
+                  const sender = users.find((u) => u.id === m.sender_id);
+                  return (
+                    <div
+                      key={m.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: mine ? "flex-end" : "flex-start",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          maxWidth: "78%",
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          background: mine
+                            ? "rgba(245,166,35,.12)"
+                            : "#161616",
+                          border:
+                            "1px solid " +
+                            (mine ? "rgba(245,166,35,.3)" : "#222"),
+                          fontFamily: "'Syne',sans-serif",
+                          fontSize: 13,
+                          color: "#f0ede8",
+                        }}
+                      >
+                        {!mine && (
+                          <div
+                            style={{
+                              fontFamily: "'DM Mono',monospace",
+                              fontSize: 9,
+                              color: sender ? sender.color : "#888",
+                              marginBottom: 3,
+                            }}
+                          >
+                            {sender ? sender.name : "Member"}
+                          </div>
+                        )}
+                        {m.body}
+                        <div
+                          style={{
+                            ...mono,
+                            fontSize: 8,
+                            marginTop: 4,
+                            textAlign: mine ? "right" : "left",
+                          }}
+                        >
+                          {timeAgo(m.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") sendCrew();
+                  }}
+                  placeholder="Message the crew…"
+                  style={{
+                    flex: 1,
+                    background: "#0c0c0c",
+                    border: "1px solid #1e1e1e",
+                    borderRadius: 6,
+                    color: "#f0ede8",
+                    fontFamily: "'Syne',sans-serif",
+                    fontSize: 13,
+                    padding: "10px 12px",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  onClick={sendCrew}
+                  disabled={!draft.trim()}
+                  style={{
+                    padding: "0 16px",
+                    background: draft.trim()
+                      ? "#F5A623"
+                      : "rgba(245,166,35,.2)",
+                    border: "none",
+                    borderRadius: 6,
+                    color: "#000",
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: draft.trim() ? "pointer" : "default",
+                  }}
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── ACTIVITY ── */}
           {tab === "activity" && (
             <div>
@@ -1560,6 +1902,10 @@ function CDetail({
   onGenreClick,
   onShare,
   onToggleHidden,
+  crew,
+  onStartCrew,
+  onJoinCrew,
+  onOpenCrew,
 }) {
   const u = getUrgency(c.date),
     dy = daysUntil(c.date),
@@ -1576,6 +1922,21 @@ function CDetail({
     rc = u === "urgent" ? "#FF5555" : "#F5A623";
   const showR = u === "urgent" || u === "soon";
   const isFestival = c.is_festival && c.end_date && c.end_date !== c.date;
+  const isCrewMember =
+    crew && (crew.thread_members || []).some((m) => m.user_id === curUser.id);
+  const crewBtn = {
+    margin: "8px 0 2px",
+    width: "100%",
+    padding: "10px 0",
+    background: "rgba(245,166,35,.06)",
+    border: "1px solid rgba(245,166,35,.3)",
+    borderRadius: 6,
+    color: "#F5A623",
+    fontFamily: "'DM Mono',monospace",
+    fontSize: 11,
+    letterSpacing: 1,
+    cursor: "pointer",
+  };
   const tasteGoing = (c.attendees || []).filter((uid) => {
     if (uid === curUser.id) return false;
     const u2 = users.find((x) => x.id === uid);
@@ -1690,6 +2051,24 @@ function CDetail({
                 : "👁 VISIBLE TO FRIENDS & MATCHES. TAP TO GO QUIETLY"}
             </button>
           )}
+          {curUser.id &&
+            (c.attendees || []).includes(curUser.id) &&
+            onStartCrew &&
+            (crew ? (
+              isCrewMember ? (
+                <button onClick={() => onOpenCrew(crew.id)} style={crewBtn}>
+                  💬 OPEN CREW CHAT ({(crew.thread_members || []).length})
+                </button>
+              ) : (
+                <button onClick={() => onJoinCrew(crew)} style={crewBtn}>
+                  👥 JOIN THE CREW — {(crew.thread_members || []).length} IN
+                </button>
+              )
+            ) : (
+              <button onClick={() => onStartCrew(c)} style={crewBtn}>
+                👥 START A CREW CHAT FOR THIS SHOW
+              </button>
+            ))}
           <div className="sh-lbl nb">Get Tickets</div>
           {primaryUrl(c) ? (
             <a
@@ -3332,11 +3711,63 @@ function SearchPage({
         (c.attendees || []).includes(curUser.id) &&
         (c.attendees || []).includes(u2.id),
     ).length;
+  // Match-ranked strangers: strongest overlap first, people I follow excluded.
+  const likeYou = others
+    .map((u2) => ({ u2, mi: matchInfo(curUser, u2, concerts) }))
+    .filter(
+      (x) => x.mi.score > 0 && !(curUser.following || []).includes(x.u2.id),
+    )
+    .sort((a, b) => b.mi.score - a.mi.score)
+    .slice(0, 5);
   return (
     <div className="search-page">
       <div className="pg-head">
         <div className="pg-title">Discover</div>
       </div>
+      {curUser.id && likeYou.length > 0 && (
+        <div style={{ marginBottom: 18 }}>
+          <div
+            style={{
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 10,
+              letterSpacing: 2,
+              color: "#F5A623",
+              textTransform: "uppercase",
+              marginBottom: 8,
+            }}
+          >
+            ⚡ People like you
+          </div>
+          {likeYou.map(({ u2, mi }) => (
+            <div
+              key={u2.id}
+              className="user-card"
+              onClick={() => onViewProfile(u2.id)}
+            >
+              <div className="uc-av" style={{ background: u2.color }}>
+                {u2.name.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="uc-info">
+                <div className="uc-name">{u2.name}</div>
+                <div className="uc-handle">
+                  @{u2.handle}
+                  {u2.location ? " · " + u2.location : ""}
+                </div>
+                {mi.line && <div className="uc-mutual">{mi.line}</div>}
+              </div>
+              <button
+                className="uc-follow ucf-n"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFollowToggle(u2.id);
+                }}
+              >
+                Follow
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="search-box">
         <span className="search-icon">⌕</span>
         <input
@@ -5757,6 +6188,8 @@ function App() {
   const [activeThread, setActiveThread] = useState(null); // other user's id
   const [shareShow, setShareShow] = useState(null); // concert being shared
   const [actFilter, setActFilter] = useState("all");
+  const [crews, setCrews] = useState([]); // group threads (one per show)
+  const [activeCrew, setActiveCrew] = useState(null);
   const [showBug, setShowBug] = useState(false);
   const [bugText, setBugText] = useState("");
   const [bugSending, setBugSending] = useState(false);
@@ -5976,6 +6409,40 @@ function App() {
     toast("Blocked. They can't message you anymore.");
   };
 
+  // Crew chats: RLS returns only crews I'm in or could join (I'm going).
+  const loadCrews = async () => {
+    if (!session?.user?.id) {
+      setCrews([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("threads")
+      .select("*, thread_members(user_id, last_read_at)");
+    if (data) setCrews(data);
+  };
+  useEffect(() => {
+    loadCrews();
+    if (!session?.user?.id || typeof supabase.channel !== "function") return;
+    const ch = supabase
+      .channel("crewbump-" + session.user.id)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "thread_messages" },
+        (payload) => {
+          if (payload.new)
+            setCrews((p) =>
+              p.map((t) =>
+                t.id === payload.new.thread_id
+                  ? { ...t, last_message_at: payload.new.created_at }
+                  : t,
+              ),
+            );
+        },
+      )
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [session]);
+
   // Track "last active" for DAU/WAU (one lightweight write per app load).
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -6123,6 +6590,16 @@ function App() {
       !m.read &&
       !myBlocks.includes(m.sender_id),
   ).length;
+  const crewUnreadCount = crews.filter((t) => {
+    const me = (t.thread_members || []).find(
+      (m) => m.user_id === session?.user?.id,
+    );
+    return (
+      me &&
+      t.last_message_at &&
+      new Date(t.last_message_at) > new Date(me.last_read_at)
+    );
+  }).length;
 
   const sendMessage = async (toId, body, show) => {
     if (!session?.user?.id) return false;
@@ -6164,6 +6641,7 @@ function App() {
   const openThread = (id) => {
     if (!requireAuth()) return;
     setInboxTab("messages");
+    setActiveCrew(null);
     setActiveThread(id);
     markThreadRead(id);
     setShowNotifs(true);
@@ -6180,6 +6658,88 @@ function App() {
         .eq("user_id", session.user.id)
         .eq("read", false);
     }
+  };
+  const markCrewRead = async (tid) => {
+    if (!session?.user?.id) return;
+    const now = new Date().toISOString();
+    setCrews((p) =>
+      p.map((t) =>
+        t.id === tid
+          ? {
+              ...t,
+              thread_members: (t.thread_members || []).map((m) =>
+                m.user_id === session.user.id
+                  ? { ...m, last_read_at: now }
+                  : m,
+              ),
+            }
+          : t,
+      ),
+    );
+    await supabase
+      .from("thread_members")
+      .update({ last_read_at: now })
+      .eq("thread_id", tid)
+      .eq("user_id", session.user.id);
+  };
+  const crewForShow = (c) =>
+    c
+      ? crews.find(
+          (t) => t.show_artist === c.artist && t.show_date === c.date,
+        )
+      : null;
+  const startCrew = async (c) => {
+    if (!requireAuth()) return;
+    const { data, error } = await supabase
+      .from("threads")
+      .insert({
+        show_artist: c.artist,
+        show_date: c.date,
+        venue: c.venue || "",
+        city: c.city || "",
+        created_by: session.user.id,
+      })
+      .select()
+      .single();
+    if (error) {
+      toast("Couldn't start the crew — " + error.message, true);
+      return;
+    }
+    await supabase
+      .from("thread_members")
+      .insert({ thread_id: data.id, user_id: session.user.id });
+    await loadCrews();
+    setDetail(null);
+    openCrew(data.id);
+  };
+  const joinCrew = async (t) => {
+    if (!requireAuth()) return;
+    const { error } = await supabase
+      .from("thread_members")
+      .insert({ thread_id: t.id, user_id: session.user.id });
+    if (error) {
+      toast("Couldn't join — " + error.message, true);
+      return;
+    }
+    await loadCrews();
+    setDetail(null);
+    openCrew(t.id);
+  };
+  const leaveCrew = async (tid) => {
+    await supabase
+      .from("thread_members")
+      .delete()
+      .eq("thread_id", tid)
+      .eq("user_id", session.user.id);
+    setActiveCrew(null);
+    await loadCrews();
+    toast("Left the crew.");
+  };
+  const openCrew = (tid) => {
+    setInboxTab("messages");
+    setActiveThread(null);
+    setActiveCrew(tid);
+    setShowNotifs(true);
   };
   const openNotifs = () => {
     setInboxTab(unreadMsgCount > 0 ? "messages" : "activity");
@@ -6350,7 +6910,21 @@ function App() {
     if (adding && u2?.notify && uid !== curUser.id)
       toast(u2.name + " tagged on " + c.artist + " — notified!");
   };
-  const toggleGoing = (cid) => toggleAttendee(cid, curUser.id);
+  const [crewPrompt, setCrewPrompt] = useState(null);
+  const toggleGoing = (cid) => {
+    const c = liveConcerts.find((x) => x.id === cid);
+    const wasGoing = c && (c.attendees || []).includes(curUser.id);
+    toggleAttendee(cid, curUser.id);
+    // Just marked going + this show has a crew I'm not in → suggest it.
+    if (c && !wasGoing) {
+      const t = crewForShow(c);
+      if (
+        t &&
+        !(t.thread_members || []).some((m) => m.user_id === curUser.id)
+      )
+        setCrewPrompt(t);
+    }
+  };
   const toggleFollow = async (uid) => {
     if (!requireAuth()) return;
     if (uid === curUser.id) return;
@@ -6427,6 +7001,32 @@ function App() {
     }
     setView("profile");
   };
+  // Open to Connect nudge: shown on the feed once someone has 3+ shows.
+  const [otcHidden, setOtcHidden] = useState(() => {
+    try {
+      return localStorage.getItem("encore_otc_nudge") === "1";
+    } catch (e) {
+      return false;
+    }
+  });
+  const dismissOtc = () => {
+    setOtcHidden(true);
+    try {
+      localStorage.setItem("encore_otc_nudge", "1");
+    } catch (e) {
+      /* private mode */
+    }
+  };
+  const enableOtc = async () => {
+    dismissOtc();
+    await supabase
+      .from("profiles")
+      .update({ discoverable: true })
+      .eq("id", session.user.id);
+    setProfile((p) => ({ ...p, discoverable: true }));
+    toast("You're open to connect 🔓");
+  };
+
   // Per-show privacy: hidden shows are owner-only (enforced by RLS too).
   const toggleHidden = async (c) => {
     const v = !c.hidden;
@@ -6591,7 +7191,7 @@ function App() {
                   >
                     🔔
                     {(notifs.some((n) => !n.read) ||
-                      unreadMsgCount > 0) && (
+                      unreadMsgCount + crewUnreadCount > 0) && (
                       <span
                         style={{
                           position: "absolute",
@@ -6615,7 +7215,8 @@ function App() {
                         {(() => {
                           const u =
                             notifs.filter((n) => !n.read).length +
-                            unreadMsgCount;
+                            unreadMsgCount +
+                            crewUnreadCount;
                           return u > 9 ? "9+" : u;
                         })()}
                       </span>
@@ -6897,6 +7498,76 @@ function App() {
                   </button>
                 </div>
               )}
+              {!isGuest &&
+                !curUser.discoverable &&
+                !otcHidden &&
+                liveConcerts.filter((c) =>
+                  (c.attendees || []).includes(curUser.id),
+                ).length >= 3 && (
+                  <div
+                    style={{
+                      background: "rgba(245,166,35,.05)",
+                      border: "1px solid rgba(245,166,35,.25)",
+                      borderRadius: 10,
+                      padding: "13px 15px",
+                      marginBottom: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "'Syne',sans-serif",
+                        fontSize: 13,
+                        color: "#f0ede8",
+                        flex: 1,
+                        minWidth: 220,
+                      }}
+                    >
+                      🔓 You've got{" "}
+                      {
+                        liveConcerts.filter((c) =>
+                          (c.attendees || []).includes(curUser.id),
+                        ).length
+                      }{" "}
+                      shows tracked. Open your profile and find the people who
+                      go to the same ones.
+                    </span>
+                    <button
+                      onClick={enableOtc}
+                      style={{
+                        background: "#F5A623",
+                        border: "none",
+                        color: "#000",
+                        padding: "7px 13px",
+                        borderRadius: 6,
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Open to Connect
+                    </button>
+                    <button
+                      onClick={dismissOtc}
+                      style={{
+                        background: "none",
+                        border: "1px solid #2a2a2a",
+                        color: "#666",
+                        padding: "7px 11px",
+                        borderRadius: 6,
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 11,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Not now
+                    </button>
+                  </div>
+                )}
               {!isGuest && pushState === "prompt" && !pushHidden && (
                 <div style={bannerBox}>
                   <span style={bannerTxt}>
@@ -7129,15 +7800,22 @@ function App() {
           setTab={setInboxTab}
           activeThread={activeThread}
           setActiveThread={(id) => {
+            setActiveCrew(null);
             setActiveThread(id);
             if (id) markThreadRead(id);
           }}
+          crews={crews}
+          activeCrew={activeCrew}
+          setActiveCrew={setActiveCrew}
+          onLeaveCrew={leaveCrew}
+          onCrewRead={markCrewRead}
           actFilter={actFilter}
           setActFilter={setActFilter}
           onSend={sendMessage}
           onClose={() => {
             setShowNotifs(false);
             setActiveThread(null);
+            setActiveCrew(null);
           }}
           onViewProfile={(id) => {
             setShowNotifs(false);
@@ -7330,6 +8008,10 @@ function App() {
           }}
           onShare={(cc) => setShareShow(cc)}
           onToggleHidden={toggleHidden}
+          crew={crewForShow(detail)}
+          onStartCrew={startCrew}
+          onJoinCrew={joinCrew}
+          onOpenCrew={openCrew}
         />
       )}
       {shareShow && (
@@ -7352,6 +8034,73 @@ function App() {
             setShareShow(null);
           }}
         />
+      )}
+      {crewPrompt && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 18,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 800,
+            background: "#141414",
+            border: "1px solid rgba(245,166,35,.35)",
+            borderRadius: 10,
+            padding: "12px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            boxShadow: "0 8px 30px rgba(0,0,0,.6)",
+            maxWidth: "92vw",
+          }}
+        >
+          <span style={{ fontSize: 16 }}>👥</span>
+          <span
+            style={{
+              fontFamily: "'Syne',sans-serif",
+              fontSize: 13,
+              color: "#f0ede8",
+            }}
+          >
+            {(crewPrompt.thread_members || []).length} in the crew for{" "}
+            {crewPrompt.show_artist} — join them?
+          </span>
+          <button
+            onClick={() => {
+              const t = crewPrompt;
+              setCrewPrompt(null);
+              joinCrew(t);
+            }}
+            style={{
+              background: "#F5A623",
+              border: "none",
+              color: "#000",
+              padding: "7px 13px",
+              borderRadius: 6,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Join
+          </button>
+          <button
+            onClick={() => setCrewPrompt(null)}
+            style={{
+              background: "none",
+              border: "1px solid #2a2a2a",
+              color: "#666",
+              padding: "7px 11px",
+              borderRadius: 6,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 11,
+              cursor: "pointer",
+            }}
+          >
+            Not now
+          </button>
+        </div>
       )}
       {artistModal && (
         <ArtistSheet
