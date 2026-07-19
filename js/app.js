@@ -761,7 +761,7 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
         (u.following || []).includes(curUser.id)),
   );
   return (
-    <div className="mwrap" onClick={onClose} style={{ zIndex: 60 }}>
+    <div className="mwrap" onClick={onClose} style={{ zIndex: 700 }}>
       <div
         className="sheet"
         onClick={(e) => e.stopPropagation()}
@@ -882,6 +882,7 @@ function InboxSheet({
   onBlock,
 }) {
   const [draft, setDraft] = useState("");
+  const [showCompose, setShowCompose] = useState(false);
   const listRef = useRef(null);
   useEffect(() => {
     if (tab === "activity") onMarkActivityRead();
@@ -1047,6 +1048,120 @@ function InboxSheet({
           {/* ── MESSAGES ── */}
           {tab === "messages" && !activeThread && (
             <div>
+              {!showCompose ? (
+                <button
+                  onClick={() => setShowCompose(true)}
+                  style={{
+                    width: "100%",
+                    marginBottom: 10,
+                    padding: "9px 0",
+                    background: "transparent",
+                    border: "1px dashed #2a2a2a",
+                    borderRadius: 6,
+                    color: "#888",
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 11,
+                    letterSpacing: 1,
+                    cursor: "pointer",
+                  }}
+                >
+                  ✎ NEW MESSAGE
+                </button>
+              ) : (
+                <div style={{ marginBottom: 12 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 10,
+                        letterSpacing: 2,
+                        color: "#F5A623",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Message someone
+                    </span>
+                    <button
+                      onClick={() => setShowCompose(false)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#666",
+                        cursor: "pointer",
+                        fontSize: 12,
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {users.filter(
+                    (u) => u.id !== curUser.id && isConnected(u.id),
+                  ).length === 0 ? (
+                    <div
+                      style={{
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 10,
+                        color: "#666",
+                        padding: "8px 0",
+                      }}
+                    >
+                      Follow someone (or get followed) to start a chat.
+                    </div>
+                  ) : (
+                    users
+                      .filter((u) => u.id !== curUser.id && isConnected(u.id))
+                      .map((u2) => (
+                        <div
+                          key={u2.id}
+                          onClick={() => {
+                            setShowCompose(false);
+                            setActiveThread(u2.id);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            padding: "8px 4px",
+                            borderBottom: "1px solid #141414",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              background: u2.color,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 9,
+                              fontWeight: 700,
+                              color: "#000",
+                            }}
+                          >
+                            {u2.name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <span
+                            style={{
+                              fontFamily: "'Syne',sans-serif",
+                              fontSize: 13,
+                            }}
+                          >
+                            {u2.name}
+                          </span>
+                        </div>
+                      ))
+                  )}
+                </div>
+              )}
               {threadIds.length === 0 ? (
                 <div
                   style={{
@@ -1057,8 +1172,8 @@ function InboxSheet({
                     textAlign: "center",
                   }}
                 >
-                  No messages yet. Open a show and tap “Share with a friend”
-                  to start a chat.
+                  No messages yet — hit ✎ New message, or share a show
+                  from any show page.
                 </div>
               ) : (
                 threadIds.map((tid) => {
@@ -2747,7 +2862,7 @@ function TagSearch({ value, onChange, suggestions, max, placeholder }) {
 }
 
 // ── EDIT PROFILE PAGE ─────────────────────────────────────────────────────────
-function EditProfilePage({ user, onBack, onSave }) {
+function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
   const [draft, setDraft] = useState({
     name: user.name || "",
     handle: user.handle || "",
@@ -2766,6 +2881,7 @@ function EditProfilePage({ user, onBack, onSave }) {
   const setSocial = (k, v) =>
     setDraft((p) => ({ ...p, social: { ...p.social, [k]: v } }));
   const bioLen = draft.bio.length;
+  const [armClear, setArmClear] = useState(false);
 
   return (
     <div className="edit-page">
@@ -3108,6 +3224,82 @@ function EditProfilePage({ user, onBack, onSave }) {
             placeholder="yourhandle"
           />
         </div>
+      </div>
+
+      {/* DANGER ZONE */}
+      <div
+        className="edit-section"
+        style={{ marginTop: 20, paddingBottom: 24 }}
+      >
+        <div className="edit-sec-title" style={{ color: "#ff6b6b" }}>
+          Danger Zone
+        </div>
+        <div
+          style={{
+            fontFamily: "'DM Mono',monospace",
+            fontSize: 10,
+            color: "#666",
+            lineHeight: 1.6,
+            marginBottom: 10,
+          }}
+        >
+          Deletes all {showCount || 0} of your shows — history, stats, the
+          lot. They come back if you re-forward your ticket emails (or add
+          shows manually). Follows, messages, and your profile are untouched.
+        </div>
+        {!armClear ? (
+          <button
+            onClick={() => setArmClear(true)}
+            style={{
+              background: "transparent",
+              border: "1px solid #442222",
+              color: "#ff6b6b",
+              padding: "9px 14px",
+              borderRadius: 6,
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 11,
+              cursor: "pointer",
+            }}
+          >
+            ⌫ Clear all my shows…
+          </button>
+        ) : (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              onClick={() => {
+                setArmClear(false);
+                onClearShows && onClearShows();
+              }}
+              style={{
+                background: "rgba(255,107,107,.12)",
+                border: "1px solid #ff6b6b",
+                color: "#ff6b6b",
+                padding: "9px 14px",
+                borderRadius: 6,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 11,
+                cursor: "pointer",
+              }}
+            >
+              Yes, delete all {showCount || 0} shows
+            </button>
+            <button
+              onClick={() => setArmClear(false)}
+              style={{
+                background: "transparent",
+                border: "1px solid #2a2a2a",
+                color: "#888",
+                padding: "9px 14px",
+                borderRadius: 6,
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 11,
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -6258,7 +6450,6 @@ function App() {
 
   const clearMyShows = async () => {
     if (!requireAuth()) return;
-    if (!window.confirm("Delete ALL your shows? This can't be undone.")) return;
     if (session?.user?.id) {
       const { data: mine } = await supabase
         .from("concerts")
@@ -6448,7 +6639,12 @@ function App() {
                     </button>
                   )}
                   <button
-                    onClick={() => supabase.auth.signOut()}
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      // Hard redirect: guarantees clean state instead of the
+                      // app re-rendering stale views with no session.
+                      window.location.href = "/";
+                    }}
                     style={{
                       background: "transparent",
                       border: "1px solid #1e1e1e",
@@ -6485,13 +6681,6 @@ function App() {
                     onClick={() => setShowAddC(true)}
                   >
                     + Add
-                  </button>
-                  <button
-                    className="btn-sm"
-                    onClick={clearMyShows}
-                    title="Delete all your shows"
-                  >
-                    ⌫ Clear
                   </button>
                 </>
               )}
@@ -6669,6 +6858,10 @@ function App() {
               user={curUser}
               onBack={() => setView("profile")}
               onSave={saveProfile}
+              onClearShows={clearMyShows}
+              showCount={
+                liveConcerts.filter((c) => c.owner_id === curUser.id).length
+              }
             />
           )}
           {view === "genre" && genreView && (
