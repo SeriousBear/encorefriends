@@ -6190,6 +6190,14 @@ function App() {
   const [actFilter, setActFilter] = useState("all");
   const [crews, setCrews] = useState([]); // group threads (one per show)
   const [activeCrew, setActiveCrew] = useState(null);
+  const [crewPrompt, setCrewPrompt] = useState(null);
+  const [otcHidden, setOtcHidden] = useState(() => {
+    try {
+      return localStorage.getItem("encore_otc_nudge") === "1";
+    } catch (e) {
+      return false;
+    }
+  });
   const [showBug, setShowBug] = useState(false);
   const [bugText, setBugText] = useState("");
   const [bugSending, setBugSending] = useState(false);
@@ -6910,7 +6918,6 @@ function App() {
     if (adding && u2?.notify && uid !== curUser.id)
       toast(u2.name + " tagged on " + c.artist + " — notified!");
   };
-  const [crewPrompt, setCrewPrompt] = useState(null);
   const toggleGoing = (cid) => {
     const c = liveConcerts.find((x) => x.id === cid);
     const wasGoing = c && (c.attendees || []).includes(curUser.id);
@@ -7002,13 +7009,6 @@ function App() {
     setView("profile");
   };
   // Open to Connect nudge: shown on the feed once someone has 3+ shows.
-  const [otcHidden, setOtcHidden] = useState(() => {
-    try {
-      return localStorage.getItem("encore_otc_nudge") === "1";
-    } catch (e) {
-      return false;
-    }
-  });
   const dismissOtc = () => {
     setOtcHidden(true);
     try {
