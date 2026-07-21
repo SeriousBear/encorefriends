@@ -100,6 +100,17 @@
     </head>
     <body>
         <div id="root"></div>
-        <script type="text/babel" src="js/app.js"></script>
+        <!-- ── App modules — load order matters (see js/app/). Concatenated in
+             this order they equal the old single app.js. 09-main.js must be
+             last: it defines App and calls ReactDOM.render. ── -->
+        <script type="text/babel" src="js/app/01-config.js"></script>
+        <script type="text/babel" src="js/app/02-genres.js"></script>
+        <script type="text/babel" src="js/app/03-helpers.js"></script>
+        <script type="text/babel" src="js/app/04-cards.js"></script>
+        <script type="text/babel" src="js/app/05-inbox.js"></script>
+        <script type="text/babel" src="js/app/06-profile.js"></script>
+        <script type="text/babel" src="js/app/07-forms.js"></script>
+        <script type="text/babel" src="js/app/08-onboard.js"></script>
+        <script type="text/babel" src="js/app/09-main.js"></script>
     </body>
 </html>
