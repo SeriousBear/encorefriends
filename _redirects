@@ -1,2 +1,7 @@
 /app     /app.html   200
 /demo    /app.html   200
+
+# Migration SQL lives in the repo for history, but is for pasting into
+# Supabase — never for public download. Force-404 the whole folder.
+# (The trailing ! overrides Netlify serving the real file.)
+/sql/*   /404.html   404!
