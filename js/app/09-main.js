@@ -122,7 +122,7 @@ function App() {
   const [actFilter, setActFilter] = useState("all");
   const [crews, setCrews] = useState([]); // group threads (one per show)
   const [activeCrew, setActiveCrew] = useState(null);
-  const [crewPrompt, setCrewPrompt] = useState(null);
+  const [crewCreateShow, setCrewCreateShow] = useState(null); // show being turned into a group
   const [otcHidden, setOtcHidden] = useState(() => {
     try {
       return localStorage.getItem("encore_otc_nudge") === "1";
@@ -357,7 +357,7 @@ function App() {
     }
     const { data } = await supabase
       .from("threads")
-      .select("*, thread_members(user_id, last_read_at)");
+      .select("*, thread_members(user_id, status, last_read_at)");
     if (data) setCrews(data);
   };
   useEffect(() => {
@@ -536,10 +536,17 @@ function App() {
     );
     return (
       me &&
+      me.status === "joined" &&
       t.last_message_at &&
       new Date(t.last_message_at) > new Date(me.last_read_at)
     );
   }).length;
+  // Pending group invites addressed to me.
+  const crewInviteCount = crews.filter((t) =>
+    (t.thread_members || []).some(
+      (m) => m.user_id === session?.user?.id && m.status === "invited",
+    ),
+  ).length;
 
   const sendMessage = async (toId, body, show) => {
     if (!session?.user?.id) return false;
@@ -628,42 +635,79 @@ function App() {
           (t) => t.show_artist === c.artist && t.show_date === c.date,
         )
       : null;
-  const startCrew = async (c) => {
+  // Open the "create a group" sheet for a show (name + pick followers).
+  const openCrewCreate = (c) => {
+    if (!requireAuth()) return;
+    setDetail(null);
+    setCrewCreateShow(c);
+  };
+  // Create a private group: custom name + a set of followers to invite.
+  const createGroup = async (show, name, memberIds) => {
     if (!requireAuth()) return;
     const { data, error } = await supabase
       .from("threads")
       .insert({
-        show_artist: c.artist,
-        show_date: c.date,
-        venue: c.venue || "",
-        city: c.city || "",
+        show_artist: show.artist,
+        show_date: show.date,
+        venue: show.venue || "",
+        city: show.city || "",
+        name: (name || "").trim() || null,
         created_by: session.user.id,
       })
       .select()
       .single();
     if (error) {
-      toast("Couldn't start the crew — " + error.message, true);
+      toast("Couldn't create the group — " + error.message, true);
       return;
     }
-    await supabase
-      .from("thread_members")
-      .insert({ thread_id: data.id, user_id: session.user.id });
+    // Creator joins immediately.
+    await supabase.from("thread_members").insert({
+      thread_id: data.id,
+      user_id: session.user.id,
+      status: "joined",
+    });
+    // Invite the picked followers (they accept before they can chat).
+    if (memberIds && memberIds.length) {
+      await supabase.from("thread_members").insert(
+        memberIds.map((uid) => ({
+          thread_id: data.id,
+          user_id: uid,
+          status: "invited",
+          invited_by: session.user.id,
+        })),
+      );
+    }
+    setCrewCreateShow(null);
     await loadCrews();
-    setDetail(null);
     openCrew(data.id);
   };
-  const joinCrew = async (t) => {
-    if (!requireAuth()) return;
-    const { error } = await supabase
+  const acceptInvite = async (tid) => {
+    await supabase
       .from("thread_members")
-      .insert({ thread_id: t.id, user_id: session.user.id });
-    if (error) {
-      toast("Couldn't join — " + error.message, true);
-      return;
-    }
+      .update({ status: "joined", last_read_at: new Date().toISOString() })
+      .eq("thread_id", tid)
+      .eq("user_id", session.user.id);
     await loadCrews();
-    setDetail(null);
-    openCrew(t.id);
+    openCrew(tid);
+  };
+  const declineInvite = async (tid) => {
+    await supabase
+      .from("thread_members")
+      .delete()
+      .eq("thread_id", tid)
+      .eq("user_id", session.user.id);
+    await loadCrews();
+    toast("Invite declined.");
+  };
+  const renameCrew = async (tid, name) => {
+    const clean = (name || "").trim();
+    setCrews((p) =>
+      p.map((t) => (t.id === tid ? { ...t, name: clean || null } : t)),
+    );
+    await supabase
+      .from("threads")
+      .update({ name: clean || null })
+      .eq("id", tid);
   };
   const leaveCrew = async (tid) => {
     await supabase
@@ -850,20 +894,7 @@ function App() {
     if (adding && u2?.notify && uid !== curUser.id)
       toast(u2.name + " tagged on " + c.artist + " — notified!");
   };
-  const toggleGoing = (cid) => {
-    const c = liveConcerts.find((x) => x.id === cid);
-    const wasGoing = c && (c.attendees || []).includes(curUser.id);
-    toggleAttendee(cid, curUser.id);
-    // Just marked going + this show has a crew I'm not in → suggest it.
-    if (c && !wasGoing) {
-      const t = crewForShow(c);
-      if (
-        t &&
-        !(t.thread_members || []).some((m) => m.user_id === curUser.id)
-      )
-        setCrewPrompt(t);
-    }
-  };
+  const toggleGoing = (cid) => toggleAttendee(cid, curUser.id);
   const toggleFollow = async (uid) => {
     if (!requireAuth()) return;
     if (uid === curUser.id) return;
@@ -1774,6 +1805,9 @@ function App() {
           onMarkActivityRead={markNotifsRead}
           myBlocks={myBlocks}
           onBlock={blockUser}
+          onAcceptInvite={acceptInvite}
+          onDeclineInvite={declineInvite}
+          onRenameCrew={renameCrew}
         />
       )}
 
@@ -1954,9 +1988,15 @@ function App() {
           }}
           onShare={(cc) => setShareShow(cc)}
           onToggleHidden={toggleHidden}
-          crew={crewForShow(detail)}
-          onStartCrew={startCrew}
-          onJoinCrew={joinCrew}
+          myGroups={crews.filter(
+            (t) =>
+              t.show_artist === detail.artist &&
+              t.show_date === detail.date &&
+              (t.thread_members || []).some(
+                (m) => m.user_id === curUser.id && m.status === "joined",
+              ),
+          )}
+          onStartGroup={openCrewCreate}
           onOpenCrew={openCrew}
         />
       )}
@@ -1981,72 +2021,14 @@ function App() {
           }}
         />
       )}
-      {crewPrompt && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 18,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 800,
-            background: "#141414",
-            border: "1px solid rgba(245,166,35,.35)",
-            borderRadius: 10,
-            padding: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            boxShadow: "0 8px 30px rgba(0,0,0,.6)",
-            maxWidth: "92vw",
-          }}
-        >
-          <span style={{ fontSize: 16 }}>👥</span>
-          <span
-            style={{
-              fontFamily: "'Syne',sans-serif",
-              fontSize: 13,
-              color: "#f0ede8",
-            }}
-          >
-            {(crewPrompt.thread_members || []).length} in the crew for{" "}
-            {crewPrompt.show_artist} — join them?
-          </span>
-          <button
-            onClick={() => {
-              const t = crewPrompt;
-              setCrewPrompt(null);
-              joinCrew(t);
-            }}
-            style={{
-              background: "#F5A623",
-              border: "none",
-              color: "#000",
-              padding: "7px 13px",
-              borderRadius: 6,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 11,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Join
-          </button>
-          <button
-            onClick={() => setCrewPrompt(null)}
-            style={{
-              background: "none",
-              border: "1px solid #2a2a2a",
-              color: "#666",
-              padding: "7px 11px",
-              borderRadius: 6,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 11,
-              cursor: "pointer",
-            }}
-          >
-            Not now
-          </button>
-        </div>
+      {crewCreateShow && (
+        <CrewCreate
+          show={crewCreateShow}
+          curUser={curUser}
+          users={users}
+          onClose={() => setCrewCreateShow(null)}
+          onCreate={createGroup}
+        />
       )}
       {artistModal && (
         <ArtistSheet

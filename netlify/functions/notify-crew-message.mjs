@@ -56,6 +56,7 @@ export default async (req) => {
         .from("thread_members")
         .select("user_id")
         .eq("thread_id", row.thread_id)
+        .eq("status", "joined") // invited-but-not-joined can't read the chat
         .neq("user_id", row.sender_id),
       sb
         .from("profiles")

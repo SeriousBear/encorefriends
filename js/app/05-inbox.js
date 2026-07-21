@@ -1,3 +1,187 @@
+// ── CREATE A GROUP (name + pick followers to invite) ─────────────────────────
+function CrewCreate({ show, curUser, users, onClose, onCreate }) {
+  const defaultName = show.artist ? show.artist + " crew" : "New group";
+  const [name, setName] = useState(defaultName);
+  const [picked, setPicked] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const follows = users.filter(
+    (u) => u.id !== curUser.id && (curUser.following || []).includes(u.id),
+  );
+  const toggle = (id) =>
+    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const create = async () => {
+    if (saving) return;
+    setSaving(true);
+    await onCreate(show, name, picked);
+  };
+  return (
+    <div className="mwrap" onClick={onClose} style={{ zIndex: 700 }}>
+      <div
+        className="sheet"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: 440 }}
+      >
+        <div className="sheet-bar" style={{ background: "#F5A623" }} />
+        <div style={{ padding: "10px 18px 22px" }}>
+          <div
+            style={{
+              fontFamily: "'Bebas Neue',sans-serif",
+              fontSize: 22,
+              letterSpacing: 1,
+              marginBottom: 10,
+            }}
+          >
+            New group chat
+          </div>
+          <div
+            style={{
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 10,
+              letterSpacing: 2,
+              color: "#F5A623",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}
+          >
+            Name
+          </div>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={defaultName}
+            style={{
+              width: "100%",
+              background: "#0c0c0c",
+              border: "1px solid #1e1e1e",
+              borderRadius: 6,
+              color: "#f0ede8",
+              fontFamily: "'Syne',sans-serif",
+              fontSize: 14,
+              padding: "10px 12px",
+              outline: "none",
+              boxSizing: "border-box",
+              marginBottom: 16,
+            }}
+          />
+          <div
+            style={{
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 10,
+              letterSpacing: 2,
+              color: "#F5A623",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}
+          >
+            Add people you follow{picked.length ? " (" + picked.length + ")" : ""}
+          </div>
+          {follows.length === 0 ? (
+            <div
+              style={{
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 10,
+                color: "#666",
+                padding: "8px 0 14px",
+              }}
+            >
+              Follow some people first — then you can add them to a group.
+            </div>
+          ) : (
+            <div style={{ maxHeight: "38vh", overflowY: "auto", marginBottom: 14 }}>
+              {follows.map((u2) => {
+                const on = picked.includes(u2.id);
+                return (
+                  <div
+                    key={u2.id}
+                    onClick={() => toggle(u2.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "8px 4px",
+                      borderBottom: "1px solid #141414",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        background: u2.color,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: "#000",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {u2.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <span
+                      style={{
+                        flex: 1,
+                        fontFamily: "'Syne',sans-serif",
+                        fontSize: 13,
+                      }}
+                    >
+                      {u2.name}
+                    </span>
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 5,
+                        border:
+                          "1px solid " + (on ? "#F5A623" : "#2a2a2a"),
+                        background: on ? "#F5A623" : "transparent",
+                        color: "#000",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {on ? "✓" : ""}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <button
+            onClick={create}
+            disabled={saving}
+            style={{
+              width: "100%",
+              padding: "11px 0",
+              background: "#F5A623",
+              border: "none",
+              borderRadius: 6,
+              color: "#000",
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: 1,
+              cursor: saving ? "default" : "pointer",
+            }}
+          >
+            {saving
+              ? "Creating…"
+              : picked.length
+                ? "Create & invite " + picked.length
+                : "Create group"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function InboxSheet({
   curUser,
   users,
@@ -22,11 +206,23 @@ function InboxSheet({
   setActiveCrew,
   onLeaveCrew,
   onCrewRead,
+  onAcceptInvite,
+  onDeclineInvite,
+  onRenameCrew,
 }) {
   const [draft, setDraft] = useState("");
   const [showCompose, setShowCompose] = useState(false);
   const [crewMsgs, setCrewMsgs] = useState([]);
+  const [renaming, setRenaming] = useState(false);
+  const [renameVal, setRenameVal] = useState("");
   const listRef = useRef(null);
+  // Display name for a group: custom name, else "<artist> crew".
+  const crewName = (t) =>
+    t && (t.name || (t.show_artist ? t.show_artist + " crew" : "Group"));
+  const isJoined = (t) =>
+    (t.thread_members || []).some(
+      (m) => m.user_id === curUser.id && m.status === "joined",
+    );
 
   // Load + live-subscribe the open crew's messages; mark the crew read.
   useEffect(() => {
@@ -118,9 +314,14 @@ function InboxSheet({
       threads[other].last = m;
     if (m.recipient_id === curUser.id && !m.read) threads[other].unread++;
   });
-  const myCrews = (crews || []).filter((t) =>
-    (t.thread_members || []).some((m) => m.user_id === curUser.id),
+  const myCrews = (crews || []).filter(isJoined);
+  const pendingInvites = (crews || []).filter((t) =>
+    (t.thread_members || []).some(
+      (m) => m.user_id === curUser.id && m.status === "invited",
+    ),
   );
+  const joinedCount = (t) =>
+    (t.thread_members || []).filter((m) => m.status === "joined").length;
   const crewUnread = (t) => {
     const me = (t.thread_members || []).find(
       (m) => m.user_id === curUser.id,
@@ -385,6 +586,110 @@ function InboxSheet({
                   )}
                 </div>
               )}
+              {pendingInvites.length > 0 && (
+                <div style={{ margin: "2px 0 10px" }}>
+                  <div
+                    style={{
+                      fontFamily: "'DM Mono',monospace",
+                      fontSize: 9,
+                      letterSpacing: 2,
+                      color: "#F5A623",
+                      textTransform: "uppercase",
+                      marginBottom: 4,
+                    }}
+                  >
+                    Group invites
+                  </div>
+                  {pendingInvites.map((t) => {
+                    const inviter = users.find(
+                      (u) =>
+                        u.id ===
+                        (t.thread_members || []).find(
+                          (m) => m.user_id === curUser.id,
+                        )?.invited_by,
+                    );
+                    return (
+                      <div
+                        key={t.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: "9px 4px",
+                          borderBottom: "1px solid #141414",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 8,
+                            background: "rgba(245,166,35,.08)",
+                            border: "1px solid rgba(245,166,35,.3)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 14,
+                            flexShrink: 0,
+                          }}
+                        >
+                          👥
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontFamily: "'Syne',sans-serif",
+                              fontSize: 14,
+                              fontWeight: 600,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {crewName(t)}
+                          </div>
+                          <div style={mono}>
+                            {inviter ? inviter.name + " invited you" : "Invite"}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => onAcceptInvite(t.id)}
+                          style={{
+                            background: "#F5A623",
+                            border: "none",
+                            color: "#000",
+                            fontFamily: "'DM Mono',monospace",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "5px 10px",
+                            borderRadius: 5,
+                            cursor: "pointer",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Join
+                        </button>
+                        <button
+                          onClick={() => onDeclineInvite(t.id)}
+                          style={{
+                            background: "none",
+                            border: "1px solid #2a2a2a",
+                            color: "#888",
+                            fontFamily: "'DM Mono',monospace",
+                            fontSize: 10,
+                            padding: "5px 9px",
+                            borderRadius: 5,
+                            cursor: "pointer",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               {myCrews.length > 0 && (
                 <div style={{ margin: "2px 0 10px" }}>
                   <div
@@ -439,11 +744,10 @@ function InboxSheet({
                             textOverflow: "ellipsis",
                           }}
                         >
-                          {t.show_artist}
+                          {crewName(t)}
                         </div>
                         <div style={mono}>
-                          {t.show_date} · {(t.thread_members || []).length} in
-                          the crew
+                          {t.show_date} · {joinedCount(t)} in the group
                         </div>
                       </div>
                       {crewUnread(t) && (
@@ -778,24 +1082,60 @@ function InboxSheet({
                       ←
                     </button>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontFamily: "'Syne',sans-serif",
-                          fontSize: 15,
-                          fontWeight: 700,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        👥 {t ? t.show_artist : "Crew"}
-                      </div>
+                      {renaming ? (
+                        <input
+                          autoFocus
+                          value={renameVal}
+                          onChange={(e) => setRenameVal(e.target.value)}
+                          onBlur={() => {
+                            onRenameCrew &&
+                              onRenameCrew(activeCrew, renameVal.trim());
+                            setRenaming(false);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.target.blur();
+                            if (e.key === "Escape") setRenaming(false);
+                          }}
+                          placeholder={t ? crewName(t) : "Group name"}
+                          style={{
+                            width: "100%",
+                            background: "#0c0c0c",
+                            border: "1px solid #1e1e1e",
+                            borderRadius: 5,
+                            color: "#f0ede8",
+                            fontFamily: "'Syne',sans-serif",
+                            fontSize: 14,
+                            padding: "6px 9px",
+                            outline: "none",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          onClick={() => {
+                            setRenameVal(t && t.name ? t.name : "");
+                            setRenaming(true);
+                          }}
+                          title="Tap to rename"
+                          style={{
+                            fontFamily: "'Syne',sans-serif",
+                            fontSize: 15,
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            cursor: "pointer",
+                          }}
+                        >
+                          👥 {t ? crewName(t) : "Group"}{" "}
+                          <span style={{ fontSize: 11, color: "#555" }}>✎</span>
+                        </div>
+                      )}
                       <div style={mono}>
                         {t
                           ? t.show_date +
                             " · " +
-                            (t.thread_members || []).length +
-                            " in the crew"
+                            joinedCount(t) +
+                            " in the group"
                           : ""}
                       </div>
                     </div>
@@ -1039,9 +1379,8 @@ function CDetail({
   onGenreClick,
   onShare,
   onToggleHidden,
-  crew,
-  onStartCrew,
-  onJoinCrew,
+  myGroups,
+  onStartGroup,
   onOpenCrew,
 }) {
   const u = getUrgency(c.date),
@@ -1059,8 +1398,6 @@ function CDetail({
     rc = u === "urgent" ? "#FF5555" : "#F5A623";
   const showR = u === "urgent" || u === "soon";
   const isFestival = c.is_festival && c.end_date && c.end_date !== c.date;
-  const isCrewMember =
-    crew && (crew.thread_members || []).some((m) => m.user_id === curUser.id);
   const crewBtn = {
     margin: "8px 0 2px",
     width: "100%",
@@ -1188,24 +1525,24 @@ function CDetail({
                 : "👁 VISIBLE TO FRIENDS & MATCHES. TAP TO GO QUIETLY"}
             </button>
           )}
-          {curUser.id &&
-            (c.attendees || []).includes(curUser.id) &&
-            onStartCrew &&
-            (crew ? (
-              isCrewMember ? (
-                <button onClick={() => onOpenCrew(crew.id)} style={crewBtn}>
-                  💬 OPEN CREW CHAT ({(crew.thread_members || []).length})
+          {curUser.id && onStartGroup && (
+            <>
+              {(myGroups || []).map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => onOpenCrew(g.id)}
+                  style={crewBtn}
+                >
+                  💬 OPEN{" "}
+                  {g.name ||
+                    (g.show_artist ? g.show_artist + " crew" : "group")}
                 </button>
-              ) : (
-                <button onClick={() => onJoinCrew(crew)} style={crewBtn}>
-                  👥 JOIN THE CREW — {(crew.thread_members || []).length} IN
-                </button>
-              )
-            ) : (
-              <button onClick={() => onStartCrew(c)} style={crewBtn}>
-                👥 START A CREW CHAT FOR THIS SHOW
+              ))}
+              <button onClick={() => onStartGroup(c)} style={crewBtn}>
+                👥 START A GROUP CHAT FOR THIS SHOW
               </button>
-            ))}
+            </>
+          )}
           <div className="sh-lbl nb">Get Tickets</div>
           {primaryUrl(c) ? (
             <a
