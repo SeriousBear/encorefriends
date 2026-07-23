@@ -1,0 +1,24 @@
+{
+  "platform": "dayof-reminder",
+  "description": "REAL FAILURE (scrubbed) — a day-of reminder with a RELATIVE date ('today'). The old prompt required a hard YYYY-MM-DD and was never told today's date, so it produced no show. `today` pins the prompt date so the reminder resolves; buildParseSystem() supplies the same in production.",
+  "today": "2026-07-22",
+  "email": {
+    "subject": "7:00 PM today: HeadRoom by Synchronized Swimming",
+    "from": "DICE <no-reply@dice.fm>",
+    "body": "See you tonight!\n\nHeadRoom by Synchronized Swimming\n\nYour event is TODAY. Doors 7:00 PM.\n\nThe Empty Bottle, 1035 N Western Ave, Chicago, IL\n\nOrder #DICE-5583091\nOpen your ticket in the DICE app: https://dice.fm/tickets/5583091"
+  },
+  "expected": {
+    "is_ticket": true,
+    "shows": [
+      {
+        "artist": "Synchronized Swimming",
+        "date": "2026-07-22",
+        "end_date": "2026-07-22",
+        "is_festival": false,
+        "genres": ["Indie Rock", "Rock", "Art Rock", "Experimental"],
+        "venue": "Empty Bottle",
+        "city": "Chicago, IL"
+      }
+    ]
+  }
+}

@@ -16,7 +16,7 @@
 import { createClient } from "@supabase/supabase-js";
 import PostalMime from "postal-mime";
 import {
-  PARSE_SYSTEM,
+  buildParseSystem,
   tokenFromAddress,
   extractParseResult,
   buildConcertRow,
@@ -29,8 +29,9 @@ const sb = createClient(
 
 const HOURLY_LIMIT = 40; // forwards processed per user per hour (abuse/cost cap)
 
-// PARSE_SYSTEM and the other pure helpers live in parse-helpers.mjs so
-// unit tests and evals exercise exactly what production runs.
+// The parse prompt and other pure helpers live in parse-helpers.mjs so unit
+// tests and evals exercise exactly what production runs. buildParseSystem()
+// stamps today's date into the prompt so relative reminder dates resolve.
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -124,14 +125,24 @@ export default async (req) => {
     /* fall through */
   }
   if (!token) token = tokenFromAddress(to);
-  if (!token) return json({ ok: false, reason: "no forward token in recipient" });
+  if (!token) {
+    // No parseable token in the recipient — log it so "I forwarded a ticket and
+    // nothing happened" leaves a trace instead of vanishing. (user_id null.)
+    await logEvent(null, subject, "unmatched", "no forward token in recipient");
+    return json({ ok: false, reason: "no forward token in recipient" });
+  }
 
   const { data: prof } = await sb
     .from("profiles")
     .select("id")
     .eq("forward_token", token)
     .single();
-  if (!prof) return json({ ok: false, reason: "unknown token" });
+  if (!prof) {
+    // Token present but matches no user (typo, stale, or someone else's) — also
+    // logged as unmatched so it's debuggable in the admin view.
+    await logEvent(null, subject, "unmatched", "unknown token: " + token);
+    return json({ ok: false, reason: "unknown token" });
+  }
   const userId = prof.id;
 
   // ── Rate limit: cap forwards processed per user per hour. ──
@@ -177,6 +188,7 @@ export default async (req) => {
   // Parse with the same model + prompt as the manual scan (now on clean text).
   let concerts = [];
   let isTicket = false;
+  let reason = "";
   try {
     const ai = await fetch(
       (process.env.URL || "") + "/.netlify/functions/claude",
@@ -186,7 +198,9 @@ export default async (req) => {
         body: JSON.stringify({
           model: "claude-sonnet-4-5",
           max_tokens: 4000,
-          system: PARSE_SYSTEM,
+          // buildParseSystem() stamps today's date so relative reminder dates
+          // ("7:00 PM today") resolve to a real YYYY-MM-DD.
+          system: buildParseSystem(),
           messages: [
             {
               role: "user",
@@ -204,6 +218,7 @@ export default async (req) => {
     const parsed = extractParseResult(t);
     isTicket = parsed.is_ticket;
     concerts = parsed.shows;
+    reason = parsed.reason || "";
   } catch (e) {
     await logEvent(userId, subject, "error", "parse failed: " + e.message);
     return json({ ok: false, reason: "parse failed", error: String(e) });
@@ -231,12 +246,17 @@ export default async (req) => {
     }
   }
 
-  // ── Feedback logic ──
+  // ── Feedback logic ── (the model's `reason` is logged on every outcome)
   if (saved > 0) {
-    await logEvent(userId, subject, "saved", saved + " show(s)");
+    await logEvent(
+      userId,
+      subject,
+      "saved",
+      saved + " show(s)" + (reason ? " · " + reason : ""),
+    );
   } else if (isTicket) {
     // Looked like a real music ticket but we couldn't extract it → worth a nudge.
-    await logEvent(userId, subject, "no_show", "music ticket, 0 parsed");
+    await logEvent(userId, subject, "no_show", reason || "music ticket, 0 parsed");
     try {
       await sb.from("notifications").insert({
         user_id: userId,
@@ -250,7 +270,7 @@ export default async (req) => {
   } else {
     // Not a music ticket at all (receipt, newsletter, non-music event) →
     // silently ignore. Logged for the admin view, but no user notification.
-    await logEvent(userId, subject, "ignored", "not a music ticket");
+    await logEvent(userId, subject, "ignored", reason || "not a music ticket");
   }
 
   return json({ ok: true, kind: "ticket", saved });

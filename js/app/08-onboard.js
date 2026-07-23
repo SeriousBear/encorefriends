@@ -952,6 +952,8 @@ function AdminPage({ onBack }) {
   const [fwd, setFwd] = useState({
     saved: 0,
     no_show: 0,
+    ignored: 0,
+    unmatched: 0,
     error: 0,
     rate_limited: 0,
     confirm: 0,
@@ -988,7 +990,7 @@ function AdminPage({ onBack }) {
         .limit(25),
       supabase
         .from("forward_events")
-        .select("result,subject,created_at")
+        .select("result,subject,detail,created_at")
         .gte("created_at", weekAgo)
         .order("created_at", { ascending: false })
         .limit(1000),
@@ -1006,6 +1008,8 @@ function AdminPage({ onBack }) {
     const t = {
       saved: 0,
       no_show: 0,
+      ignored: 0,
+      unmatched: 0,
       error: 0,
       rate_limited: 0,
       confirm: 0,
@@ -1336,6 +1340,8 @@ function AdminPage({ onBack }) {
                 {[
                   ["saved", "#5cc46a"],
                   ["no_show", "#e0a13f"],
+                  ["ignored", "#888"],
+                  ["unmatched", "#e0674f"],
                   ["error", "#e0674f"],
                   ["rate_limited", "#888"],
                   ["confirm", "#888"],
@@ -1371,24 +1377,34 @@ function AdminPage({ onBack }) {
                     RECENT FAILURES
                   </div>
                   {fwd.failures.slice(0, 8).map((f, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        ...mono,
-                        fontSize: 11,
-                        color: "#aaa",
-                        padding: "3px 0",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color: f.result === "error" ? "#e0674f" : "#e0a13f",
-                        }}
+                    <div key={i} style={{ padding: "3px 0" }}>
+                      <div
+                        style={{ ...mono, fontSize: 11, color: "#aaa" }}
                       >
-                        [{f.result}]
-                      </span>{" "}
-                      {f.subject || "(no subject)"}{" "}
-                      <span style={{ color: "#555" }}>· {timeAgo(f.created_at)}</span>
+                        <span
+                          style={{
+                            color: f.result === "error" ? "#e0674f" : "#e0a13f",
+                          }}
+                        >
+                          [{f.result}]
+                        </span>{" "}
+                        {f.subject || "(no subject)"}{" "}
+                        <span style={{ color: "#555" }}>
+                          · {timeAgo(f.created_at)}
+                        </span>
+                      </div>
+                      {f.detail && (
+                        <div
+                          style={{
+                            ...mono,
+                            fontSize: 10,
+                            color: "#777",
+                            paddingLeft: 14,
+                          }}
+                        >
+                          ↳ {f.detail}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

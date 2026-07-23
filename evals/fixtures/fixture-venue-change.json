@@ -1,0 +1,23 @@
+{
+  "platform": "venue-change",
+  "description": "REAL FAILURE (scrubbed) — a venue-change notice for a show the user already holds tickets to. Not a purchase confirmation, so the old purchase-only prompt logged it as no_show. The forwarded email must still be tracked.",
+  "email": {
+    "subject": "Thank you for your order for Glass Beams - Moved from Sleeping Village",
+    "from": "DICE <no-reply@dice.fm>",
+    "body": "An update about your event\n\nGlass Beams\n\nYour show has MOVED. Due to demand, Glass Beams has been relocated from Sleeping Village to Thalia Hall, Chicago, IL. Your existing tickets remain valid — no action needed.\n\nNew venue: Thalia Hall, 1807 S Allport St, Chicago, IL\nDate: Friday, October 9, 2026\nDoors: 8:00 PM\n\nOrder #DICE-7741203\nView your tickets: https://dice.fm/tickets/7741203"
+  },
+  "expected": {
+    "is_ticket": true,
+    "shows": [
+      {
+        "artist": "Glass Beams",
+        "date": "2026-10-09",
+        "end_date": "2026-10-09",
+        "is_festival": false,
+        "genres": ["Psychedelic Rock", "Indie Rock", "Rock", "Art Rock", "Experimental"],
+        "venue": "Thalia Hall",
+        "city": "Chicago, IL"
+      }
+    ]
+  }
+}

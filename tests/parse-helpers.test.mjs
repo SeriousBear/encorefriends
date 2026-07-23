@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest";
 import {
   PARSE_SYSTEM,
   FORWARD_DOMAIN,
+  buildParseSystem,
   tokenFromAddress,
   extractParseResult,
   buildConcertRow,
@@ -50,16 +51,66 @@ describe("extractParseResult", () => {
     expect(r.shows).toEqual([]);
   });
   it("degrades malformed JSON to not-a-ticket instead of throwing", () => {
+    // Contract now includes a `reason` field, defaulting to "".
     expect(extractParseResult('{"is_ticket": tru')).toEqual({
       is_ticket: false,
       shows: [],
+      reason: "",
     });
-    expect(extractParseResult("")).toEqual({ is_ticket: false, shows: [] });
-    expect(extractParseResult(null)).toEqual({ is_ticket: false, shows: [] });
+    expect(extractParseResult("")).toEqual({
+      is_ticket: false,
+      shows: [],
+      reason: "",
+    });
+    expect(extractParseResult(null)).toEqual({
+      is_ticket: false,
+      shows: [],
+      reason: "",
+    });
   });
   it("coerces a non-array shows field", () => {
     const r = extractParseResult('{"is_ticket": true, "shows": "nope"}');
     expect(r.shows).toEqual([]);
+  });
+  it("passes the model's reason through", () => {
+    const r = extractParseResult(
+      '{"is_ticket": true, "shows": [], "reason": "Day-of reminder for a concert"}',
+    );
+    expect(r.reason).toBe("Day-of reminder for a concert");
+  });
+  it("defaults reason to empty string when omitted or non-string", () => {
+    expect(extractParseResult('{"is_ticket": false, "shows": []}').reason).toBe(
+      "",
+    );
+    expect(
+      extractParseResult('{"is_ticket": false, "shows": [], "reason": 5}')
+        .reason,
+    ).toBe("");
+  });
+  it("caps reason at 120 chars", () => {
+    const long = "x".repeat(300);
+    const r = extractParseResult(
+      '{"is_ticket": false, "shows": [], "reason": "' + long + '"}',
+    );
+    expect(r.reason).toHaveLength(120);
+  });
+});
+
+describe("buildParseSystem", () => {
+  it("appends today's date so relative reminder dates resolve", () => {
+    const s = buildParseSystem(new Date("2026-07-22T09:00:00Z"));
+    expect(s).toContain("TODAY'S DATE IS 2026-07-22");
+    expect(s.startsWith(PARSE_SYSTEM)).toBe(true);
+  });
+  it("keeps day-of reminders in scope (no regression)", () => {
+    // Guards the intentional broadening: forwarded reminders must stay in-scope
+    // while promos / on-sales stay rejected.
+    expect(PARSE_SYSTEM).toMatch(/reminder/i);
+    expect(PARSE_SYSTEM).toMatch(/on[- ]?sale/i);
+  });
+  it("keeps venue-change and transfer notices in scope (no regression)", () => {
+    expect(PARSE_SYSTEM).toMatch(/moved|reschedule|change/i);
+    expect(PARSE_SYSTEM).toMatch(/transfer/i);
   });
 });
 

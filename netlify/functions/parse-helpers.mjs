@@ -11,13 +11,18 @@ import { GENRE_PROMPT_LIST, canonicalizeGenres } from "./genre-taxonomy.mjs";
 export const FORWARD_DOMAIN = "encorefriends.com";
 
 // Same extraction contract as the in-app scan (js/app.js doScan).
-export const PARSE_SYSTEM = `You are an expert MUSIC concert ticket email parser. Your job is to extract ONLY confirmed ticket PURCHASES for MUSIC events.
+export const PARSE_SYSTEM = `You are an expert MUSIC concert ticket email parser. The user FORWARDED this email to their personal concert tracker, so assume they WANT this show tracked — your job is to extract the live MUSIC event it refers to.
 
-STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
+WHAT TO EXTRACT — treat any of these as a show the user is going to:
 
-1. CONFIRMED PURCHASES ONLY — the user must have actually bought a ticket. Look for phrases like:
-   "Your order", "Your tickets", "You're going", "Order confirmation", "Payment received", "Booking confirmation", "Order #", "Payment plan", "Installment payment"
-   DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Just announced", advertisements, presale invites, refund/cancel notices, waitlist emails.
+1. The email concerns a live MUSIC event the user holds or is attending a ticket for. This INCLUDES more than the original purchase confirmation:
+   - purchase/order confirmations ("Your order", "Your tickets", "Order #", "Payment received", "Booking confirmation", "Payment plan", "Installment payment")
+   - day-of / upcoming-show REMINDERS ("7:00 PM today:", "Your event is tomorrow", "See you tonight", "Reminder: doors at 8")
+   - venue-change / reschedule / "moved" / date-change notices for a show they already hold
+   - ticket TRANSFERS accepted or sent to the user, and "your tickets are ready / available to download / view your tickets" emails
+   Because the user chose to forward it, lean toward is_ticket=true for a real music event even if this specific email is not the original receipt.
+
+   DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Just announced", advertisements, presale/on-sale invites, refund/CANCELLATION notices, waitlist emails.
 
 2. MUSIC EVENTS ONLY:
    Concerts, DJ sets, festivals, club nights, raves, after-parties, music tours.
@@ -28,10 +33,11 @@ STRICT RULES — EXTRACT ONLY EMAILS THAT MATCH ALL OF THESE:
 4. DEDUPLICATION — if multiple emails reference the same event/order, include the EVENT only ONCE.
 
 Return ONLY a valid JSON object of this exact shape:
-{"is_ticket": boolean, "shows": [ ... ]}
+{"is_ticket": boolean, "shows": [ ... ], "reason": string}
 
-- is_ticket: true if this email is a confirmed order/ticket for a live MUSIC event (concert, festival, DJ set, club night, tour) — even if you could not extract clean details. false for EVERYTHING else: retail orders, food/travel receipts, newsletters, promos, on-sale announcements, and non-music events (sports, comedy, theater).
-- shows: an array of the qualifying music purchases. Each show object:
+- is_ticket: true if this email concerns a real live MUSIC event the user holds/attends a ticket for — a confirmation, reminder, change notice, or transfer (concert, festival, DJ set, club night, tour) — even if you could not extract clean details. false for EVERYTHING else: retail orders, food/travel receipts, newsletters, promos, on-sale announcements, cancellations, and non-music events (sports, comedy, theater).
+- reason: a SHORT (max ~120 chars) plain-language explanation of your decision — what kind of email this is and why you did or didn't treat it as a show. Example: "Day-of reminder for a concert" or "On-sale promo, not a purchase".
+- shows: an array of the qualifying music shows. Each show object:
 {"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean, "genres": string[]}
 
 - artist: performer/band/DJ name. For festivals, use the festival name.
@@ -47,7 +53,18 @@ Return ONLY a valid JSON object of this exact shape:
 GENRE LIST (the only allowed values for "genres"):
 ${GENRE_PROMPT_LIST}
 
-Deduplicate aggressively. If the email is not a music ticket at all, return {"is_ticket": false, "shows": []}.`;
+Deduplicate aggressively. If the email is not a music ticket at all, return {"is_ticket": false, "shows": [], "reason": "<why>"}.`;
+
+// Production/evals build the system prompt through this so the model is always
+// told TODAY'S DATE — without it, relative dates in reminders ("7:00 PM today",
+// "your show is tomorrow") cannot be resolved to a real YYYY-MM-DD.
+export function buildParseSystem(now = new Date()) {
+  const today = now.toISOString().slice(0, 10);
+  return (
+    PARSE_SYSTEM +
+    `\n\nTODAY'S DATE IS ${today}. Resolve any relative date ("today", "tonight", "tomorrow", a weekday name) against this date and output an absolute YYYY-MM-DD.`
+  );
+}
 
 export function tokenFromAddress(addr) {
   if (!addr) return null;
@@ -63,15 +80,19 @@ export function tokenFromAddress(addr) {
 // prose). Malformed replies degrade to "not a ticket" rather than throwing.
 export function extractParseResult(text) {
   const mm = String(text || "").match(/\{[\s\S]*\}/);
-  if (!mm) return { is_ticket: false, shows: [] };
+  if (!mm) return { is_ticket: false, shows: [], reason: "" };
   try {
     const parsed = JSON.parse(mm[0]);
     return {
       is_ticket: !!parsed.is_ticket,
       shows: Array.isArray(parsed.shows) ? parsed.shows : [],
+      // Short model-written explanation; capped so a runaway reply can't bloat
+      // logs. Defaults to "" when the model omits it.
+      reason:
+        typeof parsed.reason === "string" ? parsed.reason.slice(0, 120) : "",
     };
   } catch (e) {
-    return { is_ticket: false, shows: [] };
+    return { is_ticket: false, shows: [], reason: "" };
   }
 }
 

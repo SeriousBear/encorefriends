@@ -5,9 +5,11 @@
 //   node evals/run-evals.mjs --strict  exit 1 if anything fails (for CI)
 //
 // Each fixture in evals/fixtures/*.json:
-//   { platform, description, email: { subject, from, body },
+//   { platform, description, today?, email: { subject, from, body },
 //     expected: { is_ticket, shows: [{ artist, date, end_date?,
 //                 is_festival?, genres?[acceptable], venue?, city? }] } }
+// `today` (YYYY-MM-DD, optional) pins the prompt's TODAY'S DATE so fixtures
+// with relative dates ("7:00 PM today") resolve deterministically.
 //
 // PASS/FAIL fields: is_ticket, show count, artist, date, end_date,
 // is_festival, genres (must be valid taxonomy + overlap expected).
@@ -17,7 +19,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  PARSE_SYSTEM,
+  buildParseSystem,
   extractParseResult,
 } from "../netlify/functions/parse-helpers.mjs";
 import { ALL_GENRES } from "../netlify/functions/genre-taxonomy.mjs";
@@ -50,7 +52,7 @@ const artistMatch = (a, b) => {
   return x === y || (x && y && (x.includes(y) || y.includes(x)));
 };
 
-async function callModel(email) {
+async function callModel(email, today) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -61,7 +63,9 @@ async function callModel(email) {
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 1500,
-      system: PARSE_SYSTEM,
+      // Build the prompt exactly as production does. An optional per-fixture
+      // `today` lets reminder fixtures resolve relative dates deterministically.
+      system: buildParseSystem(today ? new Date(today) : new Date()),
       messages: [
         {
           role: "user",
@@ -120,7 +124,7 @@ for (const f of files) {
   const fx = JSON.parse(readFileSync(join(dir, f), "utf8"));
   const raw = DRY
     ? JSON.stringify(fx.expected)
-    : await callModel(fx.email);
+    : await callModel(fx.email, fx.today);
   const got = extractParseResult(raw);
   const { fails, warns } = scoreFixture(fx.expected, got);
   const ok = fails.length === 0;
