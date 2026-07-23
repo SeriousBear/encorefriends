@@ -647,10 +647,10 @@ function App() {
     const { data, error } = await supabase
       .from("threads")
       .insert({
-        show_artist: show.artist,
-        show_date: show.date,
-        venue: show.venue || "",
-        city: show.city || "",
+        show_artist: show ? show.artist : null,
+        show_date: show ? show.date : null,
+        venue: (show && show.venue) || "",
+        city: (show && show.city) || "",
         name: (name || "").trim() || null,
         created_by: session.user.id,
       })
@@ -1808,6 +1808,7 @@ function App() {
           onAcceptInvite={acceptInvite}
           onDeclineInvite={declineInvite}
           onRenameCrew={renameCrew}
+          onCreateGroup={(name, ids) => createGroup(null, name, ids)}
         />
       )}
 

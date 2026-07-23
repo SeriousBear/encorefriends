@@ -209,9 +209,12 @@ function InboxSheet({
   onAcceptInvite,
   onDeclineInvite,
   onRenameCrew,
+  onCreateGroup,
 }) {
   const [draft, setDraft] = useState("");
   const [showCompose, setShowCompose] = useState(false);
+  const [composePicked, setComposePicked] = useState([]);
+  const [composeName, setComposeName] = useState("");
   const [crewMsgs, setCrewMsgs] = useState([]);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState("");
@@ -474,7 +477,11 @@ function InboxSheet({
             <div>
               {!showCompose ? (
                 <button
-                  onClick={() => setShowCompose(true)}
+                  onClick={() => {
+                    setComposePicked([]);
+                    setComposeName("");
+                    setShowCompose(true);
+                  }}
                   style={{
                     width: "100%",
                     marginBottom: 10,
@@ -489,102 +496,227 @@ function InboxSheet({
                     cursor: "pointer",
                   }}
                 >
-                  ✎ NEW MESSAGE
+                  ＋ New message
                 </button>
               ) : (
-                <div style={{ marginBottom: 12 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 6,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "'DM Mono',monospace",
-                        fontSize: 10,
-                        letterSpacing: 2,
-                        color: "#F5A623",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Message someone
-                    </span>
-                    <button
-                      onClick={() => setShowCompose(false)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "#666",
-                        cursor: "pointer",
-                        fontSize: 12,
-                      }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  {users.filter(
+                (() => {
+                  const connected = users.filter(
                     (u) => u.id !== curUser.id && isConnected(u.id),
-                  ).length === 0 ? (
-                    <div
-                      style={{
-                        fontFamily: "'DM Mono',monospace",
-                        fontSize: 10,
-                        color: "#666",
-                        padding: "8px 0",
-                      }}
-                    >
-                      Follow someone (or get followed) to start a chat.
-                    </div>
-                  ) : (
-                    users
-                      .filter((u) => u.id !== curUser.id && isConnected(u.id))
-                      .map((u2) => (
-                        <div
-                          key={u2.id}
-                          onClick={() => {
-                            setShowCompose(false);
-                            setActiveThread(u2.id);
-                          }}
+                  );
+                  const toggle = (id) =>
+                    setComposePicked((p) =>
+                      p.includes(id)
+                        ? p.filter((x) => x !== id)
+                        : [...p, id],
+                    );
+                  const n = composePicked.length;
+                  const groupDefault = composePicked
+                    .map(
+                      (id) =>
+                        (users.find((u) => u.id === id) || {}).name?.split(
+                          " ",
+                        )[0],
+                    )
+                    .filter(Boolean)
+                    .slice(0, 3)
+                    .join(", ");
+                  const go = () => {
+                    if (n === 0) return;
+                    if (n === 1) {
+                      setShowCompose(false);
+                      setActiveThread(composePicked[0]);
+                    } else {
+                      onCreateGroup(
+                        composeName.trim() || groupDefault,
+                        composePicked,
+                      );
+                      setShowCompose(false);
+                    }
+                  };
+                  return (
+                    <div style={{ marginBottom: 12 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 4,
+                        }}
+                      >
+                        <span
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            padding: "8px 4px",
-                            borderBottom: "1px solid #141414",
-                            cursor: "pointer",
+                            fontFamily: "'DM Mono',monospace",
+                            fontSize: 10,
+                            letterSpacing: 2,
+                            color: "#F5A623",
+                            textTransform: "uppercase",
                           }}
                         >
-                          <div
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: "50%",
-                              background: u2.color,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 9,
-                              fontWeight: 700,
-                              color: "#000",
-                            }}
-                          >
-                            {u2.name.slice(0, 2).toUpperCase()}
-                          </div>
-                          <span
-                            style={{
-                              fontFamily: "'Syne',sans-serif",
-                              fontSize: 13,
-                            }}
-                          >
-                            {u2.name}
-                          </span>
+                          New message
+                        </span>
+                        <button
+                          onClick={() => setShowCompose(false)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#666",
+                            cursor: "pointer",
+                            fontSize: 12,
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'DM Mono',monospace",
+                          fontSize: 10,
+                          color: "#666",
+                          marginBottom: 8,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Pick one person to message — or add a few to start a
+                        group.
+                      </div>
+                      {connected.length === 0 ? (
+                        <div
+                          style={{
+                            fontFamily: "'DM Mono',monospace",
+                            fontSize: 10,
+                            color: "#666",
+                            padding: "8px 0",
+                          }}
+                        >
+                          Follow someone (or get followed) to start a chat.
                         </div>
-                      ))
-                  )}
-                </div>
+                      ) : (
+                        <>
+                          <div
+                            style={{ maxHeight: "34vh", overflowY: "auto" }}
+                          >
+                            {connected.map((u2) => {
+                              const on = composePicked.includes(u2.id);
+                              return (
+                                <div
+                                  key={u2.id}
+                                  onClick={() => toggle(u2.id)}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    padding: "8px 4px",
+                                    borderBottom: "1px solid #141414",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: 28,
+                                      height: 28,
+                                      borderRadius: "50%",
+                                      background: u2.color,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      fontSize: 9,
+                                      fontWeight: 700,
+                                      color: "#000",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {u2.name.slice(0, 2).toUpperCase()}
+                                  </div>
+                                  <span
+                                    style={{
+                                      flex: 1,
+                                      fontFamily: "'Syne',sans-serif",
+                                      fontSize: 13,
+                                    }}
+                                  >
+                                    {u2.name}
+                                  </span>
+                                  <div
+                                    style={{
+                                      width: 18,
+                                      height: 18,
+                                      borderRadius: "50%",
+                                      border:
+                                        "1px solid " +
+                                        (on ? "#F5A623" : "#2a2a2a"),
+                                      background: on
+                                        ? "#F5A623"
+                                        : "transparent",
+                                      color: "#000",
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {on ? "✓" : ""}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {n >= 2 && (
+                            <input
+                              value={composeName}
+                              onChange={(e) => setComposeName(e.target.value)}
+                              placeholder={"Group name (default: " + groupDefault + ")"}
+                              style={{
+                                width: "100%",
+                                marginTop: 10,
+                                background: "#0c0c0c",
+                                border: "1px solid #1e1e1e",
+                                borderRadius: 6,
+                                color: "#f0ede8",
+                                fontFamily: "'Syne',sans-serif",
+                                fontSize: 13,
+                                padding: "9px 11px",
+                                outline: "none",
+                                boxSizing: "border-box",
+                              }}
+                            />
+                          )}
+                          <button
+                            onClick={go}
+                            disabled={n === 0}
+                            style={{
+                              width: "100%",
+                              marginTop: 10,
+                              padding: "10px 0",
+                              background:
+                                n === 0 ? "rgba(245,166,35,.2)" : "#F5A623",
+                              border: "none",
+                              borderRadius: 6,
+                              color: "#000",
+                              fontFamily: "'DM Mono',monospace",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              letterSpacing: 1,
+                              cursor: n === 0 ? "default" : "pointer",
+                            }}
+                          >
+                            {n === 0
+                              ? "Select people"
+                              : n === 1
+                                ? "Message " +
+                                  ((
+                                    users.find(
+                                      (u) => u.id === composePicked[0],
+                                    ) || {}
+                                  ).name || "")
+                                : "Start group (" + n + ")"}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()
               )}
               {pendingInvites.length > 0 && (
                 <div style={{ margin: "2px 0 10px" }}>

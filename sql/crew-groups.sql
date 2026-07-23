@@ -11,6 +11,9 @@
 alter table threads add column if not exists name text;
 -- the old "one crew per (artist,date)" rule no longer applies to private groups
 alter table threads drop constraint if exists threads_show_artist_show_date_key;
+-- a group started from the Messages "+" isn't tied to a show, so show is optional
+alter table threads alter column show_artist drop not null;
+alter table threads alter column show_date drop not null;
 
 -- 2 ▸ thread_members: invite status + who invited
 alter table thread_members
