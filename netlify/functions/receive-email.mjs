@@ -234,11 +234,11 @@ export default async (req) => {
         .from("concerts")
         .upsert(row, { onConflict: "owner_id,artist,date", ignoreDuplicates: true })
         .select();
-      const row = data && data[0];
-      if (row && row.id) {
+      const inserted = data && data[0];
+      if (inserted && inserted.id) {
         await sb
           .from("concert_attendees")
-          .insert({ concert_id: row.id, user_id: userId });
+          .insert({ concert_id: inserted.id, user_id: userId });
         saved++;
       }
     } catch (e) {

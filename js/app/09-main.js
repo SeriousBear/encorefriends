@@ -99,7 +99,7 @@ function App() {
       cancelled = true;
     };
   }, [session]);
-  const [view, setView] = useState("feed"); // "feed" | "search" | "profile" | "edit" | "genre"
+  const [view, setView] = useState("feed"); // "feed" | "search" | "profile" | "edit" | "genre" | "tour"
   const [genreView, setGenreView] = useState(null); // current genre string when view==="genre"
   const [prevView, setPrevView] = useState("feed"); // where to go back from genre page
   const [genreStack, setGenreStack] = useState([]); // genre->genre nav history
@@ -1161,6 +1161,13 @@ function App() {
               ) : (
                 <>
                   <button
+                    className={"icon-btn" + (view === "tour" ? " active" : "")}
+                    onClick={() => setView(view === "tour" ? "feed" : "tour")}
+                    title="Your Tour"
+                  >
+                    🎟
+                  </button>
+                  <button
                     className="icon-btn"
                     onClick={openNotifs}
                     title="Notifications"
@@ -1429,6 +1436,17 @@ function App() {
               onMessage={openThread}
               onGenreClick={openGenre}
               onArtistClick={openArtist}
+            />
+          )}
+          {view === "tour" && (
+            <TourPage
+              user={curUser}
+              concerts={liveConcerts}
+              users={users}
+              onBack={() => setView("feed")}
+              onArtistClick={openArtist}
+              onGenreClick={openGenre}
+              onViewProfile={viewProfile}
             />
           )}
           {view === "edit" && (
