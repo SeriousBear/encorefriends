@@ -272,7 +272,7 @@ function TourPage({
                   {daysUntil(nextShow.date) === 0
                     ? "Tonight"
                     : "In " + daysUntil(nextShow.date) + " days"}{" "}
-                  · {nextShow.venue || nextShow.city || fmt(nextShow.date)}
+                  · {nextShow.venue || nextShow.city || fmt(nextShow.date).full}
                 </div>
               </div>
             )}
@@ -519,7 +519,7 @@ function TourPage({
                   color: "#555",
                 }}
               >
-                On tour since {fmt(firstShow.date)}
+                On tour since {fmt(firstShow.date).full}
               </div>
             )}
           </>
