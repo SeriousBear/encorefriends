@@ -757,6 +757,14 @@ function App() {
           " just got added — right up your alley" +
           (d.genres && d.genres[0] ? " (" + d.genres[0] + ")" : ""),
       };
+    if (n.type === "bucket_unlock")
+      return {
+        icon: "🎯",
+        text:
+          "Bucket list unlocked — you're finally seeing " +
+          (d.artist || "an artist you've been chasing") +
+          "! 🎉",
+      };
     return { icon: "🔔", text: "New activity" };
   };
 

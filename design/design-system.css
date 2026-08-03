@@ -1,0 +1,106 @@
+/* ============================================================================
+   Encore — Design System (foundation)
+   ----------------------------------------------------------------------------
+   The token layer for the redesign. Goal: readability across every platform
+   and size. Everything scales with clamp() so text is comfortable at 360px and
+   never oversized on desktop. Import this once; build components on the tokens.
+
+   Readability rules baked in here:
+   - Body never below 16px; fluid 16 → 18px.
+   - Line-height 1.6 for body, tighter only for display.
+   - Letter-spacing lives on LABELS/eyebrows, never on body copy.
+   - Secondary/muted greys lightened for ≥4.5:1 contrast on the near-black bg.
+   ============================================================================ */
+
+:root {
+  /* ---- Brand palette ---- */
+  --gold: #f5a623;
+  --gold-soft: rgba(245, 166, 35, 0.14);
+  --gold-line: rgba(245, 166, 35, 0.34);
+
+  /* ---- Surfaces (near-black, layered) ---- */
+  --bg: #070707;        /* page */
+  --surface-1: #0e0e0e; /* raised section */
+  --surface-2: #141414; /* card */
+  --line: #262626;      /* hairline border — lifted from #1e1e1e so it's visible */
+  --line-strong: #383838;
+
+  /* ---- Text (contrast-checked on --bg) ---- */
+  --text: #f2efea;      /* primary — ~15:1 */
+  --text-2: #c4c2bc;    /* secondary — ~9:1 (was #a6a6a6 / #8a8a8a: too faint) */
+  --text-3: #97948d;    /* muted/meta only — ~5:1, never for long copy */
+  --on-gold: #1a1204;   /* text on gold fills — darkest gold-family, not black */
+
+  /* ---- Type families ---- */
+  --font-display: "Bebas Neue", sans-serif;   /* big headlines only */
+  --font-label: "DM Mono", monospace;         /* eyebrows, labels, meta */
+  --font-body: "Inter", "Syne", sans-serif;   /* body + UI — readable at any size */
+  --font-accent: "Syne", sans-serif;          /* optional marketing flourish */
+
+  /* ---- Fluid type scale (min @360px → max @1280px) ---- */
+  --fs-eyebrow: 0.75rem;                                 /* 12px labels (tracked) */
+  --fs-meta: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);   /* 13→14 */
+  --fs-body: clamp(1rem, 0.96rem + 0.28vw, 1.125rem);        /* 16→18 */
+  --fs-body-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem); /* 18→21 */
+  --fs-h3: clamp(1.25rem, 1.1rem + 0.7vw, 1.75rem);          /* 20→28 */
+  --fs-h2: clamp(1.75rem, 1.4rem + 1.6vw, 2.75rem);          /* 28→44 */
+  --fs-display: clamp(3rem, 1.8rem + 6vw, 6rem);             /* 48→96 (Bebas) */
+
+  /* ---- Line-heights ---- */
+  --lh-display: 0.95;
+  --lh-heading: 1.15;
+  --lh-body: 1.6;
+
+  /* ---- Letter-spacing (labels only) ---- */
+  --ls-eyebrow: 0.22em;
+  --ls-label: 0.14em;
+  --ls-display: 0.01em;
+
+  /* ---- Spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* ---- Radius / measure / motion ---- */
+  --radius: 10px;
+  --radius-lg: 16px;
+  --measure: 66ch;   /* max line length for body copy */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ---- Base element defaults built on the tokens ---- */
+.ds {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+.ds h1, .ds h2, .ds h3 { color: var(--text); margin: 0; }
+.ds p { color: var(--text-2); margin: 0; max-width: var(--measure); }
+
+.ds .eyebrow {
+  font-family: var(--font-label);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ds .display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+}
+.ds .h2 { font-size: var(--fs-h2); line-height: var(--lh-heading); font-weight: 600; }
+.ds .h3 { font-size: var(--fs-h3); line-height: var(--lh-heading); font-weight: 600; }
+.ds .lead { font-size: var(--fs-body-lg); color: var(--text-2); }
+.ds .meta { font-family: var(--font-label); font-size: var(--fs-meta); color: var(--text-3); }

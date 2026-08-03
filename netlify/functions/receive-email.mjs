@@ -134,7 +134,7 @@ export default async (req) => {
 
   const { data: prof } = await sb
     .from("profiles")
-    .select("id")
+    .select("id, bucket_list")
     .eq("forward_token", token)
     .single();
   if (!prof) {
@@ -225,6 +225,7 @@ export default async (req) => {
   }
 
   let saved = 0;
+  const savedRows = []; // newly-inserted concerts (for bucket-list unlock)
   for (const c of concerts) {
     const row = buildConcertRow(c, userId);
     if (!row) continue;
@@ -240,10 +241,35 @@ export default async (req) => {
           .from("concert_attendees")
           .insert({ concert_id: inserted.id, user_id: userId });
         saved++;
+        savedRows.push(inserted);
       }
     } catch (e) {
       /* skip individual failures */
     }
+  }
+
+  // ── Bucket-list unlock ── celebrate when a forwarded ticket is finally for an
+  // artist the user has been chasing. Best-effort; never blocks processing.
+  try {
+    const bucket = (prof.bucket_list || []).map((a) =>
+      String(a || "").trim().toLowerCase(),
+    );
+    if (bucket.length && savedRows.length) {
+      const fired = new Set();
+      for (const r of savedRows) {
+        const key = String(r.artist || "").trim().toLowerCase();
+        if (!key || fired.has(key) || !bucket.includes(key)) continue;
+        fired.add(key);
+        await sb.from("notifications").insert({
+          user_id: userId,
+          type: "bucket_unlock",
+          read: false,
+          data: { artist: r.artist, date: r.date, venue: r.venue || "" },
+        });
+      }
+    }
+  } catch (e) {
+    /* notifications schema may differ; ignore */
   }
 
   // ── Feedback logic ── (the model's `reason` is logged on every outcome)

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Encore — Redesign Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./design-system.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-9); }
+  .banner { background: var(--gold); color: var(--on-gold); font-family: var(--font-label); font-size: var(--fs-meta); text-align: center; padding: 10px var(--space-5); letter-spacing: 0.04em; }
+  .rule { height: 1px; background: var(--line); border: 0; margin: var(--space-8) 0; }
+  .sec-label { font-family: var(--font-label); font-size: var(--fs-eyebrow); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-3); margin-bottom: var(--space-5); }
+  .specimen { display: grid; grid-template-columns: 92px 1fr; gap: var(--space-3) var(--space-5); align-items: baseline; }
+  .specimen .tag { font-family: var(--font-label); font-size: 12px; color: var(--text-3); }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); }
+  .sw { border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4); }
+  .sw .big { font-size: 22px; margin-bottom: 6px; }
+  /* hero */
+  .hero { text-align: left; padding: var(--space-7) 0 var(--space-6); }
+  .hero .display { margin: var(--space-4) 0; }
+  .hero .display .gold { color: var(--gold); }
+  .hero .lead { margin-bottom: var(--space-6); }
+  .cta-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .btn { font-family: var(--font-label); font-size: var(--fs-meta); letter-spacing: 0.08em; text-transform: uppercase; padding: 14px 26px; border-radius: var(--radius); text-decoration: none; cursor: pointer; border: 1px solid transparent; }
+  .btn-primary { background: var(--gold); color: var(--on-gold); font-weight: 500; }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--line-strong); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-4); margin-top: var(--space-7); }
+  .stat .n { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem); color: var(--gold); line-height: 1; }
+  .stat .l { font-family: var(--font-label); font-size: var(--fs-eyebrow); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-3); margin-top: 6px; }
+  /* features */
+  .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); }
+  .feat { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-5); }
+  .feat .ic { font-size: 26px; margin-bottom: var(--space-3); }
+  .feat h3 { font-family: var(--font-display); font-size: var(--fs-h3); letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: var(--space-2); }
+  .feat p { font-size: var(--fs-body); color: var(--text-2); }
+  .cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4); }
+  .cmp .col { border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4); }
+  .cmp .before p { font-size: 13px; color: #8a8a8a; letter-spacing: 0.06em; line-height: 1.4; }
+  .cmp .after p { font-size: var(--fs-body); color: var(--text-2); line-height: var(--lh-body); }
+  .cmp .k { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; }
+  .cmp .before .k { color: #e0674f; }
+  .cmp .after .k { color: #5cc46a; }
+</style>
+</head>
+<body class="ds">
+  <div class="banner">Redesign preview — new design system applied to real Encore content. Not the live site.</div>
+  <div class="wrap">
+
+    <!-- TYPE SCALE -->
+    <div class="sec-label">Type scale — fluid, resize the window to watch it adapt</div>
+    <div class="specimen">
+      <span class="tag">display</span><span class="display">Encore</span>
+      <span class="tag">h2</span><span class="h2">Track shows on autopilot</span>
+      <span class="tag">h3</span><span class="h3">Your Tour, updated after every show</span>
+      <span class="tag">lead</span><span class="lead">Forward a ticket and Encore files the show — you never tap “add” again.</span>
+      <span class="tag">body</span><span style="max-width:var(--measure);display:block">Body copy now sits at a comfortable 16–18px with 1.6 line-height and no letter-spacing, so paragraphs stay easy to read on a phone and on a desktop alike. This is the size most of the app and marketing text should use.</span>
+      <span class="tag">meta</span><span class="meta">DM MONO · LABELS &amp; METADATA</span>
+      <span class="tag">eyebrow</span><span class="eyebrow">Your concert life, connected</span>
+    </div>
+
+    <hr class="rule" />
+
+    <!-- CONTRAST -->
+    <div class="sec-label">Text contrast on the near-black background</div>
+    <div class="swatches">
+      <div class="sw"><div class="big" style="color:var(--text)">Primary text</div><span class="meta">--text · #F2EFEA</span></div>
+      <div class="sw"><div class="big" style="color:var(--text-2)">Secondary text</div><span class="meta">--text-2 · #C4C2BC</span></div>
+      <div class="sw"><div class="big" style="color:var(--text-3)">Muted / meta</div><span class="meta">--text-3 · #97948D</span></div>
+      <div class="sw" style="background:var(--gold)"><div class="big" style="color:var(--on-gold)">On gold</div><span class="meta" style="color:var(--on-gold)">--on-gold</span></div>
+    </div>
+
+    <hr class="rule" />
+
+    <!-- HERO -->
+    <div class="sec-label">Homepage hero — redesigned</div>
+    <section class="hero">
+      <span class="eyebrow">Your concert life, connected</span>
+      <h1 class="display">Never miss<br />a show<br /><span class="gold">again.</span></h1>
+      <p class="lead">Forward your ticket emails and Encore builds your concert calendar automatically — then follows your friends, tracks your bucket list, and turns every gig into your story. We never touch the rest of your inbox.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#">Try the demo</a>
+        <a class="btn btn-ghost" href="#">See how it works</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n">9</div><div class="l">Ticket platforms</div></div>
+        <div class="stat"><div class="n">8</div><div class="l">Streaming services</div></div>
+        <div class="stat"><div class="n">∞</div><div class="l">Shows tracked</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">Inbox access</div></div>
+      </div>
+    </section>
+
+    <hr class="rule" />
+
+    <!-- FEATURES -->
+    <div class="sec-label">Features — redesigned cards</div>
+    <div class="feat-grid">
+      <div class="feat"><div class="ic">📨</div><h3>Ticket Forwarding</h3><p>Forward a ticket confirmation — Ticketmaster, SeatGeek, DICE, anywhere — and Encore reads it and files the show for you. Set it once and your list builds itself.</p></div>
+      <div class="feat"><div class="ic">🗺️</div><h3>Your Tour</h3><p>Every show you've been to, turned into your story: lifetime stats, a genre passport, bucket-list progress, and the friends whose paths keep crossing yours.</p></div>
+      <div class="feat"><div class="ic">🎯</div><h3>Bucket List</h3><p>Add the artists you need to see live. When a forwarded ticket is finally for one of them, Encore celebrates the unlock — and connects you with others chasing the same names.</p></div>
+    </div>
+
+    <hr class="rule" />
+
+    <!-- BEFORE / AFTER -->
+    <div class="sec-label">Why it reads better — body copy, before vs after</div>
+    <div class="cmp">
+      <div class="col before"><div class="k">Before · 13px, tracked, #8a8a8a</div><p>Shows within 14 days glow red. Shows within 30 days glow amber. You always know which shows need action right now.</p></div>
+      <div class="col after"><div class="k">After · 16–18px, 1.6 line-height, #C4C2BC</div><p>Shows within 14 days glow red. Shows within 30 days glow amber. You always know which shows need action right now.</p></div>
+    </div>
+
+  </div>
+</body>
+</html>
