@@ -103,6 +103,7 @@ function ProfilePage({
   onOpenConcert,
   onViewProfile,
   onEdit,
+  onOpenTour,
   onMessage,
   onGenreClick,
   onArtistClick,
@@ -158,6 +159,15 @@ function ProfilePage({
             onClick={() => onMessage(user.id)}
           >
             ✉ Message
+          </button>
+        )}
+        {isSelf && onOpenTour && (
+          <button
+            className="prof-follow-btn pf-follow"
+            style={{ background: "var(--gold)", border: "none", color: "#1a1204" }}
+            onClick={onOpenTour}
+          >
+            🎟 Your Tour
           </button>
         )}
         {isSelf && (
