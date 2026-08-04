@@ -219,19 +219,7 @@ function CDetail({
     rc = u === "urgent" ? "#FF5555" : "var(--gold)";
   const showR = u === "urgent" || u === "soon";
   const isFestival = c.is_festival && c.end_date && c.end_date !== c.date;
-  const crewBtn = {
-    margin: "8px 0 2px",
-    width: "100%",
-    padding: "10px 0",
-    background: "rgba(245,166,35,.06)",
-    border: "1px solid rgba(245,166,35,.3)",
-    borderRadius: 6,
-    color: "var(--gold)",
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-xs)",
-    letterSpacing: 1,
-    cursor: "pointer",
-  };
+  // "Start a group" button styling lives in css/app.css (.crew-btn).
   const tasteGoing = (c.attendees || []).filter((uid) => {
     if (uid === curUser.id) return false;
     const u2 = users.find((x) => x.id === uid);
@@ -352,14 +340,14 @@ function CDetail({
                 <button
                   key={g.id}
                   onClick={() => onOpenCrew(g.id)}
-                  style={crewBtn}
+                  className="crew-btn"
                 >
                   💬 OPEN{" "}
                   {g.name ||
                     (g.show_artist ? g.show_artist + " crew" : "group")}
                 </button>
               ))}
-              <button onClick={() => onStartGroup(c)} style={crewBtn}>
+              <button onClick={() => onStartGroup(c)} className="crew-btn">
                 👥 START A GROUP CHAT FOR THIS SHOW
               </button>
             </>

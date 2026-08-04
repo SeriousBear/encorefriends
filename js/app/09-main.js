@@ -480,26 +480,7 @@ function App() {
   const isAdmin = !!(profile && profile.is_admin);
 
   // Shared look for the inline banners above the feed.
-  const bannerBox = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    flexWrap: "wrap",
-    background: "var(--card)",
-    border: "1px solid var(--line)",
-    borderRadius: 8,
-    padding: "12px 14px",
-    marginBottom: 16,
-  };
-  const bannerTxt = {
-    fontFamily: "var(--font-body)",
-    fontSize: "var(--fs-sm)",
-    color: "var(--fg2)",
-    flex: 1,
-    minWidth: 200,
-    lineHeight: 1.45,
-  };
+  // Install/push banner styling lives in css/app.css (.banner-box/.banner-txt).
   // Only ever show one banner at a time.
   const pushBannerShowing =
     !isGuest &&
@@ -1486,8 +1467,8 @@ function App() {
               {notif && <div className="toast-ok">🔔 {notif}</div>}
               {errMsg && <div className="toast-err">⚠ {errMsg}</div>}
               {!isGuest && pushState === "ios-install" && !pushHidden && (
-                <div style={bannerBox}>
-                  <span style={bannerTxt}>
+                <div className="banner-box">
+                  <span className="banner-txt">
                     {isIOSNonSafari()
                       ? "🔔 To get show alerts on iPhone, open encorefriends.com in Safari, then tap Share → Add to Home Screen."
                       : "🔔 Want a ping when friends add a show? Tap Share, then “Add to Home Screen” — iPhone only sends alerts to installed apps."}
@@ -1572,8 +1553,8 @@ function App() {
                   </div>
                 )}
               {!isGuest && pushState === "prompt" && !pushHidden && (
-                <div style={bannerBox}>
-                  <span style={bannerTxt}>
+                <div className="banner-box">
+                  <span className="banner-txt">
                     🔔 Get a ping when people you follow add a show.
                   </span>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -1599,8 +1580,8 @@ function App() {
                 installPrompt &&
                 !installHidden &&
                 !pushBannerShowing && (
-                  <div style={bannerBox}>
-                    <span style={bannerTxt}>
+                  <div className="banner-box">
+                    <span className="banner-txt">
                       📲 Install Encore for quicker access and reliable alerts.
                     </span>
                     <div style={{ display: "flex", gap: 8 }}>

@@ -406,3 +406,9 @@
   .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
   .adm-sec{font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:26px 0 12px}
   .mono{font-family:var(--font-mono)}
+
+  /* ── Misc extracted singletons (crew button, inbox meta, install/push banner) ── */
+  .crew-btn{margin:8px 0 2px;width:100%;padding:10px 0;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.3);border-radius:6px;color:var(--gold);font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:1px;cursor:pointer}
+  .inbox-meta{font-family:var(--font-mono);font-size:var(--fs-2xs);color:var(--fg3)}
+  .banner-box{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:16px}
+  .banner-txt{font-family:var(--font-body);font-size:var(--fs-sm);color:var(--fg2);flex:1;min-width:200px;line-height:1.45}

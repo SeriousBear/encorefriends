@@ -203,11 +203,7 @@ function InboxSheet({
         : n.type !== "new_show" && n.type !== "taste_match",
   );
 
-  const mono = {
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-2xs)",
-    color: "var(--fg3)",
-  };
+  // Muted mono meta styling lives in css/app.css (.inbox-meta).
   const tabStyle = (on) => ({
     flex: 1,
     padding: "8px 0",
@@ -602,7 +598,7 @@ function InboxSheet({
                           >
                             {crewName(t)}
                           </div>
-                          <div style={mono}>
+                          <div className="inbox-meta">
                             {inviter ? inviter.name + " invited you" : "Invite"}
                           </div>
                         </div>
@@ -700,7 +696,7 @@ function InboxSheet({
                         >
                           {crewName(t)}
                         </div>
-                        <div style={mono}>
+                        <div className="inbox-meta">
                           {t.show_date} · {joinedCount(t)} in the group
                         </div>
                       </div>
@@ -794,7 +790,7 @@ function InboxSheet({
                         </div>
                         <div
                           style={{
-                            ...mono,
+                            fontFamily: "var(--font-mono)", fontSize: "var(--fs-2xs)", color: "var(--fg3)",
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -806,7 +802,7 @@ function InboxSheet({
                         </div>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={mono}>{timeAgo(t.last.created_at)}</div>
+                        <div className="inbox-meta">{timeAgo(t.last.created_at)}</div>
                         {t.unread > 0 && (
                           <div
                             style={{
@@ -948,7 +944,7 @@ function InboxSheet({
                             >
                               🎟 {m.show.artist}
                             </div>
-                            <div style={mono}>
+                            <div className="inbox-meta">
                               {m.show.venue}
                               {m.show.city ? " · " + m.show.city : ""}
                               {m.show.date ? " · " + m.show.date : ""}
@@ -958,7 +954,7 @@ function InboxSheet({
                         {m.body}
                         <div
                           style={{
-                            ...mono,
+                            fontFamily: "var(--font-mono)", fontSize: "var(--fs-2xs)", color: "var(--fg3)",
                             fontSize: "var(--fs-2xs)",
                             marginTop: 4,
                             textAlign: mine ? "right" : "left",
@@ -1084,7 +1080,7 @@ function InboxSheet({
                           <span style={{ fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>✎</span>
                         </div>
                       )}
-                      <div style={mono}>
+                      <div className="inbox-meta">
                         {t
                           ? t.show_date +
                             " · " +
@@ -1176,7 +1172,7 @@ function InboxSheet({
                         {m.body}
                         <div
                           style={{
-                            ...mono,
+                            fontFamily: "var(--font-mono)", fontSize: "var(--fs-2xs)", color: "var(--fg3)",
                             fontSize: "var(--fs-2xs)",
                             marginTop: 4,
                             textAlign: mine ? "right" : "left",
@@ -1287,7 +1283,7 @@ function InboxSheet({
                         >
                           {m.text}
                         </div>
-                        <div style={{ ...mono, marginTop: 3 }}>
+                        <div style={{ fontFamily: "var(--font-mono)", fontSize: "var(--fs-2xs)", color: "var(--fg3)", marginTop: 3 }}>
                           {timeAgo(n.created_at)}
                         </div>
                         {m.action === "no_show" && (
