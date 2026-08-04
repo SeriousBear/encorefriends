@@ -14,6 +14,7 @@
   --gold-dim:    rgba(245,166,35,.12);
   --gold-border: rgba(245,166,35,.25);
   --red:         #FF4D4D;
+  --urg:         #FF5A4D;   /* urgency red — warm, sits beside gold without clashing */
 
   /* ---- Surfaces (near-black, layered darkest → lightest) ---- */
   --bg:        #070707;   /* page */

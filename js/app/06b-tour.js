@@ -137,7 +137,7 @@ function TourPage({
         <span className="prof-hdr-name">Your Tour</span>
       </div>
 
-      <div style={{ padding: "4px 14px 40px" }}>
+      <div className="page-inner" style={{ padding: "4px 18px 40px" }}>
         {mine.length === 0 ? (
           <div className="panel" style={{ textAlign: "center", padding: 28 }}>
             <div

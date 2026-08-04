@@ -1,144 +1,136 @@
+// A concert rendered as a torn ticket stub: gold date panel (brand constant),
+// ★ marquee artist ★, venue, who-else-is-going avatars, and a countdown stub
+// whose color escalates as the show nears (grey → gold → red), with a pulsing
+// "tonight" peak. Tap opens the detail sheet (where going/hide/genre live).
 function CCard({
   c,
   users,
   curUser,
   onOpen,
-  onToggleGoing,
   onViewProfile,
   onDelete,
-  onGenreClick,
 }) {
-  const d = fmt(c.date),
-    u = getUrgency(c.date),
-    dy = daysUntil(c.date);
-  const cc = u === "urgent" ? "card-u" : u === "soon" ? "card-s" : "card-n";
-  const going = c.attendees?.includes(curUser.id);
+  const d = fmt(c.date);
+  const dy = daysUntil(c.date);
+  const isMultiDay = c.is_festival && c.end_date && c.end_date !== c.date;
+  const isOwner = c.owner_id === curUser.id;
 
   // Recently scanned within the last 24 hours?
   const isNew =
     c.scanned_at &&
     Date.now() - new Date(c.scanned_at).getTime() < 24 * 60 * 60 * 1000;
 
-  // Multi-day festival
-  const isMultiDay = c.is_festival && c.end_date && c.end_date !== c.date;
-  const dateDisplay = isMultiDay
-    ? fmt(c.date).mo + " " + fmt(c.date).day + "–" + fmt(c.end_date).day
-    : null;
+  // Countdown label + urgency tier for the stub.
+  const isTonight = dy === 0;
+  let cdLabel, cdClass;
+  if (dy < 0) {
+    cdLabel = agoLabel(dy);
+    cdClass = "later";
+  } else if (dy === 0) {
+    cdLabel = "Tonight";
+    cdClass = "live";
+  } else if (dy === 1) {
+    cdLabel = "Tomorrow";
+    cdClass = "now";
+  } else if (dy <= 7) {
+    cdLabel = dy + " Days";
+    cdClass = "now";
+  } else if (dy <= 30) {
+    cdLabel = dy + " Days";
+    cdClass = "soon";
+  } else {
+    cdLabel = dy + " Days";
+    cdClass = "later";
+  }
+
+  // "Via Ticketmaster" — only for a real ticket source (implies purchase).
+  const src =
+    c.source && !["Email", "Manual", "manual", ""].includes(c.source)
+      ? "Via " + c.source
+      : "";
+
+  // Other people going (exclude yourself), resolved to user records.
+  const others = (c.attendees || [])
+    .filter((id) => id !== curUser.id)
+    .map((id) => users.find((u) => u.id === id))
+    .filter(Boolean);
 
   return (
-    <div className={"card " + cc} onClick={() => onOpen(c)}>
-      <div className="cbar" style={{ background: uColor(u) }} />
-      <div className="cbody">
-        <div className="card-badges">
-          {c.hidden && c.owner_id === curUser.id && (
-            <div
-              className="card-badge quiet"
-              title="Going quietly — only you can see this show"
-            >
-              🤫
-            </div>
-          )}
-          {isNew && <div className="card-badge new">NEW</div>}
-          {c.is_festival && <div className="card-badge fest">FEST</div>}
-          {onDelete && (
-            <button
-              className="card-badge del"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(c.id);
-              }}
-              title="Remove this show"
-            >
-              ×
-            </button>
-          )}
-        </div>
-        {u === "urgent" && (
-          <div className="upill pill-u">
-            <div className="pdot" style={{ background: "#FF5050" }} />
-            {dy === 0 ? "tonight" : dy === 1 ? "tomorrow" : dy + " days left"}
-          </div>
+    <div className={"tk" + (isTonight ? " live" : "")} onClick={() => onOpen(c)}>
+      <div className="tk-date">
+        {c.hidden && isOwner && (
+          <span className="tk-quiet" title="Going quietly — only you can see this">
+            🤫
+          </span>
         )}
-        {u === "soon" && (
-          <div className="upill pill-s">
-            <div className="pdot" style={{ background: "var(--gold)" }} />
-            {dy} days away
-          </div>
-        )}
-        {u === "past" && (
-          <div
-            className="upill"
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              color: "var(--fg2)",
-              border: "1px solid var(--line-2)",
+        <div className="mo">{d.mo}</div>
+        <div className="dy">{d.day}</div>
+        <div className="dw">{isMultiDay ? "→ " + fmt(c.end_date).day : d.dow}</div>
+      </div>
+
+      <div className="tk-tear"></div>
+
+      <div className="tk-body">
+        {isOwner && onDelete && (
+          <button
+            className="tk-del"
+            title="Remove this show"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(c.id);
             }}
           >
-            <div className="pdot" style={{ background: "var(--fg3)" }} />
-            {agoLabel(dy)}
-          </div>
+            ×
+          </button>
         )}
-        <div className="drow">
-          <div className="dbdg">
-            <div className="dmo">{d.mo}</div>
-            <div className="ddy">{d.day}</div>
-            <div className="ddw">
-              {isMultiDay ? "→ " + fmt(c.end_date).day : d.dow}
-            </div>
+        {isTonight ? (
+          <div className="tk-src live">
+            <span className="tk-livedot"></span> Tonight
           </div>
-          <div className="dart">{c.artist}</div>
+        ) : src || isNew ? (
+          <div className="tk-src">
+            {src}
+            {src && isNew ? " · " : ""}
+            {isNew && <span className="new">New</span>}
+          </div>
+        ) : null}
+        <div className="tk-artist">
+          <span className="sym">★</span>
+          {c.artist}
+          <span className="sym">★</span>
         </div>
-        <div className="dven">{c.venue}</div>
-        <div className="dcit">{c.city}</div>
-        {(c.genres || []).length > 0 && (
-          <div
-            style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 7 }}
-          >
-            {(c.genres || []).slice(0, 3).map((g) => (
+        <div className="tk-venue">
+          {c.venue}
+          {c.venue && c.city ? " · " : ""}
+          {c.city}
+        </div>
+        {others.length > 0 && (
+          <div className="tk-friends">
+            {others.slice(0, 4).map((u2) => (
               <span
-                key={g}
-                className="uc-genre"
-                title={"Explore " + g}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onGenreClick && onGenreClick(g);
-                }}
-              >
-                {g}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="cfoot" onClick={(e) => e.stopPropagation()}>
-        <div className="ftags">
-          {(c.attendees || []).slice(0, 5).map((uid) => {
-            const u2 = users.find((u) => u.id === uid);
-            return u2 ? (
-              <div
-                key={uid}
-                className="ftag"
+                key={u2.id}
+                className="tkav"
                 style={{ background: u2.color }}
                 title={"View " + u2.name + "'s profile"}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onViewProfile && onViewProfile(uid);
+                  onViewProfile && onViewProfile(u2.id);
                 }}
               >
                 {u2.name.slice(0, 2).toUpperCase()}
-              </div>
-            ) : null;
-          })}
-          <button className="tagbtn" onClick={() => onOpen(c)}>
-            + tag
-          </button>
-        </div>
-        <div
-          className={"tkbdg " + (going ? "tk-on" : "tk-off")}
-          onClick={() => onToggleGoing(c.id)}
-        >
-          {going ? "✓ going" : "not going"}
-        </div>
+              </span>
+            ))}
+            {others.length > 4 && (
+              <span className="tkmore">+{others.length - 4}</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="tk-tear"></div>
+
+      <div className="tk-stub">
+        <div className={"tk-cd " + cdClass}>{cdLabel}</div>
       </div>
     </div>
   );

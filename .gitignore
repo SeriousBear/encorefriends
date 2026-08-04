@@ -6,3 +6,6 @@
 .DS_Store
 node_modules/
 package-lock.json
+
+# Design mockups / previews — local only, not part of the site
+design/

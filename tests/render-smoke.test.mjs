@@ -82,3 +82,36 @@ describe("TourPage renders without throwing", () => {
     expect(html).toContain("Your tour starts here");
   });
 });
+
+const CCard = loadComponent(
+  ["02-genres.js", "03-helpers.js", "04-cards.js"],
+  "CCard",
+);
+
+describe("CCard (ticket stub) renders without throwing", () => {
+  const curUser = { id: "u1", following: [] };
+  it("renders a future show — stars, source, countdown, friends cluster", () => {
+    const c = {
+      id: "c1", owner_id: "u9", artist: "Bicep", venue: "Fabric", city: "London",
+      date: "2999-01-15", source: "Ticketmaster", attendees: ["u2"], genres: ["Techno"],
+    };
+    const html = renderToString(
+      React.createElement(CCard, {
+        c, users, curUser, onOpen: noop, onViewProfile: noop, onDelete: noop,
+      }),
+    );
+    expect(html).toContain("Bicep");
+    expect(html).toContain("★");
+    expect(html).toContain("Days");            // urgency countdown label
+    expect(html).toContain("Via Ticketmaster"); // purchase-source line
+    expect(html).not.toContain("[object Object]");
+  });
+  it("renders a past show without throwing (agoLabel path)", () => {
+    const c = { id: "c2", owner_id: "u9", artist: "Aphex Twin", venue: "Warehouse", city: "", date: "2020-01-01", attendees: [] };
+    const html = renderToString(
+      React.createElement(CCard, { c, users, curUser, onOpen: noop, onViewProfile: noop, onDelete: noop }),
+    );
+    expect(html).toContain("Aphex Twin");
+    expect(html).not.toContain("[object Object]");
+  });
+});

@@ -214,7 +214,7 @@ function AdminPage({ onBack }) {
         overflowY: "auto",
       }}
     >
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 18px 70px" }}>
+      <div className="page-inner" style={{ padding: "28px 18px 70px" }}>
         <div
           style={{
             display: "flex",
