@@ -385,3 +385,24 @@
   .share-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2xs);font-weight:700;color:#000}
   .share-name{font-family:var(--font-body);font-size:var(--fs-md)}
   .share-send{margin-left:auto;font-family:var(--font-mono);font-size:var(--fs-2xs);color:var(--gold)}
+
+  /* ── Mail-connect walkthrough (forwarding setup steps) ── */
+  .mc-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:14px}
+  .mc-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#000;font-family:var(--font-mono);font-size:var(--fs-sm);font-weight:700;margin-right:10px;flex-shrink:0}
+  .mc-step{display:flex;align-items:center;font-family:var(--font-display);font-size:var(--fs-lg);letter-spacing:.5px;color:#eee;margin-bottom:10px}
+  .mc-body{font-family:var(--font-body);font-size:var(--fs-sm);line-height:1.55;color:var(--fg2);margin:0 0 12px 34px}
+  .mc-ghost{display:inline-block;font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:1px;text-transform:uppercase;color:var(--gold);border:1px solid var(--line-2);border-radius:6px;padding:8px 12px;text-decoration:none;margin-left:34px}
+  .mc-copy{display:flex;align-items:center;gap:8px;margin-left:34px;margin-bottom:12px}
+  .mc-code{flex:1;font-family:var(--font-mono);font-size:var(--fs-sm);background:#000;border:1px solid var(--line);border-radius:6px;padding:10px 12px;word-break:break-all}
+
+  /* ── Onboarding walkthrough (form fields, help text, nav buttons) ── */
+  .onb-lbl{font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:block}
+  .onb-inp{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--fg);font-family:var(--font-body);font-size:var(--fs-md);padding:12px 13px;outline:none;box-sizing:border-box}
+  .onb-help{font-family:var(--font-mono);font-size:var(--fs-2xs);color:var(--fg4);margin-top:6px;line-height:1.5}
+  .onb-back{flex:0 0 auto;padding:13px 18px;background:transparent;color:var(--fg2);border:1px solid var(--line-2);border-radius:6px;font-family:var(--font-body);font-size:var(--fs-sm);font-weight:600;cursor:pointer}
+  .onb-next{flex:1;padding:13px;background:var(--gold);color:#000;border:none;border-radius:6px;font-family:var(--font-body);font-size:var(--fs-md);font-weight:700;cursor:pointer}
+
+  /* ── Admin dashboard ── */
+  .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .adm-sec{font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:26px 0 12px}
+  .mono{font-family:var(--font-mono)}

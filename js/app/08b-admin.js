@@ -161,21 +161,8 @@ function AdminPage({ onBack }) {
       .includes(q);
   });
 
-  const card = {
-    background: "var(--panel)",
-    border: "1px solid var(--line)",
-    borderRadius: 10,
-    padding: 16,
-  };
-  const sectionTitle = {
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-xs)",
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    color: "var(--gold)",
-    margin: "26px 0 12px",
-  };
-  const mono = { fontFamily: "var(--font-mono)" };
+  // Card / section-title / mono styling lives in css/app.css
+  // (.adm-card / .adm-sec / .mono).
   const pill = (state) => ({
     display: "inline-flex",
     alignItems: "center",
@@ -186,7 +173,7 @@ function AdminPage({ onBack }) {
   });
 
   const Stat = ({ label, value, sub }) => (
-    <div style={card}>
+    <div className="adm-card">
       <div
         style={{
           fontFamily: "var(--font-display)",
@@ -199,7 +186,7 @@ function AdminPage({ onBack }) {
       </div>
       <div
         style={{
-          ...mono,
+          fontFamily: "var(--font-mono)",
           fontSize: "var(--fs-2xs)",
           letterSpacing: 1.5,
           textTransform: "uppercase",
@@ -210,7 +197,7 @@ function AdminPage({ onBack }) {
         {label}
       </div>
       {sub && (
-        <div style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg4)", marginTop: 2 }}>
+        <div className="mono" style={{fontSize: "var(--fs-2xs)", color: "var(--fg4)", marginTop: 2 }}>
           {sub}
         </div>
       )}
@@ -258,7 +245,7 @@ function AdminPage({ onBack }) {
         </div>
 
         {loading ? (
-          <div style={{ ...mono, color: "var(--fg3)", padding: "40px 0" }}>
+          <div className="mono" style={{color: "var(--fg3)", padding: "40px 0" }}>
             Loading…
           </div>
         ) : (
@@ -290,10 +277,10 @@ function AdminPage({ onBack }) {
             </div>
 
             {/* SIGNUPS CHART */}
-            <div style={sectionTitle}>Signups — last 30 days</div>
+            <div className="adm-sec">Signups — last 30 days</div>
             <div
+              className="adm-card"
               style={{
-                ...card,
                 display: "flex",
                 alignItems: "flex-end",
                 gap: 2,
@@ -319,10 +306,10 @@ function AdminPage({ onBack }) {
             </div>
 
             {/* SOURCE BREAKDOWN */}
-            <div style={sectionTitle}>How shows get added</div>
-            <div style={card}>
+            <div className="adm-sec">How shows get added</div>
+            <div className="adm-card">
               {growth.sources.length === 0 ? (
-                <div style={{ ...mono, fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>—</div>
+                <div className="mono" style={{fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>—</div>
               ) : (
                 (() => {
                   const total =
@@ -337,7 +324,7 @@ function AdminPage({ onBack }) {
                         padding: "4px 0",
                       }}
                     >
-                      <div style={{ width: 96, ...mono, fontSize: "var(--fs-xs)", color: "var(--fg2)" }}>
+                      <div style={{ width: 96, fontFamily: "var(--font-mono)", fontSize: "var(--fs-xs)", color: "var(--fg2)" }}>
                         {s}
                       </div>
                       <div
@@ -359,7 +346,7 @@ function AdminPage({ onBack }) {
                       </div>
                       <div
                         style={{
-                          ...mono,
+                          fontFamily: "var(--font-mono)",
                           fontSize: "var(--fs-xs)",
                           color: "var(--fg3)",
                           width: 40,
@@ -375,8 +362,8 @@ function AdminPage({ onBack }) {
             </div>
 
             {/* HEALTH */}
-            <div style={sectionTitle}>Health</div>
-            <div style={{ ...card, display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <div className="adm-sec">Health</div>
+            <div className="adm-card" style={{display: "flex", gap: 24, flexWrap: "wrap" }}>
               <span style={pill(health.spotify)}>
                 {health.spotify === "ok" ? "●" : "○"} Spotify proxy:{" "}
                 {health.spotify}
@@ -389,8 +376,8 @@ function AdminPage({ onBack }) {
             </div>
 
             {/* FORWARDING */}
-            <div style={sectionTitle}>Forwarding — last 7 days</div>
-            <div style={card}>
+            <div className="adm-sec">Forwarding — last 7 days</div>
+            <div className="adm-card">
               <div
                 style={{
                   display: "flex",
@@ -420,7 +407,7 @@ function AdminPage({ onBack }) {
                     </span>
                     <span
                       style={{
-                        ...mono,
+                        fontFamily: "var(--font-mono)",
                         fontSize: "var(--fs-2xs)",
                         color: "var(--fg2)",
                         marginLeft: 6,
@@ -434,14 +421,14 @@ function AdminPage({ onBack }) {
               {fwd.failures.length > 0 && (
                 <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 10 }}>
                   <div
-                    style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg2)", marginBottom: 6 }}
+                    className="mono" style={{fontSize: "var(--fs-2xs)", color: "var(--fg2)", marginBottom: 6 }}
                   >
                     RECENT FAILURES
                   </div>
                   {fwd.failures.slice(0, 8).map((f, i) => (
                     <div key={i} style={{ padding: "3px 0" }}>
                       <div
-                        style={{ ...mono, fontSize: "var(--fs-xs)", color: "var(--fg2)" }}
+                        className="mono" style={{fontSize: "var(--fs-xs)", color: "var(--fg2)" }}
                       >
                         <span
                           style={{
@@ -458,7 +445,7 @@ function AdminPage({ onBack }) {
                       {f.detail && (
                         <div
                           style={{
-                            ...mono,
+                            fontFamily: "var(--font-mono)",
                             fontSize: "var(--fs-2xs)",
                             color: "var(--fg2)",
                             paddingLeft: 14,
@@ -474,10 +461,10 @@ function AdminPage({ onBack }) {
             </div>
 
             {/* BUG REPORTS */}
-            <div style={sectionTitle}>Bug reports ({bugs.length})</div>
-            <div style={card}>
+            <div className="adm-sec">Bug reports ({bugs.length})</div>
+            <div className="adm-card">
               {bugs.length === 0 ? (
-                <div style={{ ...mono, color: "var(--fg4)", fontSize: "var(--fs-sm)" }}>
+                <div className="mono" style={{color: "var(--fg4)", fontSize: "var(--fs-sm)" }}>
                   None yet.
                 </div>
               ) : (
@@ -498,7 +485,7 @@ function AdminPage({ onBack }) {
                     >
                       {b.message}
                     </div>
-                    <div style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg4)", marginTop: 3 }}>
+                    <div className="mono" style={{fontSize: "var(--fs-2xs)", color: "var(--fg4)", marginTop: 3 }}>
                       {timeAgo(b.created_at)}
                       {b.context && b.context.view
                         ? " · view:" + b.context.view
@@ -516,7 +503,7 @@ function AdminPage({ onBack }) {
             </div>
 
             {/* TASTE */}
-            <div style={sectionTitle}>Top taste</div>
+            <div className="adm-sec">Top taste</div>
             <div
               style={{
                 display: "grid",
@@ -528,14 +515,14 @@ function AdminPage({ onBack }) {
                 ["Artists", taste.artists],
                 ["Venues", taste.venues],
               ].map(([label, list]) => (
-                <div key={label} style={card}>
+                <div key={label} className="adm-card">
                   <div
-                    style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg2)", marginBottom: 8 }}
+                    className="mono" style={{fontSize: "var(--fs-2xs)", color: "var(--fg2)", marginBottom: 8 }}
                   >
                     {label.toUpperCase()}
                   </div>
                   {list.length === 0 ? (
-                    <div style={{ ...mono, fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>—</div>
+                    <div className="mono" style={{fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>—</div>
                   ) : (
                     list.map(([name, n]) => (
                       <div
@@ -558,7 +545,7 @@ function AdminPage({ onBack }) {
                         >
                           {name}
                         </span>
-                        <span style={{ ...mono, color: "var(--fg3)" }}>{n}</span>
+                        <span className="mono" style={{color: "var(--fg3)" }}>{n}</span>
                       </div>
                     ))
                   )}
@@ -567,7 +554,7 @@ function AdminPage({ onBack }) {
             </div>
 
             {/* USERS */}
-            <div style={sectionTitle}>Users ({users.length})</div>
+            <div className="adm-sec">Users ({users.length})</div>
             <input
               className="form-inp"
               placeholder="Search name, handle, city…"
@@ -575,7 +562,7 @@ function AdminPage({ onBack }) {
               onChange={(e) => setUq(e.target.value)}
               style={{ width: "100%", marginBottom: 10 }}
             />
-            <div style={card}>
+            <div className="adm-card">
               {shownUsers.slice(0, 100).map((u) => (
                 <div
                   key={u.id}
@@ -604,7 +591,7 @@ function AdminPage({ onBack }) {
                         </span>
                       )}
                     </div>
-                    <div style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg4)" }}>
+                    <div className="mono" style={{fontSize: "var(--fs-2xs)", color: "var(--fg4)" }}>
                       {u.location || "no location"} · joined{" "}
                       {timeAgo(u.created_at)}
                     </div>

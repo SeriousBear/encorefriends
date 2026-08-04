@@ -76,74 +76,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     typeof navigator !== "undefined" &&
     /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
-  const card = {
-    background: "var(--panel)",
-    border: "1px solid var(--line)",
-    borderRadius: 10,
-    padding: 18,
-    marginBottom: 14,
-  };
-  const num = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 24,
-    height: 24,
-    borderRadius: "50%",
-    background: "var(--gold)",
-    color: "#000",
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-sm)",
-    fontWeight: 700,
-    marginRight: 10,
-    flexShrink: 0,
-  };
-  const stepHead = {
-    display: "flex",
-    alignItems: "center",
-    fontFamily: "var(--font-display)",
-    fontSize: "var(--fs-lg)",
-    letterSpacing: 0.5,
-    color: "#eee",
-    marginBottom: 10,
-  };
-  const body = {
-    fontFamily: "var(--font-body)",
-    fontSize: "var(--fs-sm)",
-    lineHeight: 1.55,
-    color: "var(--fg2)",
-    margin: "0 0 12px 34px",
-  };
-  const ghost = {
-    display: "inline-block",
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-xs)",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: "var(--gold)",
-    border: "1px solid var(--line-2)",
-    borderRadius: 6,
-    padding: "8px 12px",
-    textDecoration: "none",
-    marginLeft: 34,
-  };
-  const copyBox = {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    marginLeft: 34,
-    marginBottom: 12,
-  };
-  const codeBox = {
-    flex: 1,
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-sm)",
-    background: "#000",
-    border: "1px solid var(--line)",
-    borderRadius: 6,
-    padding: "10px 12px",
-    wordBreak: "break-all",
-  };
+  // Walkthrough styling lives in css/app.css (.mc-card/.mc-num/.mc-step/
+  // .mc-body/.mc-ghost/.mc-copy/.mc-code).
 
   return (
     <div
@@ -218,12 +152,12 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             : "Set this up once and your concerts add themselves — every time you buy a ticket, it just shows up. Takes about a minute, and you'll never tap \"add\" again."}
         </p>
 
-        <div style={card}>
-          <div style={stepHead}>
-            <span style={num}>1</span> Copy your private Encore address
+        <div className="mc-card">
+          <div className="mc-step">
+            <span className="mc-num">1</span> Copy your private Encore address
           </div>
-          <div style={copyBox}>
-            <code style={{ ...codeBox, color: "var(--gold)" }}>{addr}</code>
+          <div className="mc-copy">
+            <code className="mc-code" style={{ color: "var(--gold)" }}>{addr}</code>
             <button
               onClick={() => copy(addr, "addr")}
               className="btn-sm btn-amber"
@@ -232,7 +166,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               {copied === "addr" ? "Copied ✓" : "Copy"}
             </button>
           </div>
-          <p style={body}>
+          <p className="mc-body">
             This one's yours alone. It isn't an inbox you check — just a private
             drop box where Gmail tucks your ticket emails so Encore can read
             them.
@@ -240,11 +174,11 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
         </div>
 
         {isMobile ? (
-          <div style={card}>
-            <div style={stepHead}>
-              <span style={num}>2</span> Forward your tickets
+          <div className="mc-card">
+            <div className="mc-step">
+              <span className="mc-num">2</span> Forward your tickets
             </div>
-            <p style={body}>
+            <p className="mc-body">
               In the Gmail app, open a ticket confirmation → tap the{" "}
               <b style={{ color: "var(--fg2)" }}>Forward</b> arrow → send it to the
               address above. It shows up in your feed within a few seconds.
@@ -270,11 +204,11 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           </div>
         ) : (
           <>
-            <div style={card}>
-              <div style={stepHead}>
-                <span style={num}>2</span> Paste it into Gmail
+            <div className="mc-card">
+              <div className="mc-step">
+                <span className="mc-num">2</span> Paste it into Gmail
           </div>
-          <p style={body}>
+          <p className="mc-body">
             Open Gmail's forwarding settings, click{" "}
             <b style={{ color: "var(--fg2)" }}>Add a forwarding address</b>, paste your
             address, and hit Next → Proceed.
@@ -287,7 +221,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
                 "https://mail.google.com/mail/u/0/#settings/fwdandpop",
               )
             }
-            style={{ ...ghost, background: "none", cursor: "pointer" }}
+            className="mc-ghost"
+            style={{ background: "none", cursor: "pointer" }}
           >
             Open Gmail forwarding — address copied ↗
           </button>
@@ -356,18 +291,18 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           </div>
         </div>
 
-        <div style={card}>
-          <div style={stepHead}>
-            <span style={num}>3</span> Choose what forwards
+        <div className="mc-card">
+          <div className="mc-step">
+            <span className="mc-num">3</span> Choose what forwards
           </div>
-          <p style={body}>
+          <p className="mc-body">
             One filter keeps it to ticket emails only — nothing else leaves your
             inbox. In Gmail filters, click{" "}
             <b style={{ color: "var(--fg2)" }}>Create a new filter</b> and paste this
             into the <b style={{ color: "var(--fg2)" }}>Has the words</b> box:
           </p>
-          <div style={copyBox}>
-            <code style={{ ...codeBox, color: "var(--fg2)", fontSize: 11.5 }}>
+          <div className="mc-copy">
+            <code className="mc-code" style={{ color: "var(--fg2)", fontSize: 11.5 }}>
               {FILTER_QUERY}
             </code>
             <button
@@ -378,7 +313,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               {copied === "q" ? "Copied ✓" : "Copy"}
             </button>
           </div>
-          <p style={body}>
+          <p className="mc-body">
             Then <b style={{ color: "var(--fg2)" }}>Create filter</b> → check{" "}
             <b style={{ color: "var(--fg2)" }}>Forward it to</b> → pick your Encore
             address → <b style={{ color: "var(--fg2)" }}>Create filter</b>. That's it.
@@ -391,7 +326,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
                 "https://mail.google.com/mail/u/0/#settings/filters",
               )
             }
-            style={{ ...ghost, background: "none", cursor: "pointer" }}
+            className="mc-ghost"
+            style={{ background: "none", cursor: "pointer" }}
           >
             Open Gmail filters — filter text copied ↗
           </button>
@@ -547,34 +483,7 @@ function Onboarding({ session, profile, onComplete }) {
     onComplete(data);
   };
 
-  const lbl = {
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-2xs)",
-    letterSpacing: 3,
-    textTransform: "uppercase",
-    color: "var(--gold)",
-    marginBottom: 8,
-    display: "block",
-  };
-  const inp = {
-    width: "100%",
-    background: "var(--panel)",
-    border: "1px solid var(--line)",
-    borderRadius: 6,
-    color: "var(--fg)",
-    fontFamily: "var(--font-body)",
-    fontSize: "var(--fs-md)",
-    padding: "12px 13px",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-  const help = {
-    fontFamily: "var(--font-mono)",
-    fontSize: "var(--fs-2xs)",
-    color: "var(--fg4)",
-    marginTop: 6,
-    lineHeight: 1.5,
-  };
+  // Form styling lives in css/app.css (.onb-lbl / .onb-inp / .onb-help).
 
   const handleMsg = {
     checking: { t: "Checking…", c: "var(--fg4)" },
@@ -666,14 +575,14 @@ function Onboarding({ session, profile, onComplete }) {
             >
               The basics
             </div>
-            <div style={{ ...help, marginTop: 0, marginBottom: 22 }}>
+            <div className="onb-help" style={{ marginTop: 0, marginBottom: 22 }}>
               Just a name and a handle. You can change these later.
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <label style={lbl}>Your name</label>
+              <label className="onb-lbl">Your name</label>
               <input
-                style={inp}
+                className="onb-inp"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Kyle Weber"
@@ -682,7 +591,7 @@ function Onboarding({ session, profile, onComplete }) {
             </div>
 
             <div>
-              <label style={lbl}>Handle</label>
+              <label className="onb-lbl">Handle</label>
               <div style={{ position: "relative" }}>
                 <span
                   style={{
@@ -698,7 +607,7 @@ function Onboarding({ session, profile, onComplete }) {
                   @
                 </span>
                 <input
-                  style={{ ...inp, paddingLeft: 26 }}
+                  className="onb-inp" style={{ paddingLeft: 26 }}
                   value={handle}
                   onChange={(e) =>
                     setHandle(
@@ -712,7 +621,7 @@ function Onboarding({ session, profile, onComplete }) {
                 />
               </div>
               {handleMsg.t && (
-                <div style={{ ...help, color: handleMsg.c }}>{handleMsg.t}</div>
+                <div className="onb-help" style={{ color: handleMsg.c }}>{handleMsg.t}</div>
               )}
             </div>
 
@@ -751,14 +660,14 @@ function Onboarding({ session, profile, onComplete }) {
             >
               Location & notifications
             </div>
-            <div style={{ ...help, marginTop: 0, marginBottom: 22 }}>
+            <div className="onb-help" style={{ marginTop: 0, marginBottom: 22 }}>
               All optional. Email and phone are how friends can ping you when
               they grab tickets — kept private, never shown on your profile.
             </div>
             <div style={{ marginBottom: 18 }}>
-              <label style={lbl}>City</label>
+              <label className="onb-lbl">City</label>
               <input
-                style={inp}
+                className="onb-inp"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Brooklyn, NY"
@@ -766,9 +675,9 @@ function Onboarding({ session, profile, onComplete }) {
               />
             </div>
             <div style={{ marginBottom: 18 }}>
-              <label style={lbl}>Email for notifications</label>
+              <label className="onb-lbl">Email for notifications</label>
               <input
-                style={inp}
+                className="onb-inp"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -777,9 +686,9 @@ function Onboarding({ session, profile, onComplete }) {
               />
             </div>
             <div>
-              <label style={lbl}>Phone (for texts)</label>
+              <label className="onb-lbl">Phone (for texts)</label>
               <input
-                style={inp}
+                className="onb-inp"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -788,10 +697,10 @@ function Onboarding({ session, profile, onComplete }) {
               />
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-              <button onClick={() => setStep(1)} style={btnBack}>
+              <button onClick={() => setStep(1)} className="onb-back">
                 Back
               </button>
-              <button onClick={() => setStep(3)} style={btnNext}>
+              <button onClick={() => setStep(3)} className="onb-next">
                 Continue
               </button>
             </div>
@@ -811,12 +720,12 @@ function Onboarding({ session, profile, onComplete }) {
             >
               Your music taste
             </div>
-            <div style={{ ...help, marginTop: 0, marginBottom: 22 }}>
+            <div className="onb-help" style={{ marginTop: 0, marginBottom: 22 }}>
               Optional — pick a few so friends can see what you're into.
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <label style={lbl}>Genres</label>
+              <label className="onb-lbl">Genres</label>
               <TagSearch
                 value={genres}
                 onChange={setGenres}
@@ -827,7 +736,7 @@ function Onboarding({ session, profile, onComplete }) {
             </div>
 
             <div>
-              <label style={lbl}>Favorite artists</label>
+              <label className="onb-lbl">Favorite artists</label>
               <ArtistSearch
                 value={artists}
                 onChange={setArtists}
@@ -884,7 +793,7 @@ function Onboarding({ session, profile, onComplete }) {
                   {discoverable ? "ON" : "OFF"}
                 </div>
               </div>
-              <div style={{ ...help, marginTop: 8 }}>
+              <div className="onb-help" style={{ marginTop: 8 }}>
                 Looking to make friends and hit shows together? Open your
                 profile so people who share your taste can find you. When off,
                 only friends and people you follow can see you. Change it
@@ -893,7 +802,7 @@ function Onboarding({ session, profile, onComplete }) {
             </div>
 
             {err && (
-              <div style={{ ...help, color: "#ff6b6b", marginTop: 16 }}>
+              <div className="onb-help" style={{ color: "#ff6b6b", marginTop: 16 }}>
                 Couldn't save: {err}
               </div>
             )}
@@ -902,11 +811,11 @@ function Onboarding({ session, profile, onComplete }) {
               <button
                 onClick={() => setStep(2)}
                 disabled={saving}
-                style={btnBack}
+                className="onb-back"
               >
                 Back
               </button>
-              <button onClick={finish} disabled={saving} style={btnNext}>
+              <button onClick={finish} disabled={saving} className="onb-next">
                 {saving ? "Saving…" : "Finish"}
               </button>
             </div>
@@ -917,27 +826,4 @@ function Onboarding({ session, profile, onComplete }) {
   );
 }
 
-const btnBack = {
-  flex: "0 0 auto",
-  padding: "13px 18px",
-  background: "transparent",
-  color: "var(--fg2)",
-  border: "1px solid #262626",
-  borderRadius: 6,
-  fontFamily: "var(--font-body)",
-  fontSize: "var(--fs-sm)",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-const btnNext = {
-  flex: 1,
-  padding: "13px",
-  background: "var(--gold)",
-  color: "#000",
-  border: "none",
-  borderRadius: 6,
-  fontFamily: "var(--font-body)",
-  fontSize: "var(--fs-md)",
-  fontWeight: 700,
-  cursor: "pointer",
-};
+// Onboarding nav buttons are styled in css/app.css (.onb-back / .onb-next).
