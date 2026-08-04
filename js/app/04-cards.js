@@ -8,7 +8,9 @@ function CCard({
   curUser,
   onOpen,
   onViewProfile,
-  onDelete,
+  selecting,
+  selected,
+  onSelect,
 }) {
   const d = fmt(c.date);
   const dy = daysUntil(c.date);
@@ -56,7 +58,17 @@ function CCard({
     .filter(Boolean);
 
   return (
-    <div className={"tk" + (isTonight ? " live" : "")} onClick={() => onOpen(c)}>
+    <div
+      className={
+        "tk" + (isTonight ? " live" : "") + (selected ? " tk-sel" : "")
+      }
+      onClick={() => (selecting ? onSelect(c.id) : onOpen(c))}
+    >
+      {selecting && (
+        <div className={"tk-check" + (selected ? " on" : "")}>
+          {selected ? "✓" : ""}
+        </div>
+      )}
       <div className="tk-date">
         {c.hidden && isOwner && (
           <span className="tk-quiet" title="Going quietly — only you can see this">
@@ -71,18 +83,6 @@ function CCard({
       <div className="tk-tear"></div>
 
       <div className="tk-body">
-        {isOwner && onDelete && (
-          <button
-            className="tk-del"
-            title="Remove this show"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(c.id);
-            }}
-          >
-            ×
-          </button>
-        )}
         {isTonight ? (
           <div className="tk-src live">
             <span className="tk-livedot"></span> Tonight
@@ -96,7 +96,7 @@ function CCard({
         ) : null}
         <div className="tk-artist">
           <span className="sym">★</span>
-          {c.artist}
+          <span className="tk-artist-name">{c.artist}</span>
           <span className="sym">★</span>
         </div>
         <div className="tk-venue">
@@ -113,6 +113,7 @@ function CCard({
                 style={{ background: u2.color }}
                 title={"View " + u2.name + "'s profile"}
                 onClick={(e) => {
+                  if (selecting) return; // let the tap select the card
                   e.stopPropagation();
                   onViewProfile && onViewProfile(u2.id);
                 }}

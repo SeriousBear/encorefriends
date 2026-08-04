@@ -108,6 +108,8 @@ function App() {
   const [filter, setFilter] = useState("all");
   const [showAuth, setShowAuth] = useState(false); // guest -> sign-in screen
   const [showPast, setShowPast] = useState(false); // collapse past shows
+  const [selMode, setSelMode] = useState(false); // feed multi-select remove mode
+  const [selIds, setSelIds] = useState([]); // ids selected for removal
   const [detail, setDetail] = useState(null);
   const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported|ios-install
   const [installPrompt, setInstallPrompt] = useState(null); // deferred beforeinstallprompt
@@ -833,10 +835,8 @@ function App() {
     setInstallPrompt(null);
   };
 
-  const deleteConcert = async (cid) => {
-    if (!requireAuth()) return;
-    if (!confirm("Remove this show from your account? This can't be undone."))
-      return;
+  // Core deletion (owner-scoped), no confirm — reused by single + batch remove.
+  const removeConcertNow = async (cid) => {
     if (session?.user?.id) {
       await supabase.from("concert_attendees").delete().eq("concert_id", cid);
       await supabase
@@ -846,7 +846,39 @@ function App() {
         .eq("owner_id", session.user.id);
     }
     setLiveConcerts((p) => p.filter((c) => c.id !== cid));
+    setDetail((d) => (d && d.id === cid ? null : d)); // close sheet if open
+  };
+  const deleteConcert = async (cid) => {
+    if (!requireAuth()) return;
+    if (!confirm("Remove this show from your account? This can't be undone."))
+      return;
+    await removeConcertNow(cid);
     toast("Show removed.");
+  };
+
+  // ── Feed multi-select remove ── (state declared up top with the other hooks)
+  const toggleSel = (id) =>
+    setSelIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const exitSel = () => {
+    setSelMode(false);
+    setSelIds([]);
+  };
+  const removeSelected = async () => {
+    if (!selIds.length) return;
+    const n = selIds.length;
+    if (
+      !confirm(
+        "Remove " +
+          n +
+          " show" +
+          (n > 1 ? "s" : "") +
+          " from your account? This can't be undone.",
+      )
+    )
+      return;
+    for (const id of selIds) await removeConcertNow(id);
+    exitSel();
+    toast(n + " show" + (n > 1 ? "s" : "") + " removed.");
   };
 
   const toggleAttendee = async (cid, uid) => {
@@ -1655,7 +1687,36 @@ function App() {
                           "'s Shows"
                         ).toUpperCase()}
                 </div>
-                <div className="pg-cnt">{filtered.length} shows</div>
+                {selMode ? (
+                  <div className="sel-actions">
+                    <button className="sel-cancel" onClick={exitSel}>
+                      Cancel
+                    </button>
+                    <button
+                      className="sel-remove"
+                      disabled={!selIds.length}
+                      onClick={removeSelected}
+                    >
+                      Remove{selIds.length ? " " + selIds.length : ""}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="sel-actions">
+                    <div className="pg-cnt">{filtered.length} shows</div>
+                    {!isGuest &&
+                      liveConcerts.some((c) => c.owner_id === curUser.id) && (
+                        <button
+                          className="sel-enter"
+                          onClick={() => {
+                            setSelMode(true);
+                            setSelIds([]);
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                  </div>
+                )}
               </div>
               {liveConcerts.length > 0 && (
                 <div className="legend">
@@ -1699,11 +1760,11 @@ function App() {
                             c={c}
                             users={users}
                             curUser={curUser}
-                            onOpen={setDetail}
-                            onToggleGoing={toggleGoing}
+                            onOpen={selMode ? () => {} : setDetail}
                             onViewProfile={viewProfile}
-                            onDelete={deleteConcert}
-                            onGenreClick={openGenre}
+                            selecting={selMode && c.owner_id === curUser.id}
+                            selected={selIds.includes(c.id)}
+                            onSelect={toggleSel}
                           />
                         ))}
                       </div>
@@ -1742,11 +1803,11 @@ function App() {
                               c={c}
                               users={users}
                               curUser={curUser}
-                              onOpen={setDetail}
-                              onToggleGoing={toggleGoing}
+                              onOpen={selMode ? () => {} : setDetail}
                               onViewProfile={viewProfile}
-                              onDelete={deleteConcert}
-                              onGenreClick={openGenre}
+                              selecting={selMode && c.owner_id === curUser.id}
+                              selected={selIds.includes(c.id)}
+                              onSelect={toggleSel}
                             />
                           ))}
                         </div>
@@ -1996,6 +2057,7 @@ function App() {
           }}
           onShare={(cc) => setShareShow(cc)}
           onToggleHidden={toggleHidden}
+          onDelete={deleteConcert}
           myGroups={crews.filter(
             (t) =>
               t.show_artist === detail.artist &&

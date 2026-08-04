@@ -436,13 +436,17 @@
   @keyframes tkpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
   .tk-artist{font-family:var(--font-display);font-size:27px;letter-spacing:1px;line-height:.98;display:flex;align-items:center;justify-content:center;gap:10px}
   .tk-artist .sym{color:var(--gold);font-size:14px;line-height:1;flex:0 0 auto}
-  .tk-venue{font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.3px;color:var(--fg2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* Artist is the ONLY thing that ellipsizes (full name shows on the detail sheet). */
+  .tk-artist-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Venue · city wraps to a new line — never clipped. */
+  .tk-venue{font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.3px;color:var(--fg2);margin-top:6px;line-height:1.4}
   .tk-friends{display:flex;align-items:center;justify-content:center;margin-top:9px}
   .tk-friends .tkav{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2xs);font-weight:700;color:#000;border:2px solid var(--card);margin-left:-6px;font-family:var(--font-body);cursor:pointer}
   .tk-friends .tkav:first-child{margin-left:0}
   .tk-friends .tkmore{font-family:var(--font-mono);font-size:var(--fs-2xs);color:var(--fg3);margin-left:7px}
-  .tk-del{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--fg4);font-size:var(--fs-md);line-height:1;cursor:pointer;z-index:2;padding:2px}
-  .tk-del:hover{color:var(--urg)}
+  .tk-sel{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+  .tk-check{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--line-2);background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);color:var(--gold);z-index:3}
+  .tk-check.on{background:var(--gold);border-color:var(--gold);color:#1a1204;font-weight:700}
   .tk-stub{flex:0 0 38px;display:flex;align-items:center;justify-content:center;padding:10px 0}
   .tk-cd{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:500;letter-spacing:2px;text-transform:uppercase}
   .tk-cd.now{color:var(--urg)}
@@ -450,3 +454,15 @@
   .tk-cd.later{color:var(--fg4)}
   .tk-cd.live{color:var(--urg);animation:tkglow 1.6s ease-in-out infinite}
   @keyframes tkglow{0%,100%{opacity:1}50%{opacity:.55}}
+
+  /* ── Detail sheet: remove-show action ── */
+  .detail-remove{margin:8px 0 2px;width:100%;padding:10px 0;background:transparent;border:1px solid rgba(255,90,77,.3);border-radius:6px;color:var(--urg);font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+  .detail-remove:hover{background:rgba(255,90,77,.08)}
+
+  /* ── Feed multi-select remove ── */
+  .sel-actions{display:flex;align-items:center;gap:10px}
+  .sel-enter{background:transparent;border:none;color:var(--fg3);font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+  .sel-enter:hover{color:var(--fg)}
+  .sel-cancel{background:transparent;border:1px solid var(--line-2);color:var(--fg2);font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:6px;cursor:pointer}
+  .sel-remove{background:var(--urg);border:none;color:#fff;font-family:var(--font-mono);font-size:var(--fs-2xs);font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:6px;cursor:pointer}
+  .sel-remove:disabled{opacity:.4;cursor:not-allowed}

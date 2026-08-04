@@ -200,6 +200,7 @@ function CDetail({
   onGenreClick,
   onShare,
   onToggleHidden,
+  onDelete,
   myGroups,
   onStartGroup,
   onOpenCrew,
@@ -332,6 +333,11 @@ function CDetail({
               {c.hidden
                 ? "🤫 GOING QUIETLY — ONLY YOU SEE THIS. TAP TO UNHIDE"
                 : "👁 VISIBLE TO FRIENDS & MATCHES. TAP TO GO QUIETLY"}
+            </button>
+          )}
+          {c.owner_id === curUser.id && onDelete && (
+            <button className="detail-remove" onClick={() => onDelete(c.id)}>
+              Remove this show
             </button>
           )}
           {curUser.id && onStartGroup && (
