@@ -90,7 +90,10 @@ const agoLabel = (dy) => {
   if (a < 7) return a + " days ago";
   if (a < 14) return "last week";
   if (a < 31) return Math.round(a / 7) + " weeks ago";
-  if (a < 365) return Math.round(a / 30) + " months ago";
+  if (a < 365) {
+    const m = Math.round(a / 30);
+    return m + (m === 1 ? " month ago" : " months ago");
+  }
   return Math.round(a / 365) + " yr ago";
 };
 const fmt = (ds) => {
