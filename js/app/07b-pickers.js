@@ -83,7 +83,7 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
           {open && q.trim().length >= 2 && (
             <div className="tag-drop">
               {loading && shown.length === 0 && (
-                <div className="tag-opt" style={{ color: "#555" }}>
+                <div className="tag-opt" style={{ color: "var(--fg4)" }}>
                   Searching…
                 </div>
               )}
@@ -124,7 +124,7 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
               {!loading && q.trim().length > 1 && !shown.includes(q.trim()) && (
                 <div
                   className="tag-opt"
-                  style={{ color: "#F5A623" }}
+                  style={{ color: "var(--gold)" }}
                   onMouseDown={() => add(q.trim())}
                 >
                   + Add "{q.trim()}"
@@ -206,12 +206,12 @@ function PlaceSearch({ onPick, placeholder }) {
       {open && q.trim().length >= 3 && (
         <div className="tag-drop">
           {loading && results.length === 0 && (
-            <div className="tag-opt" style={{ color: "#555" }}>
+            <div className="tag-opt" style={{ color: "var(--fg4)" }}>
               Searching…
             </div>
           )}
           {!loading && results.length === 0 && (
-            <div className="tag-opt" style={{ color: "#555" }}>
+            <div className="tag-opt" style={{ color: "var(--fg4)" }}>
               No matches — just type it in below.
             </div>
           )}
@@ -227,7 +227,7 @@ function PlaceSearch({ onPick, placeholder }) {
                 style={{
                   fontSize: 10,
                   fontFamily: "'DM Mono',monospace",
-                  color: "#777",
+                  color: "var(--fg2)",
                   marginTop: 2,
                 }}
               >
@@ -290,7 +290,7 @@ function DatePicker({ value, onChange }) {
   const navBtn = {
     background: "none",
     border: "none",
-    color: "#F5A623",
+    color: "var(--gold)",
     fontSize: 20,
     cursor: "pointer",
     padding: "0 8px",
@@ -306,7 +306,7 @@ function DatePicker({ value, onChange }) {
         style={{
           textAlign: "left",
           cursor: "pointer",
-          color: value ? "#eee" : "#666",
+          color: value ? "#eee" : "var(--fg3)",
           width: "100%",
           display: "flex",
           justifyContent: "space-between",
@@ -314,14 +314,14 @@ function DatePicker({ value, onChange }) {
         }}
       >
         <span>{label}</span>
-        <span style={{ color: "#F5A623" }}>▾</span>
+        <span style={{ color: "var(--gold)" }}>▾</span>
       </button>
       {open && (
         <div
           style={{
             marginTop: 6,
-            background: "#0c0c0c",
-            border: "1px solid #1e1e1e",
+            background: "var(--panel)",
+            border: "1px solid var(--line)",
             borderRadius: 8,
             padding: 12,
             width: 268,
@@ -368,7 +368,7 @@ function DatePicker({ value, onChange }) {
                   textAlign: "center",
                   fontFamily: "'DM Mono',monospace",
                   fontSize: 9,
-                  color: "#555",
+                  color: "var(--fg4)",
                   padding: "2px 0",
                 }}
               >
@@ -404,8 +404,8 @@ function DatePicker({ value, onChange }) {
                     cursor: "pointer",
                     fontFamily: "'DM Mono',monospace",
                     fontSize: 12,
-                    background: isSel ? "#F5A623" : "transparent",
-                    color: isSel ? "#000" : "#ccc",
+                    background: isSel ? "var(--gold)" : "transparent",
+                    color: isSel ? "#000" : "var(--fg2)",
                   }}
                 >
                   {d}

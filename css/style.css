@@ -3,30 +3,9 @@
    style.css
    ============================================================ */
 
-/* ── CUSTOM PROPERTIES ── */
-:root {
-  --gold:        #F5A623;
-  --gold-dim:    rgba(245,166,35,.12);
-  --gold-border: rgba(245,166,35,.25);
-  --red:         #FF4D4D;
-  --bg:          #070707;
-  --bg2:         #0d0d0d;
-  --bg3:         #111;
-  --fg:          #F2EFEA;
-  --fg2:         #C4C2BC;  /* secondary — lifted from #888 for ~9:1 contrast */
-  --fg3:         #97948D;  /* muted/meta — lifted from #444 so it's legible */
-  --border:      rgba(255,255,255,.09);
-  --font-display:'Bebas Neue', sans-serif;
-  --font-body:   'Inter', 'Syne', sans-serif;  /* readable body/UI workhorse */
-  --font-mono:   'DM Mono', monospace;
-  --font-serif:  'Playfair Display', serif;
-
-  /* Fluid type scale — min @360px → max @1280px. Body never below 16px. */
-  --fs-meta:    clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);   /* 13→14 */
-  --fs-body:    clamp(1rem, 0.96rem + 0.28vw, 1.125rem);        /* 16→18 */
-  --fs-body-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem);    /* 18→21 */
-  --lh-body:    1.6;
-}
+/* ── CUSTOM PROPERTIES ──
+   All design tokens now live in css/tokens.css (the single source of truth,
+   linked before this file on index.html). Don't redeclare them here. */
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +21,7 @@ body {
 }
 ::selection { background: var(--gold); color: #000; }
 ::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 2px; }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
 

@@ -1,0 +1,53 @@
+/* ============================================================================
+   Encore — Design Tokens (single source of truth)
+   ----------------------------------------------------------------------------
+   Every color, font, size, and space the site uses lives here as a CSS custom
+   property. Linked FIRST on both index.html and app.html, so style.css, app.css,
+   and every component read from the same values. Change a token once → it
+   changes everywhere. Do NOT hardcode literals (#F5A623, 14px, 'Inter') in a
+   stylesheet or a component — reference a token instead. See CLAUDE.md.
+   ============================================================================ */
+
+:root {
+  /* ---- Brand ---- */
+  --gold:        #F5A623;
+  --gold-dim:    rgba(245,166,35,.12);
+  --gold-border: rgba(245,166,35,.25);
+  --red:         #FF4D4D;
+
+  /* ---- Surfaces (near-black, layered darkest → lightest) ---- */
+  --bg:        #070707;   /* page */
+  --panel:     #0c0c0c;   /* inset panel */
+  --surface-1: #0d0d0d;   /* raised surface */
+  --card:      #111111;   /* card */
+  --card-2:    #141414;   /* card, one step up */
+  --line:      #1e1e1e;   /* hairline border */
+  --line-2:    #2a2a2a;   /* stronger border */
+  --border:    rgba(255,255,255,.09); /* translucent hairline (marketing) */
+
+  /* Back-compat aliases used by css/style.css rules */
+  --bg2: var(--surface-1);
+  --bg3: var(--card);
+
+  /* ---- Text (contrast-checked on --bg) ---- */
+  --fg:  #F2EFEA;   /* primary — ~15:1 */
+  --fg2: #C4C2BC;   /* secondary — ~9:1 */
+  --fg3: #97948D;   /* muted — ~5:1 */
+  --fg4: #8E8C86;   /* faint — meta only */
+
+  /* ---- Type families ---- */
+  --font-display: 'Bebas Neue', sans-serif;   /* big headlines */
+  --font-body:    'Inter', 'Syne', sans-serif; /* body + UI */
+  --font-mono:    'DM Mono', monospace;        /* labels, meta */
+  --font-serif:   'Playfair Display', serif;   /* marketing italic accent */
+
+  /* ---- Fluid type scale (min @360px → max @1280px) ---- */
+  --fs-meta:    clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);   /* 13→14 */
+  --fs-body:    clamp(1rem, 0.96rem + 0.28vw, 1.125rem);        /* 16→18 */
+  --fs-body-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem);    /* 18→21 */
+  --lh-body:    1.6;
+
+  /* ---- Radius / spacing ---- */
+  --radius:    10px;
+  --radius-lg: 16px;
+}

@@ -45,7 +45,7 @@ function CCard({
               style={{
                 padding: "2px 7px",
                 background: "rgba(255,255,255,.05)",
-                border: "1px solid #2a2a2a",
+                border: "1px solid var(--line-2)",
                 borderRadius: 3,
                 fontSize: 9,
                 lineHeight: 1.4,
@@ -65,7 +65,7 @@ function CCard({
                 fontSize: 8,
                 fontWeight: 700,
                 letterSpacing: 1,
-                color: "#F5A623",
+                color: "var(--gold)",
                 textTransform: "uppercase",
               }}
             >
@@ -99,7 +99,7 @@ function CCard({
               style={{
                 padding: "2px 7px",
                 background: "transparent",
-                border: "1px solid #2a2a2a",
+                border: "1px solid var(--line-2)",
                 borderRadius: 3,
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 9,
@@ -121,7 +121,7 @@ function CCard({
         )}
         {u === "soon" && (
           <div className="upill pill-s">
-            <div className="pdot" style={{ background: "#F5A623" }} />
+            <div className="pdot" style={{ background: "var(--gold)" }} />
             {dy} days away
           </div>
         )}
@@ -130,11 +130,11 @@ function CCard({
             className="upill"
             style={{
               background: "rgba(255,255,255,0.05)",
-              color: "#888",
-              border: "1px solid #2a2a2a",
+              color: "var(--fg2)",
+              border: "1px solid var(--line-2)",
             }}
           >
-            <div className="pdot" style={{ background: "#666" }} />
+            <div className="pdot" style={{ background: "var(--fg3)" }} />
             {agoLabel(dy)}
           </div>
         )}
@@ -219,7 +219,7 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: 420 }}
       >
-        <div className="sheet-bar" style={{ background: "#F5A623" }} />
+        <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>
           <div
             style={{
@@ -235,7 +235,7 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
             style={{
               fontFamily: "'DM Mono',monospace",
               fontSize: 10,
-              color: "#666",
+              color: "var(--fg3)",
               marginBottom: 12,
             }}
           >
@@ -244,8 +244,8 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
           {friends.length === 0 ? (
             <div
               style={{
-                color: "#666",
-                fontFamily: "'Syne',sans-serif",
+                color: "var(--fg3)",
+                fontFamily: "'Inter','Syne',sans-serif",
                 fontSize: 13,
                 padding: "18px 0",
                 textAlign: "center",
@@ -263,7 +263,7 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
                   alignItems: "center",
                   gap: 10,
                   padding: "10px 6px",
-                  borderBottom: "1px solid #141414",
+                  borderBottom: "1px solid var(--card-2)",
                   cursor: "pointer",
                   borderRadius: 6,
                 }}
@@ -290,7 +290,7 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
                 >
                   {u2.name.slice(0, 2).toUpperCase()}
                 </div>
-                <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14 }}>
+                <div style={{ fontFamily: "'Inter','Syne',sans-serif", fontSize: 14 }}>
                   {u2.name}
                 </div>
                 <div
@@ -298,7 +298,7 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
                     marginLeft: "auto",
                     fontFamily: "'DM Mono',monospace",
                     fontSize: 10,
-                    color: "#F5A623",
+                    color: "var(--gold)",
                   }}
                 >
                   Send ▸

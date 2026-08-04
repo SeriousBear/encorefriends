@@ -78,7 +78,7 @@ function App() {
           id: pr.id,
           name: pr.name || "User",
           handle: pr.handle || "",
-          color: pr.color || "#F5A623",
+          color: pr.color || "var(--gold)",
           location: pr.location || "",
           bio: pr.bio || "",
           genres: pr.genres || [],
@@ -401,7 +401,7 @@ function App() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#070707",
+          background: "var(--bg)",
         }}
       >
         <div
@@ -409,7 +409,7 @@ function App() {
             fontFamily: "'Bebas Neue',sans-serif",
             fontSize: 32,
             letterSpacing: 6,
-            color: "#F5A623",
+            color: "var(--gold)",
             opacity: 0.4,
           }}
         >
@@ -443,7 +443,7 @@ function App() {
         id: session.user.id, // real UUID
         name: profile.name || session.user.user_metadata?.full_name || "User",
         handle: profile.handle || "",
-        color: profile.color || "#F5A623",
+        color: profile.color || "var(--gold)",
         location: profile.location || "",
         bio: profile.bio || "",
         genres: profile.genres || [],
@@ -486,16 +486,16 @@ function App() {
     justifyContent: "space-between",
     gap: 12,
     flexWrap: "wrap",
-    background: "#111",
-    border: "1px solid #1e1e1e",
+    background: "var(--card)",
+    border: "1px solid var(--line)",
     borderRadius: 8,
     padding: "12px 14px",
     marginBottom: 16,
   };
   const bannerTxt = {
-    fontFamily: "'Syne',sans-serif",
+    fontFamily: "'Inter','Syne',sans-serif",
     fontSize: 13,
-    color: "#ccc",
+    color: "var(--fg2)",
     flex: 1,
     minWidth: 200,
     lineHeight: 1.45,
@@ -1193,7 +1193,7 @@ function App() {
                           height: 15,
                           padding: "0 3px",
                           borderRadius: 8,
-                          background: "#F5A623",
+                          background: "var(--gold)",
                           color: "#000",
                           fontSize: 9,
                           fontWeight: 700,
@@ -1240,10 +1240,10 @@ function App() {
                     }}
                     style={{
                       background: "transparent",
-                      border: "1px solid #1e1e1e",
-                      color: "#555",
+                      border: "1px solid var(--line)",
+                      color: "var(--fg4)",
                       padding: "6px 10px",
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Inter','Syne',sans-serif",
                       fontSize: 10,
                       fontWeight: 600,
                       letterSpacing: 1,
@@ -1340,7 +1340,7 @@ function App() {
             ))}
             <button
               className="chip"
-              style={{ borderStyle: "dashed", color: "#555" }}
+              style={{ borderStyle: "dashed", color: "var(--fg4)" }}
               onClick={() => setView("search")}
             >
               + Follow
@@ -1495,7 +1495,7 @@ function App() {
                   <button
                     className="btn-sm"
                     onClick={() => setPushHidden(true)}
-                    style={{ color: "#777" }}
+                    style={{ color: "var(--fg2)" }}
                   >
                     Got it
                   </button>
@@ -1522,9 +1522,9 @@ function App() {
                   >
                     <span
                       style={{
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Inter','Syne',sans-serif",
                         fontSize: 13,
-                        color: "#f0ede8",
+                        color: "var(--fg)",
                         flex: 1,
                         minWidth: 220,
                       }}
@@ -1541,7 +1541,7 @@ function App() {
                     <button
                       onClick={enableOtc}
                       style={{
-                        background: "#F5A623",
+                        background: "var(--gold)",
                         border: "none",
                         color: "#000",
                         padding: "7px 13px",
@@ -1558,8 +1558,8 @@ function App() {
                       onClick={dismissOtc}
                       style={{
                         background: "none",
-                        border: "1px solid #2a2a2a",
-                        color: "#666",
+                        border: "1px solid var(--line-2)",
+                        color: "var(--fg3)",
                         padding: "7px 11px",
                         borderRadius: 6,
                         fontFamily: "'DM Mono',monospace",
@@ -1588,7 +1588,7 @@ function App() {
                     <button
                       className="btn-sm"
                       onClick={() => setPushHidden(true)}
-                      style={{ color: "#777" }}
+                      style={{ color: "var(--fg2)" }}
                     >
                       Not now
                     </button>
@@ -1610,7 +1610,7 @@ function App() {
                       <button
                         className="btn-sm"
                         onClick={() => setInstallHidden(true)}
-                        style={{ color: "#777" }}
+                        style={{ color: "var(--fg2)" }}
                       >
                         Not now
                       </button>
@@ -1629,8 +1629,8 @@ function App() {
                       justifyContent: "space-between",
                       gap: 12,
                       flexWrap: "wrap",
-                      background: "#111",
-                      border: "1px solid #1e1e1e",
+                      background: "var(--card)",
+                      border: "1px solid var(--line)",
                       borderRadius: 8,
                       padding: "12px 14px",
                       marginBottom: 16,
@@ -1638,9 +1638,9 @@ function App() {
                   >
                     <span
                       style={{
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Inter','Syne',sans-serif",
                         fontSize: 13,
-                        color: "#ccc",
+                        color: "var(--fg2)",
                       }}
                     >
                       📥 Add your shows automatically from email — about a
@@ -1656,7 +1656,7 @@ function App() {
                       <button
                         className="btn-sm"
                         onClick={() => setMailDismissed(true)}
-                        style={{ color: "#777" }}
+                        style={{ color: "var(--fg2)" }}
                       >
                         Not now
                       </button>
@@ -1683,11 +1683,11 @@ function App() {
                     Within 2 weeks
                   </div>
                   <div className="leg">
-                    <div className="led" style={{ background: "#F5A623" }} />
+                    <div className="led" style={{ background: "var(--gold)" }} />
                     Within 30 days
                   </div>
                   <div className="leg">
-                    <div className="led" style={{ background: "#2a2a2a" }} />
+                    <div className="led" style={{ background: "var(--line-2)" }} />
                     Further out
                   </div>
                 </div>
@@ -1743,7 +1743,7 @@ function App() {
                           display: "flex",
                           alignItems: "center",
                           gap: 8,
-                          color: "#666",
+                          color: "var(--fg3)",
                           fontFamily: "'DM Mono',monospace",
                           fontSize: 11,
                           letterSpacing: 2,
@@ -1846,7 +1846,7 @@ function App() {
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: 460 }}
           >
-            <div className="sheet-bar" style={{ background: "#F5A623" }} />
+            <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div style={{ padding: "10px 18px 22px" }}>
               <div
                 style={{
@@ -1861,9 +1861,9 @@ function App() {
               </div>
               <div
                 style={{
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Inter','Syne',sans-serif",
                   fontSize: 12.5,
-                  color: "#888",
+                  color: "var(--fg2)",
                   marginBottom: 12,
                   lineHeight: 1.5,
                 }}
@@ -1880,7 +1880,7 @@ function App() {
                 style={{
                   width: "100%",
                   resize: "vertical",
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Inter','Syne',sans-serif",
                 }}
               />
               <div
@@ -1894,7 +1894,7 @@ function App() {
                 <button
                   className="btn-sm"
                   onClick={() => setShowBug(false)}
-                  style={{ color: "#888" }}
+                  style={{ color: "var(--fg2)" }}
                 >
                   Cancel
                 </button>
@@ -1919,7 +1919,7 @@ function App() {
       {showAddC && (
         <div className="mwrap" onClick={() => setShowAddC(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-bar" style={{ background: "#F5A623" }} />
+            <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div className="sheet-handle" />
             <div className="sheet-body">
               <div className="sh-artist">Add a Show</div>

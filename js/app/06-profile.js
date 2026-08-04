@@ -19,10 +19,10 @@ function GenreSearch({ onGenreClick }) {
         placeholder="⌕ Search any genre — find your people"
         style={{
           width: "100%",
-          background: "#0c0c0c",
-          border: "1px solid #1e1e1e",
+          background: "var(--panel)",
+          border: "1px solid var(--line)",
           borderRadius: 6,
-          color: "#f0ede8",
+          color: "var(--fg)",
           fontFamily: "'DM Mono',monospace",
           fontSize: 12,
           padding: "10px 12px",
@@ -39,7 +39,7 @@ function GenreSearch({ onGenreClick }) {
             right: 0,
             zIndex: 30,
             marginTop: 4,
-            background: "#111",
+            background: "var(--card)",
             border: "1px solid #222",
             borderRadius: 6,
             overflow: "hidden",
@@ -56,7 +56,7 @@ function GenreSearch({ onGenreClick }) {
               }}
               style={{
                 padding: "9px 12px",
-                fontFamily: "'Syne',sans-serif",
+                fontFamily: "'Inter','Syne',sans-serif",
                 fontSize: 13,
                 cursor: "pointer",
                 display: "flex",
@@ -76,7 +76,7 @@ function GenreSearch({ onGenreClick }) {
                 style={{
                   fontFamily: "'DM Mono',monospace",
                   fontSize: 9,
-                  color: "#555",
+                  color: "var(--fg4)",
                   textTransform: "uppercase",
                   letterSpacing: 1,
                 }}
@@ -151,8 +151,8 @@ function ProfilePage({
             className="prof-follow-btn pf-follow"
             style={{
               background: "transparent",
-              border: "1px solid #2a2a2a",
-              color: "#aaa",
+              border: "1px solid var(--line-2)",
+              color: "var(--fg2)",
               marginLeft: 6,
             }}
             onClick={() => onMessage(user.id)}
@@ -166,7 +166,7 @@ function ProfilePage({
             style={{
               background: "transparent",
               border: "1px solid rgba(245,166,35,.3)",
-              color: "#F5A623",
+              color: "var(--gold)",
             }}
             onClick={onEdit}
           >
@@ -326,7 +326,7 @@ function ProfilePage({
                   style={{
                     fontSize: 9,
                     fontFamily: "'DM Mono',monospace",
-                    color: "#888",
+                    color: "var(--fg2)",
                     marginLeft: "auto",
                   }}
                 >
@@ -419,7 +419,7 @@ function ProfilePage({
       {connModal && (
         <div className="mwrap" onClick={() => setConnModal(null)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-bar" style={{ background: "#F5A623" }} />
+            <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div className="sheet-handle" />
             <div className="sheet-body">
               <div
@@ -438,7 +438,7 @@ function ProfilePage({
                     style={{
                       padding: "5px 12px",
                       borderRadius: 14,
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Inter','Syne',sans-serif",
                       fontSize: 10,
                       fontWeight: 700,
                       textTransform: "uppercase",
@@ -447,9 +447,9 @@ function ProfilePage({
                       transition: "all .15s",
                       background:
                         connModal === "followers"
-                          ? "#F5A623"
+                          ? "var(--gold)"
                           : "rgba(245,166,35,.1)",
-                      color: connModal === "followers" ? "#000" : "#F5A623",
+                      color: connModal === "followers" ? "#000" : "var(--gold)",
                     }}
                     onClick={() => setConnModal("followers")}
                   >
@@ -459,7 +459,7 @@ function ProfilePage({
                     style={{
                       padding: "5px 12px",
                       borderRadius: 14,
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Inter','Syne',sans-serif",
                       fontSize: 10,
                       fontWeight: 700,
                       textTransform: "uppercase",
@@ -468,9 +468,9 @@ function ProfilePage({
                       transition: "all .15s",
                       background:
                         connModal === "following"
-                          ? "#F5A623"
+                          ? "var(--gold)"
                           : "rgba(245,166,35,.1)",
-                      color: connModal === "following" ? "#000" : "#F5A623",
+                      color: connModal === "following" ? "#000" : "var(--gold)",
                     }}
                     onClick={() => setConnModal("following")}
                   >
@@ -552,7 +552,7 @@ function ArtistSheet({ artistName, concerts, onClose, onOpenConcert }) {
   return (
     <div className="mwrap" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="sheet-bar" style={{ background: "#F5A623" }} />
+        <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div className="sheet-handle" />
         <div className="sheet-body">
           <div className="sh-artist">{artistName}</div>
@@ -579,7 +579,7 @@ function ArtistSheet({ artistName, concerts, onClose, onOpenConcert }) {
                           ? "rgba(255,80,80,.3)"
                           : u === "soon"
                             ? "rgba(245,166,35,.25)"
-                            : "#1e1e1e",
+                            : "var(--line)",
                     }}
                   >
                     <div className="art-show-info">
@@ -715,7 +715,7 @@ function GenrePage({
                     ? {
                         background: "rgba(245,166,35,.12)",
                         borderColor: "rgba(245,166,35,.4)",
-                        color: "#F5A623",
+                        color: "var(--gold)",
                       }
                     : undefined
                 }
@@ -739,17 +739,17 @@ function GenrePage({
                     gap: 5,
                     padding: "6px 13px",
                     borderRadius: 14,
-                    background: "#111",
+                    background: "var(--card)",
                     border: "1px solid #222",
-                    color: "#F0EDE8",
-                    fontFamily: "'Syne',sans-serif",
+                    color: "var(--fg)",
+                    fontFamily: "'Inter','Syne',sans-serif",
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: "pointer",
                     transition: "all .15s",
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.borderColor = "#888";
+                    e.currentTarget.style.borderColor = "var(--fg2)";
                   }}
                   onMouseOut={(e) => {
                     e.currentTarget.style.borderColor = "#222";
@@ -800,8 +800,8 @@ function GenrePage({
                           u === "urgent"
                             ? "#FF5050"
                             : u === "soon"
-                              ? "#F5A623"
-                              : "#2a2a2a",
+                              ? "var(--gold)"
+                              : "var(--line-2)",
                       }}
                     />
                     <div className="cbody">
@@ -822,7 +822,7 @@ function GenrePage({
                         <div className="upill pill-s">
                           <div
                             className="pdot"
-                            style={{ background: "#F5A623" }}
+                            style={{ background: "var(--gold)" }}
                           />
                           {dy} days away
                         </div>
@@ -843,7 +843,7 @@ function GenrePage({
                         style={{
                           fontSize: 9,
                           fontFamily: "'DM Mono',monospace",
-                          color: "#555",
+                          color: "var(--fg4)",
                         }}
                       >
                         tap to see artist
@@ -857,7 +857,7 @@ function GenrePage({
                           style={{
                             fontSize: 8,
                             fontFamily: "'DM Mono',monospace",
-                            color: "#F5A623",
+                            color: "var(--gold)",
                             textDecoration: "none",
                           }}
                         >
@@ -879,7 +879,7 @@ function GenrePage({
             style={{
               fontFamily: "'DM Mono',monospace",
               fontSize: 10,
-              color: "#555",
+              color: "var(--fg4)",
               margin: "-6px 0 12px",
             }}
           >
@@ -925,7 +925,7 @@ function GenrePage({
                               g === genre ? "rgba(245,166,35,.1)" : "",
                             borderColor:
                               g === genre ? "rgba(245,166,35,.3)" : "",
-                            color: g === genre ? "#F5A623" : "",
+                            color: g === genre ? "var(--gold)" : "",
                           }}
                         >
                           {g}

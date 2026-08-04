@@ -26,6 +26,26 @@ When splitting: create the new `NN[x]-name.js`, move the block, add a
 `<script>` tag in `app.html` **before** its first user (and before `09-main.js`),
 and update the table in `js/app/README.md`.
 
+## Styling — tokens & classes, never hardcoded
+
+- **No hardcoded design values inline.** Colors, fonts, sizes, and spacing must
+  come from the shared tokens in `css/tokens.css` (a `:root` of custom
+  properties) — e.g. `var(--gold)`, `var(--line)`, `var(--text-2)`. Never write
+  a literal like `#F5A623` or `color:#666` in a component or stylesheet.
+- **Reused styling belongs in a class**, not repeated inline. If the same style
+  object appears on more than one element, promote it to a class in `css/app.css`
+  (or `css/style.css` for the marketing site) and use `className`.
+- **Inline `style` is only for genuinely dynamic, per-element values** (a user's
+  avatar color, a computed bar width). Even then, inject a CSS variable
+  (`style={{ '--w': pct }}`) and read it in a class — don't inline a literal.
+- This supersedes the old "inline styles are fine" convention.
+
+## DRY — don't repeat styles or code
+
+Don't duplicate styles or logic that's already used elsewhere unless there's a
+real, stated reason. Before writing a value or block, check whether a token,
+class, or helper already exists. One source of truth; change it in one place.
+
 ## Verify before claiming done
 
 - `npm test` (vitest) — parser unit tests + the hooks-order guard.

@@ -28,7 +28,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: 440 }}
       >
-        <div className="sheet-bar" style={{ background: "#F5A623" }} />
+        <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>
           <div
             style={{
@@ -45,7 +45,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
               fontFamily: "'DM Mono',monospace",
               fontSize: 10,
               letterSpacing: 2,
-              color: "#F5A623",
+              color: "var(--gold)",
               textTransform: "uppercase",
               marginBottom: 6,
             }}
@@ -58,11 +58,11 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
             placeholder={defaultName}
             style={{
               width: "100%",
-              background: "#0c0c0c",
-              border: "1px solid #1e1e1e",
+              background: "var(--panel)",
+              border: "1px solid var(--line)",
               borderRadius: 6,
-              color: "#f0ede8",
-              fontFamily: "'Syne',sans-serif",
+              color: "var(--fg)",
+              fontFamily: "'Inter','Syne',sans-serif",
               fontSize: 14,
               padding: "10px 12px",
               outline: "none",
@@ -75,7 +75,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
               fontFamily: "'DM Mono',monospace",
               fontSize: 10,
               letterSpacing: 2,
-              color: "#F5A623",
+              color: "var(--gold)",
               textTransform: "uppercase",
               marginBottom: 6,
             }}
@@ -87,7 +87,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
               style={{
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 10,
-                color: "#666",
+                color: "var(--fg3)",
                 padding: "8px 0 14px",
               }}
             >
@@ -106,7 +106,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
                       alignItems: "center",
                       gap: 10,
                       padding: "8px 4px",
-                      borderBottom: "1px solid #141414",
+                      borderBottom: "1px solid var(--card-2)",
                       cursor: "pointer",
                     }}
                   >
@@ -130,7 +130,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
                     <span
                       style={{
                         flex: 1,
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Inter','Syne',sans-serif",
                         fontSize: 13,
                       }}
                     >
@@ -142,8 +142,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
                         height: 18,
                         borderRadius: 5,
                         border:
-                          "1px solid " + (on ? "#F5A623" : "#2a2a2a"),
-                        background: on ? "#F5A623" : "transparent",
+                          "1px solid " + (on ? "var(--gold)" : "var(--line-2)"),
+                        background: on ? "var(--gold)" : "transparent",
                         color: "#000",
                         fontSize: 12,
                         fontWeight: 700,
@@ -166,7 +166,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
             style={{
               width: "100%",
               padding: "11px 0",
-              background: "#F5A623",
+              background: "var(--gold)",
               border: "none",
               borderRadius: 6,
               color: "#000",
@@ -216,7 +216,7 @@ function CDetail({
           ? "Tomorrow!"
           : dy + " days away";
   const bc = u === "urgent" ? "bdg-u" : u === "soon" ? "bdg-s" : "bdg-n",
-    rc = u === "urgent" ? "#FF5555" : "#F5A623";
+    rc = u === "urgent" ? "#FF5555" : "var(--gold)";
   const showR = u === "urgent" || u === "soon";
   const isFestival = c.is_festival && c.end_date && c.end_date !== c.date;
   const crewBtn = {
@@ -226,7 +226,7 @@ function CDetail({
     background: "rgba(245,166,35,.06)",
     border: "1px solid rgba(245,166,35,.3)",
     borderRadius: 6,
-    color: "#F5A623",
+    color: "var(--gold)",
     fontFamily: "'DM Mono',monospace",
     fontSize: 11,
     letterSpacing: 1,
@@ -283,7 +283,7 @@ function CDetail({
                   u === "urgent"
                     ? "#FF5555"
                     : u === "soon"
-                      ? "#F5A623"
+                      ? "var(--gold)"
                       : "#444",
                 display: "inline-block",
               }}
@@ -295,7 +295,7 @@ function CDetail({
               style={{
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 11,
-                color: "#F5A623",
+                color: "var(--gold)",
                 margin: "10px 0 2px",
               }}
             >
@@ -311,9 +311,9 @@ function CDetail({
                 width: "100%",
                 padding: "10px 0",
                 background: "transparent",
-                border: "1px solid #2a2a2a",
+                border: "1px solid var(--line-2)",
                 borderRadius: 6,
-                color: "#aaa",
+                color: "var(--fg2)",
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 11,
                 letterSpacing: 1,
@@ -332,9 +332,9 @@ function CDetail({
                 width: "100%",
                 padding: "10px 0",
                 background: c.hidden ? "rgba(255,255,255,.04)" : "transparent",
-                border: "1px solid " + (c.hidden ? "#3a3a3a" : "#2a2a2a"),
+                border: "1px solid " + (c.hidden ? "#3a3a3a" : "var(--line-2)"),
                 borderRadius: 6,
-                color: c.hidden ? "#ddd" : "#666",
+                color: c.hidden ? "#ddd" : "var(--fg3)",
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 10,
                 letterSpacing: 1,
@@ -483,7 +483,7 @@ function CDetail({
                     style={{
                       fontSize: 8,
                       fontFamily: "'DM Mono',monospace",
-                      color: "#F5A623",
+                      color: "var(--gold)",
                     }}
                   >
                     NOTIF

@@ -58,7 +58,7 @@ function TagSearch({ value, onChange, suggestions, max, placeholder }) {
               {!suggestions.includes(q.trim()) && q.trim().length > 1 && (
                 <div
                   className="tag-opt"
-                  style={{ color: "#F5A623" }}
+                  style={{ color: "var(--gold)" }}
                   onMouseDown={() => add(q.trim())}
                 >
                   + Add "{q.trim()}"
@@ -91,7 +91,7 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
     handle: user.handle || "",
     location: user.location || "",
     bio: user.bio || "",
-    color: user.color || "#F5A623",
+    color: user.color || "var(--gold)",
     genres: [...(user.genres || [])],
     artists: [...(user.artists || [])],
     bucketList: [...(user.bucketList || [])],
@@ -162,8 +162,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                background: "#0d0d0d",
-                border: "1px solid #1e1e1e",
+                background: "var(--surface-1)",
+                border: "1px solid var(--line)",
                 borderRadius: 6,
                 overflow: "hidden",
               }}
@@ -184,9 +184,9 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
                   flex: 1,
                   background: "transparent",
                   border: "none",
-                  color: "#F0EDE8",
+                  color: "var(--fg)",
                   padding: "10px 12px 10px 0",
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Inter','Syne',sans-serif",
                   fontSize: 13,
                   outline: "none",
                 }}
@@ -266,10 +266,10 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
           onClick={() => set("discoverable", !draft.discoverable)}
           style={{
             padding: "14px 15px",
-            background: draft.discoverable ? "rgba(245,166,35,.06)" : "#0c0c0c",
+            background: draft.discoverable ? "rgba(245,166,35,.06)" : "var(--panel)",
             border:
               "1px solid " +
-              (draft.discoverable ? "rgba(245,166,35,.35)" : "#1e1e1e"),
+              (draft.discoverable ? "rgba(245,166,35,.35)" : "var(--line)"),
             borderRadius: 8,
             cursor: "pointer",
             transition: "all .15s",
@@ -285,7 +285,7 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
           >
             <div
               style={{
-                fontFamily: "'Syne',sans-serif",
+                fontFamily: "'Inter','Syne',sans-serif",
                 fontSize: 14,
                 fontWeight: 700,
               }}
@@ -300,10 +300,10 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
                 letterSpacing: 1,
                 padding: "3px 10px",
                 borderRadius: 10,
-                color: draft.discoverable ? "#F5A623" : "#555",
+                color: draft.discoverable ? "var(--gold)" : "var(--fg4)",
                 border:
                   "1px solid " +
-                  (draft.discoverable ? "rgba(245,166,35,.4)" : "#2a2a2a"),
+                  (draft.discoverable ? "rgba(245,166,35,.4)" : "var(--line-2)"),
               }}
             >
               {draft.discoverable ? "ON" : "OFF"}
@@ -313,7 +313,7 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
             style={{
               fontFamily: "'DM Mono',monospace",
               fontSize: 10,
-              color: "#666",
+              color: "var(--fg3)",
               marginTop: 8,
               lineHeight: 1.6,
             }}
@@ -461,7 +461,7 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
           style={{
             fontFamily: "'DM Mono',monospace",
             fontSize: 10,
-            color: "#666",
+            color: "var(--fg3)",
             lineHeight: 1.6,
             marginBottom: 10,
           }}
@@ -510,8 +510,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
               onClick={() => setArmClear(false)}
               style={{
                 background: "transparent",
-                border: "1px solid #2a2a2a",
-                color: "#888",
+                border: "1px solid var(--line-2)",
+                color: "var(--fg2)",
                 padding: "9px 14px",
                 borderRadius: 6,
                 fontFamily: "'DM Mono',monospace",
@@ -575,7 +575,7 @@ function SearchPage({
               fontFamily: "'DM Mono',monospace",
               fontSize: 10,
               letterSpacing: 2,
-              color: "#F5A623",
+              color: "var(--gold)",
               textTransform: "uppercase",
               marginBottom: 8,
             }}
@@ -625,7 +625,7 @@ function SearchPage({
             style={{
               background: "none",
               border: "none",
-              color: "#555",
+              color: "var(--fg4)",
               cursor: "pointer",
               fontSize: 14,
             }}
@@ -734,7 +734,7 @@ function LoginPage({ onBack }) {
         alignItems: "center",
         justifyContent: "center",
         padding: "20px",
-        background: "#070707",
+        background: "var(--bg)",
         textAlign: "center",
       }}
     >
@@ -744,7 +744,7 @@ function LoginPage({ onBack }) {
             fontFamily: "'Bebas Neue',sans-serif",
             fontSize: 48,
             letterSpacing: 8,
-            color: "#F5A623",
+            color: "var(--gold)",
             marginBottom: 6,
           }}
         >
@@ -764,8 +764,8 @@ function LoginPage({ onBack }) {
       </div>
       <div
         style={{
-          background: "#111",
-          border: "1px solid #1e1e1e",
+          background: "var(--card)",
+          border: "1px solid var(--line)",
           borderRadius: 10,
           padding: "40px 32px",
           maxWidth: 360,
@@ -786,7 +786,7 @@ function LoginPage({ onBack }) {
           style={{
             fontFamily: "'DM Mono',monospace",
             fontSize: 11,
-            color: "#555",
+            color: "var(--fg4)",
             marginBottom: 32,
             lineHeight: 1.6,
           }}
@@ -801,7 +801,7 @@ function LoginPage({ onBack }) {
             color: fg,
             border: border || "none",
             borderRadius: 6,
-            fontFamily: "'Syne',sans-serif",
+            fontFamily: "'Inter','Syne',sans-serif",
             fontSize: 14,
             fontWeight: 700,
             cursor: loading ? "not-allowed" : "pointer",
@@ -904,7 +904,7 @@ function LoginPage({ onBack }) {
                 border: "none",
                 fontSize: 11,
                 fontFamily: "'DM Mono',monospace",
-                color: "#666",
+                color: "var(--fg3)",
                 cursor: "pointer",
                 letterSpacing: 0.5,
               }}
@@ -931,7 +931,7 @@ function LoginPage({ onBack }) {
           marginTop: 24,
           fontSize: 10,
           fontFamily: "'DM Mono',monospace",
-          color: "#2a2a2a",
+          color: "var(--line-2)",
           letterSpacing: 0.5,
         }}
       >

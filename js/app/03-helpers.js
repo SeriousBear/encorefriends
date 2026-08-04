@@ -42,7 +42,7 @@ const ARTIST_SUGG = [
 ];
 
 const AVATAR_COLORS = [
-  "#F5A623",
+  "var(--gold)",
   "#E85D3A",
   "#9B6BF5",
   "#2ECC71",
@@ -103,7 +103,7 @@ const fmt = (ds) => {
   };
 };
 const uColor = (u) =>
-  u === "urgent" ? "#FF5050" : u === "soon" ? "#F5A623" : "#2a2a2a";
+  u === "urgent" ? "#FF5050" : u === "soon" ? "var(--gold)" : "var(--line-2)";
 // ── TICKET VENDORS ──────────────────────────────────────────────────────────
 // Single source of truth for ticketing platforms. To support a new ticket
 // site, add ONE entry here: its display name, any aliases the scan might

@@ -77,8 +77,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
   const card = {
-    background: "#0c0c0c",
-    border: "1px solid #1e1e1e",
+    background: "var(--panel)",
+    border: "1px solid var(--line)",
     borderRadius: 10,
     padding: 18,
     marginBottom: 14,
@@ -90,7 +90,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     width: 24,
     height: 24,
     borderRadius: "50%",
-    background: "#F5A623",
+    background: "var(--gold)",
     color: "#000",
     fontFamily: "'DM Mono',monospace",
     fontSize: 12,
@@ -108,10 +108,10 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     marginBottom: 10,
   };
   const body = {
-    fontFamily: "'Syne',sans-serif",
+    fontFamily: "'Inter','Syne',sans-serif",
     fontSize: 13,
     lineHeight: 1.55,
-    color: "#aaa",
+    color: "var(--fg2)",
     margin: "0 0 12px 34px",
   };
   const ghost = {
@@ -120,8 +120,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     fontSize: 11,
     letterSpacing: 1,
     textTransform: "uppercase",
-    color: "#F5A623",
-    border: "1px solid #2a2a2a",
+    color: "var(--gold)",
+    border: "1px solid var(--line-2)",
     borderRadius: 6,
     padding: "8px 12px",
     textDecoration: "none",
@@ -139,7 +139,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     fontFamily: "'DM Mono',monospace",
     fontSize: 12,
     background: "#000",
-    border: "1px solid #1e1e1e",
+    border: "1px solid var(--line)",
     borderRadius: 6,
     padding: "10px 12px",
     wordBreak: "break-all",
@@ -151,7 +151,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
         position: "fixed",
         inset: 0,
         zIndex: 200,
-        background: "#070707",
+        background: "var(--bg)",
         overflowY: "auto",
       }}
     >
@@ -172,7 +172,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               fontSize: 10,
               letterSpacing: 3,
               textTransform: "uppercase",
-              color: "#F5A623",
+              color: "var(--gold)",
             }}
           >
             Auto-tracking
@@ -182,7 +182,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             style={{
               background: "none",
               border: "none",
-              color: "#666",
+              color: "var(--fg3)",
               fontFamily: "'DM Mono',monospace",
               fontSize: 11,
               cursor: "pointer",
@@ -206,7 +206,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
         </h1>
         <p
           style={{
-            fontFamily: "'Syne',sans-serif",
+            fontFamily: "'Inter','Syne',sans-serif",
             fontSize: 14,
             color: "#999",
             margin: "0 0 24px",
@@ -223,7 +223,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             <span style={num}>1</span> Copy your private Encore address
           </div>
           <div style={copyBox}>
-            <code style={{ ...codeBox, color: "#F5A623" }}>{addr}</code>
+            <code style={{ ...codeBox, color: "var(--gold)" }}>{addr}</code>
             <button
               onClick={() => copy(addr, "addr")}
               className="btn-sm btn-amber"
@@ -246,7 +246,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             </div>
             <p style={body}>
               In the Gmail app, open a ticket confirmation → tap the{" "}
-              <b style={{ color: "#ccc" }}>Forward</b> arrow → send it to the
+              <b style={{ color: "var(--fg2)" }}>Forward</b> arrow → send it to the
               address above. It shows up in your feed within a few seconds.
             </p>
             <div
@@ -254,12 +254,12 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
                 marginLeft: 34,
                 marginTop: 4,
                 padding: "12px 14px",
-                background: "#0c0c0c",
-                border: "1px solid #1e1e1e",
+                background: "var(--panel)",
+                border: "1px solid var(--line)",
                 borderRadius: 8,
-                fontFamily: "'Syne',sans-serif",
+                fontFamily: "'Inter','Syne',sans-serif",
                 fontSize: 12.5,
-                color: "#888",
+                color: "var(--fg2)",
                 lineHeight: 1.5,
               }}
             >
@@ -276,7 +276,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           </div>
           <p style={body}>
             Open Gmail's forwarding settings, click{" "}
-            <b style={{ color: "#ccc" }}>Add a forwarding address</b>, paste your
+            <b style={{ color: "var(--fg2)" }}>Add a forwarding address</b>, paste your
             address, and hit Next → Proceed.
           </p>
           <button
@@ -297,7 +297,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               marginTop: 6,
               fontFamily: "'DM Mono',monospace",
               fontSize: 11,
-              color: "#666",
+              color: "var(--fg3)",
               lineHeight: 1.5,
             }}
           >
@@ -309,7 +309,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             style={{
               marginLeft: 34,
               marginTop: 14,
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Inter','Syne',sans-serif",
               fontSize: 13,
               lineHeight: 1.5,
             }}
@@ -320,9 +320,9 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               </span>
             ) : confirmLink ? (
               <div>
-                <div style={{ color: "#aaa", marginBottom: 8 }}>
+                <div style={{ color: "var(--fg2)", marginBottom: 8 }}>
                   Gmail sent its confirmation — one tap to finish. This opens
-                  Google; just hit <b style={{ color: "#ccc" }}>Confirm</b>:
+                  Google; just hit <b style={{ color: "var(--fg2)" }}>Confirm</b>:
                 </div>
                 <button
                   type="button"
@@ -335,11 +335,11 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
                 </button>
               </div>
             ) : confirmCode ? (
-              <span style={{ color: "#aaa" }}>
+              <span style={{ color: "var(--fg2)" }}>
                 Almost there — enter this code on Gmail's forwarding screen:{" "}
                 <b
                   style={{
-                    color: "#F5A623",
+                    color: "var(--gold)",
                     fontFamily: "'DM Mono',monospace",
                   }}
                 >
@@ -347,7 +347,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
                 </b>
               </span>
             ) : (
-              <span style={{ color: "#888" }}>
+              <span style={{ color: "var(--fg2)" }}>
                 <span style={{ opacity: 0.7 }}>◌</span> Waiting for Gmail's
                 confirmation… once you add the address above, a "Finish
                 verifying" button shows up here within a few seconds.
@@ -363,11 +363,11 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           <p style={body}>
             One filter keeps it to ticket emails only — nothing else leaves your
             inbox. In Gmail filters, click{" "}
-            <b style={{ color: "#ccc" }}>Create a new filter</b> and paste this
-            into the <b style={{ color: "#ccc" }}>Has the words</b> box:
+            <b style={{ color: "var(--fg2)" }}>Create a new filter</b> and paste this
+            into the <b style={{ color: "var(--fg2)" }}>Has the words</b> box:
           </p>
           <div style={copyBox}>
-            <code style={{ ...codeBox, color: "#ccc", fontSize: 11.5 }}>
+            <code style={{ ...codeBox, color: "var(--fg2)", fontSize: 11.5 }}>
               {FILTER_QUERY}
             </code>
             <button
@@ -379,9 +379,9 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             </button>
           </div>
           <p style={body}>
-            Then <b style={{ color: "#ccc" }}>Create filter</b> → check{" "}
-            <b style={{ color: "#ccc" }}>Forward it to</b> → pick your Encore
-            address → <b style={{ color: "#ccc" }}>Create filter</b>. That's it.
+            Then <b style={{ color: "var(--fg2)" }}>Create filter</b> → check{" "}
+            <b style={{ color: "var(--fg2)" }}>Forward it to</b> → pick your Encore
+            address → <b style={{ color: "var(--fg2)" }}>Create filter</b>. That's it.
           </p>
           <button
             type="button"
@@ -401,7 +401,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               marginTop: 6,
               fontFamily: "'DM Mono',monospace",
               fontSize: 11,
-              color: "#666",
+              color: "var(--fg3)",
               lineHeight: 1.5,
             }}
           >
@@ -414,15 +414,15 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
 
         <div
           style={{
-            background: verified ? "rgba(92,196,106,0.08)" : "#0c0c0c",
+            background: verified ? "rgba(92,196,106,0.08)" : "var(--panel)",
             border:
-              "1px solid " + (verified ? "rgba(92,196,106,0.4)" : "#1e1e1e"),
+              "1px solid " + (verified ? "rgba(92,196,106,0.4)" : "var(--line)"),
             borderRadius: 10,
             padding: 16,
             textAlign: "center",
-            fontFamily: "'Syne',sans-serif",
+            fontFamily: "'Inter','Syne',sans-serif",
             fontSize: 13,
-            color: verified ? "#9fd9a0" : "#888",
+            color: verified ? "#9fd9a0" : "var(--fg2)",
             margin: "4px 0 20px",
           }}
         >
@@ -474,7 +474,7 @@ function Onboarding({ session, profile, onComplete }) {
   const [color] = useState(() => {
     const palette = [
       "#E85D3A", "#9B6BF5", "#2ECC71", "#3498DB",
-      "#F39C12", "#E91E8C", "#1ABC9C", "#F5A623",
+      "#F39C12", "#E91E8C", "#1ABC9C", "var(--gold)",
     ];
     return p.color || palette[Math.floor(Math.random() * palette.length)];
   });
@@ -552,17 +552,17 @@ function Onboarding({ session, profile, onComplete }) {
     fontSize: 10,
     letterSpacing: 3,
     textTransform: "uppercase",
-    color: "#F5A623",
+    color: "var(--gold)",
     marginBottom: 8,
     display: "block",
   };
   const inp = {
     width: "100%",
-    background: "#0c0c0c",
-    border: "1px solid #1e1e1e",
+    background: "var(--panel)",
+    border: "1px solid var(--line)",
     borderRadius: 6,
-    color: "#f0ede8",
-    fontFamily: "'Syne',sans-serif",
+    color: "var(--fg)",
+    fontFamily: "'Inter','Syne',sans-serif",
     fontSize: 15,
     padding: "12px 13px",
     outline: "none",
@@ -571,17 +571,17 @@ function Onboarding({ session, profile, onComplete }) {
   const help = {
     fontFamily: "'DM Mono',monospace",
     fontSize: 10,
-    color: "#555",
+    color: "var(--fg4)",
     marginTop: 6,
     lineHeight: 1.5,
   };
 
   const handleMsg = {
-    checking: { t: "Checking…", c: "#555" },
+    checking: { t: "Checking…", c: "var(--fg4)" },
     taken: { t: "That handle's taken — try another.", c: "#ff6b6b" },
     ok: { t: "Available", c: "#2ECC71" },
-    short: { t: "A little longer, please.", c: "#555" },
-    "": { t: "", c: "#555" },
+    short: { t: "A little longer, please.", c: "var(--fg4)" },
+    "": { t: "", c: "var(--fg4)" },
   }[handleStatus];
 
   return (
@@ -593,7 +593,7 @@ function Onboarding({ session, profile, onComplete }) {
         alignItems: "center",
         justifyContent: "center",
         padding: "20px",
-        background: "#070707",
+        background: "var(--bg)",
       }}
     >
       <div style={{ textAlign: "center", marginBottom: 26 }}>
@@ -602,7 +602,7 @@ function Onboarding({ session, profile, onComplete }) {
             fontFamily: "'Bebas Neue',sans-serif",
             fontSize: 40,
             letterSpacing: 7,
-            color: "#F5A623",
+            color: "var(--gold)",
           }}
         >
           ENCORE
@@ -622,8 +622,8 @@ function Onboarding({ session, profile, onComplete }) {
 
       <div
         style={{
-          background: "#111",
-          border: "1px solid #1e1e1e",
+          background: "var(--card)",
+          border: "1px solid var(--line)",
           borderRadius: 10,
           padding: "30px 26px",
           maxWidth: 400,
@@ -646,7 +646,7 @@ function Onboarding({ session, profile, onComplete }) {
                 width: n === step ? 22 : 7,
                 height: 7,
                 borderRadius: 4,
-                background: n === step ? "#F5A623" : n < step ? "#7a5a1e" : "#262626",
+                background: n === step ? "var(--gold)" : n < step ? "#7a5a1e" : "#262626",
                 transition: "all .2s",
               }}
             />
@@ -690,8 +690,8 @@ function Onboarding({ session, profile, onComplete }) {
                     left: 13,
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "#555",
-                    fontFamily: "'Syne',sans-serif",
+                    color: "var(--fg4)",
+                    fontFamily: "'Inter','Syne',sans-serif",
                     fontSize: 15,
                   }}
                 >
@@ -723,11 +723,11 @@ function Onboarding({ session, profile, onComplete }) {
                 width: "100%",
                 marginTop: 28,
                 padding: "13px",
-                background: step1Valid ? "#F5A623" : "#2a2a2a",
-                color: step1Valid ? "#000" : "#555",
+                background: step1Valid ? "var(--gold)" : "var(--line-2)",
+                color: step1Valid ? "#000" : "var(--fg4)",
                 border: "none",
                 borderRadius: 6,
-                fontFamily: "'Syne',sans-serif",
+                fontFamily: "'Inter','Syne',sans-serif",
                 fontSize: 14,
                 fontWeight: 700,
                 cursor: step1Valid ? "pointer" : "not-allowed",
@@ -841,10 +841,10 @@ function Onboarding({ session, profile, onComplete }) {
               style={{
                 marginTop: 24,
                 padding: "14px 15px",
-                background: discoverable ? "rgba(245,166,35,.06)" : "#0c0c0c",
+                background: discoverable ? "rgba(245,166,35,.06)" : "var(--panel)",
                 border:
                   "1px solid " +
-                  (discoverable ? "rgba(245,166,35,.35)" : "#1e1e1e"),
+                  (discoverable ? "rgba(245,166,35,.35)" : "var(--line)"),
                 borderRadius: 8,
                 cursor: "pointer",
                 transition: "all .15s",
@@ -860,7 +860,7 @@ function Onboarding({ session, profile, onComplete }) {
               >
                 <div
                   style={{
-                    fontFamily: "'Syne',sans-serif",
+                    fontFamily: "'Inter','Syne',sans-serif",
                     fontSize: 14,
                     fontWeight: 700,
                   }}
@@ -875,10 +875,10 @@ function Onboarding({ session, profile, onComplete }) {
                     letterSpacing: 1,
                     padding: "3px 10px",
                     borderRadius: 10,
-                    color: discoverable ? "#F5A623" : "#555",
+                    color: discoverable ? "var(--gold)" : "var(--fg4)",
                     border:
                       "1px solid " +
-                      (discoverable ? "rgba(245,166,35,.4)" : "#2a2a2a"),
+                      (discoverable ? "rgba(245,166,35,.4)" : "var(--line-2)"),
                   }}
                 >
                   {discoverable ? "ON" : "OFF"}
@@ -921,10 +921,10 @@ const btnBack = {
   flex: "0 0 auto",
   padding: "13px 18px",
   background: "transparent",
-  color: "#777",
+  color: "var(--fg2)",
   border: "1px solid #262626",
   borderRadius: 6,
-  fontFamily: "'Syne',sans-serif",
+  fontFamily: "'Inter','Syne',sans-serif",
   fontSize: 13,
   fontWeight: 600,
   cursor: "pointer",
@@ -932,11 +932,11 @@ const btnBack = {
 const btnNext = {
   flex: 1,
   padding: "13px",
-  background: "#F5A623",
+  background: "var(--gold)",
   color: "#000",
   border: "none",
   borderRadius: 6,
-  fontFamily: "'Syne',sans-serif",
+  fontFamily: "'Inter','Syne',sans-serif",
   fontSize: 14,
   fontWeight: 700,
   cursor: "pointer",

@@ -130,14 +130,14 @@ function TourPage({
     fontSize: 10,
     fontWeight: 700,
     letterSpacing: 2,
-    color: "#666",
+    color: "var(--fg3)",
     textTransform: "uppercase",
     margin: "22px 0 8px",
     fontFamily: "'DM Mono',monospace",
   };
   const card = {
-    background: "#111",
-    border: "1px solid #1e1e1e",
+    background: "var(--card)",
+    border: "1px solid var(--line)",
     borderRadius: 10,
     padding: 14,
   };
@@ -167,7 +167,7 @@ function TourPage({
               style={{
                 fontFamily: "'Bebas Neue',sans-serif",
                 fontSize: 30,
-                color: "#F5A623",
+                color: "var(--gold)",
                 letterSpacing: 1,
               }}
             >
@@ -175,8 +175,8 @@ function TourPage({
             </div>
             <div
               style={{
-                fontFamily: "'Syne',sans-serif",
-                color: "#aaa",
+                fontFamily: "'Inter','Syne',sans-serif",
+                color: "var(--fg2)",
                 fontSize: 14,
                 marginTop: 8,
                 lineHeight: 1.5,
@@ -214,35 +214,35 @@ function TourPage({
                 gap: 18,
                 flexWrap: "wrap",
                 marginTop: 12,
-                fontFamily: "'Syne',sans-serif",
+                fontFamily: "'Inter','Syne',sans-serif",
                 fontSize: 13,
-                color: "#ccc",
+                color: "var(--fg2)",
               }}
             >
               <span>
-                <b style={{ color: "#F5A623" }}>{showsThisYear}</b> in {thisYear}
+                <b style={{ color: "var(--gold)" }}>{showsThisYear}</b> in {thisYear}
               </span>
               {festivals > 0 && (
                 <span>
-                  <b style={{ color: "#F5A623" }}>{festivals}</b> festival
+                  <b style={{ color: "var(--gold)" }}>{festivals}</b> festival
                   {festivals > 1 ? "s" : ""}
                 </span>
               )}
               {yearsActive > 0 && (
                 <span>
-                  <b style={{ color: "#F5A623" }}>{yearsActive}</b> year
+                  <b style={{ color: "var(--gold)" }}>{yearsActive}</b> year
                   {yearsActive > 1 ? "s" : ""} going
                 </span>
               )}
               {topArtist && (
                 <span>
-                  Most-seen: <b style={{ color: "#F5A623" }}>{topArtist[0]}</b>
+                  Most-seen: <b style={{ color: "var(--gold)" }}>{topArtist[0]}</b>
                   {topArtist[1] > 1 ? " ×" + topArtist[1] : ""}
                 </span>
               )}
               {topCity && topCity[1] > 1 && (
                 <span>
-                  Home base: <b style={{ color: "#F5A623" }}>{topCity[0]}</b>
+                  Home base: <b style={{ color: "var(--gold)" }}>{topCity[0]}</b>
                 </span>
               )}
             </div>
@@ -254,7 +254,7 @@ function TourPage({
                   style={{
                     fontFamily: "'Bebas Neue',sans-serif",
                     fontSize: 24,
-                    color: "#F0EDE8",
+                    color: "var(--fg)",
                     letterSpacing: 0.5,
                     cursor: "pointer",
                   }}
@@ -266,7 +266,7 @@ function TourPage({
                   style={{
                     fontFamily: "'DM Mono',monospace",
                     fontSize: 12,
-                    color: "#F5A623",
+                    color: "var(--gold)",
                   }}
                 >
                   {daysUntil(nextShow.date) === 0
@@ -289,7 +289,7 @@ function TourPage({
                         ...chip,
                         background: "rgba(245,166,35,.12)",
                         border: "1px solid rgba(245,166,35,.3)",
-                        color: "#F5A623",
+                        color: "var(--gold)",
                       }}
                       onClick={() => onGenreClick && onGenreClick(g)}
                       title={"Explore " + g}
@@ -306,7 +306,7 @@ function TourPage({
               <>
                 <div style={sub}>
                   Genre passport ·{" "}
-                  <span style={{ color: "#F5A623" }}>
+                  <span style={{ color: "var(--gold)" }}>
                     {seenGenres.size} heard live
                   </span>
                 </div>
@@ -327,7 +327,7 @@ function TourPage({
                         style={{
                           fontFamily: "'DM Mono',monospace",
                           fontSize: 11,
-                          color: "#ccc",
+                          color: "var(--fg2)",
                           width: 120,
                           flexShrink: 0,
                         }}
@@ -338,7 +338,7 @@ function TourPage({
                         style={{
                           flex: 1,
                           height: 6,
-                          background: "#1e1e1e",
+                          background: "var(--line)",
                           borderRadius: 3,
                           overflow: "hidden",
                         }}
@@ -348,7 +348,7 @@ function TourPage({
                             display: "block",
                             height: "100%",
                             width: Math.round((hit / maxFam) * 100) + "%",
-                            background: "#F5A623",
+                            background: "var(--gold)",
                           }}
                         />
                       </span>
@@ -356,7 +356,7 @@ function TourPage({
                         style={{
                           fontFamily: "'DM Mono',monospace",
                           fontSize: 11,
-                          color: "#777",
+                          color: "var(--fg2)",
                           width: 22,
                           textAlign: "right",
                         }}
@@ -374,7 +374,7 @@ function TourPage({
               <>
                 <div style={sub}>
                   🎯 Bucket list ·{" "}
-                  <span style={{ color: "#F5A623" }}>
+                  <span style={{ color: "var(--gold)" }}>
                     {bucketSeen} of {bucket.length} seen
                   </span>
                 </div>
@@ -389,9 +389,9 @@ function TourPage({
                         gap: 8,
                         padding: "5px 0",
                         cursor: "pointer",
-                        fontFamily: "'Syne',sans-serif",
+                        fontFamily: "'Inter','Syne',sans-serif",
                         fontSize: 14,
-                        color: b.seen ? "#F0EDE8" : "#999",
+                        color: b.seen ? "var(--fg)" : "#999",
                       }}
                     >
                       <span style={{ color: b.seen ? "#5cc46a" : "#444" }}>
@@ -421,7 +421,7 @@ function TourPage({
                           style={{
                             fontFamily: "'DM Mono',monospace",
                             fontSize: 10,
-                            color: "#F5A623",
+                            color: "var(--gold)",
                           }}
                         >
                           🎟 UPCOMING
@@ -453,7 +453,7 @@ function TourPage({
                       <span
                         className="my-avatar"
                         style={{
-                          background: u.color || "#F5A623",
+                          background: u.color || "var(--gold)",
                           width: 30,
                           height: 30,
                           fontSize: 11,
@@ -465,9 +465,9 @@ function TourPage({
                       <div style={{ minWidth: 0 }}>
                         <div
                           style={{
-                            fontFamily: "'Syne',sans-serif",
+                            fontFamily: "'Inter','Syne',sans-serif",
                             fontSize: 14,
-                            color: "#F0EDE8",
+                            color: "var(--fg)",
                           }}
                         >
                           {u.name}
@@ -476,7 +476,7 @@ function TourPage({
                           style={{
                             fontFamily: "'DM Mono',monospace",
                             fontSize: 11,
-                            color: "#888",
+                            color: "var(--fg2)",
                           }}
                         >
                           {line}
@@ -495,7 +495,7 @@ function TourPage({
                 marginTop: 22,
                 width: "100%",
                 padding: "12px",
-                background: "#F5A623",
+                background: "var(--gold)",
                 color: "#000",
                 border: "none",
                 borderRadius: 8,
@@ -516,7 +516,7 @@ function TourPage({
                   marginTop: 10,
                   fontFamily: "'DM Mono',monospace",
                   fontSize: 10,
-                  color: "#555",
+                  color: "var(--fg4)",
                 }}
               >
                 On tour since {fmt(firstShow.date).full}
