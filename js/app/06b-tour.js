@@ -126,31 +126,8 @@ function TourPage({
     }
   };
 
-  const sub = {
-    fontSize: 10,
-    fontWeight: 700,
-    letterSpacing: 2,
-    color: "var(--fg3)",
-    textTransform: "uppercase",
-    margin: "22px 0 8px",
-    fontFamily: "'DM Mono',monospace",
-  };
-  const card = {
-    background: "var(--card)",
-    border: "1px solid var(--line)",
-    borderRadius: 10,
-    padding: 14,
-  };
-  const chip = {
-    display: "inline-block",
-    padding: "5px 10px",
-    margin: "0 6px 6px 0",
-    borderRadius: 999,
-    fontSize: 12,
-    fontFamily: "'DM Mono',monospace",
-    cursor: "pointer",
-  };
-
+  // Styling lives in css/app.css (.panel, .eyebrow, .tour-*). Only genuinely
+  // dynamic values (bar width, avatar color) stay inline below.
   return (
     <div className="prof-page">
       <div className="prof-hdr">
@@ -162,10 +139,10 @@ function TourPage({
 
       <div style={{ padding: "4px 14px 40px" }}>
         {mine.length === 0 ? (
-          <div style={{ ...card, textAlign: "center", padding: 28 }}>
+          <div className="panel" style={{ textAlign: "center", padding: 28 }}>
             <div
               style={{
-                fontFamily: "'Bebas Neue',sans-serif",
+                fontFamily: "var(--font-display)",
                 fontSize: 30,
                 color: "var(--gold)",
                 letterSpacing: 1,
@@ -175,9 +152,9 @@ function TourPage({
             </div>
             <div
               style={{
-                fontFamily: "'Inter','Syne',sans-serif",
+                fontFamily: "var(--font-body)",
                 color: "var(--fg2)",
-                fontSize: 14,
+                fontSize: "var(--fs-md)",
                 marginTop: 8,
                 lineHeight: 1.5,
               }}
@@ -214,8 +191,8 @@ function TourPage({
                 gap: 18,
                 flexWrap: "wrap",
                 marginTop: 12,
-                fontFamily: "'Inter','Syne',sans-serif",
-                fontSize: 13,
+                fontFamily: "var(--font-body)",
+                fontSize: "var(--fs-sm)",
                 color: "var(--fg2)",
               }}
             >
@@ -248,12 +225,12 @@ function TourPage({
             </div>
 
             {nextShow && (
-              <div style={{ ...card, marginTop: 14 }}>
-                <div style={{ ...sub, margin: 0 }}>Next up</div>
+              <div className="panel" style={{ marginTop: 14 }}>
+                <div className="eyebrow" style={{ margin: 0 }}>Next up</div>
                 <div
                   style={{
-                    fontFamily: "'Bebas Neue',sans-serif",
-                    fontSize: 24,
+                    fontFamily: "var(--font-display)",
+                    fontSize: "var(--fs-3xl)",
                     color: "var(--fg)",
                     letterSpacing: 0.5,
                     cursor: "pointer",
@@ -264,8 +241,8 @@ function TourPage({
                 </div>
                 <div
                   style={{
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 12,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-sm)",
                     color: "var(--gold)",
                   }}
                 >
@@ -280,17 +257,12 @@ function TourPage({
             {/* TOP GENRES */}
             {topGenres.length > 0 && (
               <>
-                <div style={sub}>Top genres</div>
+                <div className="eyebrow">Top genres</div>
                 <div>
                   {topGenres.map(([g, n]) => (
                     <span
                       key={g}
-                      style={{
-                        ...chip,
-                        background: "rgba(245,166,35,.12)",
-                        border: "1px solid rgba(245,166,35,.3)",
-                        color: "var(--gold)",
-                      }}
+                      className="tour-chip"
                       onClick={() => onGenreClick && onGenreClick(g)}
                       title={"Explore " + g}
                     >
@@ -304,13 +276,13 @@ function TourPage({
             {/* GENRE PASSPORT */}
             {passport.length > 0 && (
               <>
-                <div style={sub}>
+                <div className="eyebrow">
                   Genre passport ·{" "}
-                  <span style={{ color: "var(--gold)" }}>
+                  <span className="gold-hi">
                     {seenGenres.size} heard live
                   </span>
                 </div>
-                <div style={card}>
+                <div className="panel">
                   {passport.slice(0, 8).map(({ fam, hit }) => (
                     <div
                       key={fam}
@@ -325,8 +297,8 @@ function TourPage({
                     >
                       <span
                         style={{
-                          fontFamily: "'DM Mono',monospace",
-                          fontSize: 11,
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "var(--fs-xs)",
                           color: "var(--fg2)",
                           width: 120,
                           flexShrink: 0,
@@ -354,8 +326,8 @@ function TourPage({
                       </span>
                       <span
                         style={{
-                          fontFamily: "'DM Mono',monospace",
-                          fontSize: 11,
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "var(--fs-xs)",
                           color: "var(--fg2)",
                           width: 22,
                           textAlign: "right",
@@ -372,13 +344,13 @@ function TourPage({
             {/* BUCKET LIST */}
             {bucket.length > 0 && (
               <>
-                <div style={sub}>
+                <div className="eyebrow">
                   🎯 Bucket list ·{" "}
-                  <span style={{ color: "var(--gold)" }}>
+                  <span className="gold-hi">
                     {bucketSeen} of {bucket.length} seen
                   </span>
                 </div>
-                <div style={card}>
+                <div className="panel">
                   {bucket.map((b) => (
                     <div
                       key={b.name}
@@ -389,8 +361,8 @@ function TourPage({
                         gap: 8,
                         padding: "5px 0",
                         cursor: "pointer",
-                        fontFamily: "'Inter','Syne',sans-serif",
-                        fontSize: 14,
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--fs-md)",
                         color: b.seen ? "var(--fg)" : "#999",
                       }}
                     >
@@ -408,8 +380,8 @@ function TourPage({
                       {b.seen && (
                         <span
                           style={{
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 10,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--fs-2xs)",
                             color: "#5cc46a",
                           }}
                         >
@@ -419,8 +391,8 @@ function TourPage({
                       {b.inbound && (
                         <span
                           style={{
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 10,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--fs-2xs)",
                             color: "var(--gold)",
                           }}
                         >
@@ -436,8 +408,8 @@ function TourPage({
             {/* FRIEND OVERLAP */}
             {friends.length > 0 && (
               <>
-                <div style={sub}>Paths crossed</div>
-                <div style={card}>
+                <div className="eyebrow">Paths crossed</div>
+                <div className="panel">
                   {friends.map(({ u, line }) => (
                     <div
                       key={u.id}
@@ -456,7 +428,7 @@ function TourPage({
                           background: u.color || "var(--gold)",
                           width: 30,
                           height: 30,
-                          fontSize: 11,
+                          fontSize: "var(--fs-xs)",
                           flexShrink: 0,
                         }}
                       >
@@ -465,8 +437,8 @@ function TourPage({
                       <div style={{ minWidth: 0 }}>
                         <div
                           style={{
-                            fontFamily: "'Inter','Syne',sans-serif",
-                            fontSize: 14,
+                            fontFamily: "var(--font-body)",
+                            fontSize: "var(--fs-md)",
                             color: "var(--fg)",
                           }}
                         >
@@ -474,8 +446,8 @@ function TourPage({
                         </div>
                         <div
                           style={{
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 11,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--fs-xs)",
                             color: "var(--fg2)",
                           }}
                         >
@@ -489,36 +461,11 @@ function TourPage({
             )}
 
             {/* SHARE */}
-            <button
-              onClick={onShare}
-              style={{
-                marginTop: 22,
-                width: "100%",
-                padding: "12px",
-                background: "var(--gold)",
-                color: "#000",
-                border: "none",
-                borderRadius: 8,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                cursor: "pointer",
-              }}
-            >
+            <button className="tour-share" onClick={onShare}>
               {copied ? "Copied to clipboard ✓" : "Share your tour"}
             </button>
             {firstShow && (
-              <div
-                style={{
-                  textAlign: "center",
-                  marginTop: 10,
-                  fontFamily: "'DM Mono',monospace",
-                  fontSize: 10,
-                  color: "var(--fg4)",
-                }}
-              >
+              <div className="tour-note">
                 On tour since {fmt(firstShow.date).full}
               </div>
             )}

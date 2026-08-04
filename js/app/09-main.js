@@ -406,7 +406,7 @@ function App() {
       >
         <div
           style={{
-            fontFamily: "'Bebas Neue',sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 32,
             letterSpacing: 6,
             color: "var(--gold)",
@@ -493,8 +493,8 @@ function App() {
     marginBottom: 16,
   };
   const bannerTxt = {
-    fontFamily: "'Inter','Syne',sans-serif",
-    fontSize: 13,
+    fontFamily: "var(--font-body)",
+    fontSize: "var(--fs-sm)",
     color: "var(--fg2)",
     flex: 1,
     minWidth: 200,
@@ -1195,9 +1195,9 @@ function App() {
                           borderRadius: 8,
                           background: "var(--gold)",
                           color: "#000",
-                          fontSize: 9,
+                          fontSize: "var(--fs-2xs)",
                           fontWeight: 700,
-                          fontFamily: "'DM Mono',monospace",
+                          fontFamily: "var(--font-mono)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -1243,8 +1243,8 @@ function App() {
                       border: "1px solid var(--line)",
                       color: "var(--fg4)",
                       padding: "6px 10px",
-                      fontFamily: "'Inter','Syne',sans-serif",
-                      fontSize: 10,
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--fs-2xs)",
                       fontWeight: 600,
                       letterSpacing: 1,
                       textTransform: "uppercase",
@@ -1402,7 +1402,7 @@ function App() {
                       border: "none",
                       cursor: "pointer",
                       color: "#444",
-                      fontSize: 11,
+                      fontSize: "var(--fs-xs)",
                       padding: "3px 2px",
                     }}
                     onClick={() => viewProfile(f.id)}
@@ -1522,8 +1522,8 @@ function App() {
                   >
                     <span
                       style={{
-                        fontFamily: "'Inter','Syne',sans-serif",
-                        fontSize: 13,
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--fs-sm)",
                         color: "var(--fg)",
                         flex: 1,
                         minWidth: 220,
@@ -1546,8 +1546,8 @@ function App() {
                         color: "#000",
                         padding: "7px 13px",
                         borderRadius: 6,
-                        fontFamily: "'DM Mono',monospace",
-                        fontSize: 11,
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "var(--fs-xs)",
                         fontWeight: 700,
                         cursor: "pointer",
                       }}
@@ -1562,8 +1562,8 @@ function App() {
                         color: "var(--fg3)",
                         padding: "7px 11px",
                         borderRadius: 6,
-                        fontFamily: "'DM Mono',monospace",
-                        fontSize: 11,
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "var(--fs-xs)",
                         cursor: "pointer",
                       }}
                     >
@@ -1638,8 +1638,8 @@ function App() {
                   >
                     <span
                       style={{
-                        fontFamily: "'Inter','Syne',sans-serif",
-                        fontSize: 13,
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--fs-sm)",
                         color: "var(--fg2)",
                       }}
                     >
@@ -1744,8 +1744,8 @@ function App() {
                           alignItems: "center",
                           gap: 8,
                           color: "var(--fg3)",
-                          fontFamily: "'DM Mono',monospace",
-                          fontSize: 11,
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "var(--fs-xs)",
                           letterSpacing: 2,
                           textTransform: "uppercase",
                           margin: "28px 0 14px",
@@ -1850,8 +1850,8 @@ function App() {
             <div style={{ padding: "10px 18px 22px" }}>
               <div
                 style={{
-                  fontFamily: "'Bebas Neue',sans-serif",
-                  fontSize: 24,
+                  fontFamily: "var(--font-display)",
+                  fontSize: "var(--fs-3xl)",
                   color: "#fff",
                   letterSpacing: 1,
                   marginBottom: 6,
@@ -1861,8 +1861,8 @@ function App() {
               </div>
               <div
                 style={{
-                  fontFamily: "'Inter','Syne',sans-serif",
-                  fontSize: 12.5,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 13.5,
                   color: "var(--fg2)",
                   marginBottom: 12,
                   lineHeight: 1.5,
@@ -1880,7 +1880,7 @@ function App() {
                 style={{
                   width: "100%",
                   resize: "vertical",
-                  fontFamily: "'Inter','Syne',sans-serif",
+                  fontFamily: "var(--font-body)",
                 }}
               />
               <div

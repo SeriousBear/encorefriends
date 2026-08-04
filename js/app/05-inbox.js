@@ -204,8 +204,8 @@ function InboxSheet({
   );
 
   const mono = {
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 10,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-2xs)",
     color: "var(--fg3)",
   };
   const tabStyle = (on) => ({
@@ -215,8 +215,8 @@ function InboxSheet({
     border: "none",
     borderBottom: "2px solid " + (on ? "var(--gold)" : "transparent"),
     color: on ? "var(--gold)" : "var(--fg3)",
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 11,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-xs)",
     letterSpacing: 2,
     textTransform: "uppercase",
     cursor: "pointer",
@@ -227,8 +227,8 @@ function InboxSheet({
     background: on ? "rgba(245,166,35,.1)" : "transparent",
     border: "1px solid " + (on ? "rgba(245,166,35,.4)" : "#222"),
     color: on ? "var(--gold)" : "var(--fg3)",
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 10,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-2xs)",
     cursor: "pointer",
   });
 
@@ -251,8 +251,8 @@ function InboxSheet({
           >
             <div
               style={{
-                fontFamily: "'Bebas Neue',sans-serif",
-                fontSize: 24,
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--fs-3xl)",
                 color: "#fff",
                 letterSpacing: 1,
               }}
@@ -265,8 +265,8 @@ function InboxSheet({
                 background: "none",
                 border: "1px solid var(--line)",
                 color: "var(--fg2)",
-                fontSize: 11,
-                fontFamily: "'DM Mono',monospace",
+                fontSize: "var(--fs-xs)",
+                fontFamily: "var(--font-mono)",
                 padding: "5px 10px",
                 borderRadius: 5,
                 cursor: "pointer",
@@ -312,8 +312,8 @@ function InboxSheet({
                     border: "1px dashed var(--line-2)",
                     borderRadius: 6,
                     color: "var(--fg2)",
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 11,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-xs)",
                     letterSpacing: 1,
                     cursor: "pointer",
                   }}
@@ -367,8 +367,8 @@ function InboxSheet({
                       >
                         <span
                           style={{
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 10,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--fs-2xs)",
                             letterSpacing: 2,
                             color: "var(--gold)",
                             textTransform: "uppercase",
@@ -383,7 +383,7 @@ function InboxSheet({
                             border: "none",
                             color: "var(--fg3)",
                             cursor: "pointer",
-                            fontSize: 12,
+                            fontSize: "var(--fs-sm)",
                           }}
                         >
                           ✕
@@ -391,8 +391,8 @@ function InboxSheet({
                       </div>
                       <div
                         style={{
-                          fontFamily: "'DM Mono',monospace",
-                          fontSize: 10,
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "var(--fs-2xs)",
                           color: "var(--fg3)",
                           marginBottom: 8,
                           lineHeight: 1.5,
@@ -404,8 +404,8 @@ function InboxSheet({
                       {connected.length === 0 ? (
                         <div
                           style={{
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 10,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--fs-2xs)",
                             color: "var(--fg3)",
                             padding: "8px 0",
                           }}
@@ -441,7 +441,7 @@ function InboxSheet({
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      fontSize: 9,
+                                      fontSize: "var(--fs-2xs)",
                                       fontWeight: 700,
                                       color: "#000",
                                       flexShrink: 0,
@@ -452,8 +452,8 @@ function InboxSheet({
                                   <span
                                     style={{
                                       flex: 1,
-                                      fontFamily: "'Inter','Syne',sans-serif",
-                                      fontSize: 13,
+                                      fontFamily: "var(--font-body)",
+                                      fontSize: "var(--fs-sm)",
                                     }}
                                   >
                                     {u2.name}
@@ -470,7 +470,7 @@ function InboxSheet({
                                         ? "var(--gold)"
                                         : "transparent",
                                       color: "#000",
-                                      fontSize: 11,
+                                      fontSize: "var(--fs-xs)",
                                       fontWeight: 700,
                                       display: "flex",
                                       alignItems: "center",
@@ -496,8 +496,8 @@ function InboxSheet({
                                 border: "1px solid var(--line)",
                                 borderRadius: 6,
                                 color: "var(--fg)",
-                                fontFamily: "'Inter','Syne',sans-serif",
-                                fontSize: 13,
+                                fontFamily: "var(--font-body)",
+                                fontSize: "var(--fs-sm)",
                                 padding: "9px 11px",
                                 outline: "none",
                                 boxSizing: "border-box",
@@ -516,8 +516,8 @@ function InboxSheet({
                               border: "none",
                               borderRadius: 6,
                               color: "#000",
-                              fontFamily: "'DM Mono',monospace",
-                              fontSize: 12,
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "var(--fs-sm)",
                               fontWeight: 700,
                               letterSpacing: 1,
                               cursor: n === 0 ? "default" : "pointer",
@@ -544,8 +544,8 @@ function InboxSheet({
                 <div style={{ margin: "2px 0 10px" }}>
                   <div
                     style={{
-                      fontFamily: "'DM Mono',monospace",
-                      fontSize: 9,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "var(--fs-2xs)",
                       letterSpacing: 2,
                       color: "var(--gold)",
                       textTransform: "uppercase",
@@ -583,7 +583,7 @@ function InboxSheet({
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            fontSize: 14,
+                            fontSize: "var(--fs-md)",
                             flexShrink: 0,
                           }}
                         >
@@ -592,8 +592,8 @@ function InboxSheet({
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div
                             style={{
-                              fontFamily: "'Inter','Syne',sans-serif",
-                              fontSize: 14,
+                              fontFamily: "var(--font-body)",
+                              fontSize: "var(--fs-md)",
                               fontWeight: 600,
                               whiteSpace: "nowrap",
                               overflow: "hidden",
@@ -612,8 +612,8 @@ function InboxSheet({
                             background: "var(--gold)",
                             border: "none",
                             color: "#000",
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 10,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--fs-2xs)",
                             fontWeight: 700,
                             padding: "5px 10px",
                             borderRadius: 5,
@@ -629,8 +629,8 @@ function InboxSheet({
                             background: "none",
                             border: "1px solid var(--line-2)",
                             color: "var(--fg2)",
-                            fontFamily: "'DM Mono',monospace",
-                            fontSize: 10,
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--fs-2xs)",
                             padding: "5px 9px",
                             borderRadius: 5,
                             cursor: "pointer",
@@ -648,8 +648,8 @@ function InboxSheet({
                 <div style={{ margin: "2px 0 10px" }}>
                   <div
                     style={{
-                      fontFamily: "'DM Mono',monospace",
-                      fontSize: 9,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "var(--fs-2xs)",
                       letterSpacing: 2,
                       color: "var(--fg4)",
                       textTransform: "uppercase",
@@ -681,7 +681,7 @@ function InboxSheet({
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: 14,
+                          fontSize: "var(--fs-md)",
                           flexShrink: 0,
                         }}
                       >
@@ -690,8 +690,8 @@ function InboxSheet({
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div
                           style={{
-                            fontFamily: "'Inter','Syne',sans-serif",
-                            fontSize: 14,
+                            fontFamily: "var(--font-body)",
+                            fontSize: "var(--fs-md)",
                             fontWeight: 600,
                             whiteSpace: "nowrap",
                             overflow: "hidden",
@@ -723,8 +723,8 @@ function InboxSheet({
                 <div
                   style={{
                     color: "var(--fg3)",
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 13,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-sm)",
                     padding: "24px 0",
                     textAlign: "center",
                   }}
@@ -761,7 +761,7 @@ function InboxSheet({
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: 11,
+                          fontSize: "var(--fs-xs)",
                           fontWeight: 700,
                           color: "#000",
                           flexShrink: 0,
@@ -772,8 +772,8 @@ function InboxSheet({
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div
                           style={{
-                            fontFamily: "'Inter','Syne',sans-serif",
-                            fontSize: 14,
+                            fontFamily: "var(--font-body)",
+                            fontSize: "var(--fs-md)",
                             fontWeight: t.unread ? 700 : 500,
                           }}
                         >
@@ -781,8 +781,8 @@ function InboxSheet({
                           {isRequest(tid) && (
                             <span
                               style={{
-                                fontFamily: "'DM Mono',monospace",
-                                fontSize: 9,
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "var(--fs-2xs)",
                                 color: "var(--gold)",
                                 marginLeft: 6,
                                 letterSpacing: 1,
@@ -846,8 +846,8 @@ function InboxSheet({
                 <span
                   onClick={() => other && onViewProfile(other.id)}
                   style={{
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 15,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-md)",
                     fontWeight: 700,
                     cursor: "pointer",
                   }}
@@ -863,8 +863,8 @@ function InboxSheet({
                     background: "rgba(245,166,35,.05)",
                     border: "1px solid rgba(245,166,35,.2)",
                     borderRadius: 6,
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 10,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-2xs)",
                     color: "var(--fg2)",
                     display: "flex",
                     alignItems: "center",
@@ -882,8 +882,8 @@ function InboxSheet({
                       background: "none",
                       border: "1px solid #442222",
                       color: "#ff6b6b",
-                      fontFamily: "'DM Mono',monospace",
-                      fontSize: 10,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "var(--fs-2xs)",
                       padding: "4px 9px",
                       borderRadius: 5,
                       cursor: "pointer",
@@ -924,8 +924,8 @@ function InboxSheet({
                           border:
                             "1px solid " +
                             (mine ? "rgba(245,166,35,.3)" : "#222"),
-                          fontFamily: "'Inter','Syne',sans-serif",
-                          fontSize: 13,
+                          fontFamily: "var(--font-body)",
+                          fontSize: "var(--fs-sm)",
                           color: "var(--fg)",
                         }}
                       >
@@ -941,8 +941,8 @@ function InboxSheet({
                           >
                             <div
                               style={{
-                                fontFamily: "'Bebas Neue',sans-serif",
-                                fontSize: 16,
+                                fontFamily: "var(--font-display)",
+                                fontSize: "var(--fs-base)",
                                 letterSpacing: 1,
                               }}
                             >
@@ -959,7 +959,7 @@ function InboxSheet({
                         <div
                           style={{
                             ...mono,
-                            fontSize: 8,
+                            fontSize: "var(--fs-2xs)",
                             marginTop: 4,
                             textAlign: mine ? "right" : "left",
                           }}
@@ -987,8 +987,8 @@ function InboxSheet({
                     border: "1px solid var(--line)",
                     borderRadius: 6,
                     color: "var(--fg)",
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 13,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-sm)",
                     padding: "10px 12px",
                     outline: "none",
                   }}
@@ -1004,8 +1004,8 @@ function InboxSheet({
                     border: "none",
                     borderRadius: 6,
                     color: "#000",
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 12,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-sm)",
                     fontWeight: 700,
                     cursor: draft.trim() ? "pointer" : "default",
                   }}
@@ -1057,8 +1057,8 @@ function InboxSheet({
                             border: "1px solid var(--line)",
                             borderRadius: 5,
                             color: "var(--fg)",
-                            fontFamily: "'Inter','Syne',sans-serif",
-                            fontSize: 14,
+                            fontFamily: "var(--font-body)",
+                            fontSize: "var(--fs-md)",
                             padding: "6px 9px",
                             outline: "none",
                           }}
@@ -1071,8 +1071,8 @@ function InboxSheet({
                           }}
                           title="Tap to rename"
                           style={{
-                            fontFamily: "'Inter','Syne',sans-serif",
-                            fontSize: 15,
+                            fontFamily: "var(--font-body)",
+                            fontSize: "var(--fs-md)",
                             fontWeight: 700,
                             whiteSpace: "nowrap",
                             overflow: "hidden",
@@ -1081,7 +1081,7 @@ function InboxSheet({
                           }}
                         >
                           👥 {t ? crewName(t) : "Group"}{" "}
-                          <span style={{ fontSize: 11, color: "var(--fg4)" }}>✎</span>
+                          <span style={{ fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>✎</span>
                         </div>
                       )}
                       <div style={mono}>
@@ -1099,8 +1099,8 @@ function InboxSheet({
                         background: "none",
                         border: "1px solid var(--line-2)",
                         color: "var(--fg3)",
-                        fontFamily: "'DM Mono',monospace",
-                        fontSize: 10,
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "var(--fs-2xs)",
                         padding: "4px 9px",
                         borderRadius: 5,
                         cursor: "pointer",
@@ -1124,8 +1124,8 @@ function InboxSheet({
                   <div
                     style={{
                       color: "var(--fg3)",
-                      fontFamily: "'Inter','Syne',sans-serif",
-                      fontSize: 13,
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--fs-sm)",
                       padding: "18px 0",
                       textAlign: "center",
                     }}
@@ -1156,16 +1156,16 @@ function InboxSheet({
                           border:
                             "1px solid " +
                             (mine ? "rgba(245,166,35,.3)" : "#222"),
-                          fontFamily: "'Inter','Syne',sans-serif",
-                          fontSize: 13,
+                          fontFamily: "var(--font-body)",
+                          fontSize: "var(--fs-sm)",
                           color: "var(--fg)",
                         }}
                       >
                         {!mine && (
                           <div
                             style={{
-                              fontFamily: "'DM Mono',monospace",
-                              fontSize: 9,
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "var(--fs-2xs)",
                               color: sender ? sender.color : "var(--fg2)",
                               marginBottom: 3,
                             }}
@@ -1177,7 +1177,7 @@ function InboxSheet({
                         <div
                           style={{
                             ...mono,
-                            fontSize: 8,
+                            fontSize: "var(--fs-2xs)",
                             marginTop: 4,
                             textAlign: mine ? "right" : "left",
                           }}
@@ -1203,8 +1203,8 @@ function InboxSheet({
                     border: "1px solid var(--line)",
                     borderRadius: 6,
                     color: "var(--fg)",
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 13,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-sm)",
                     padding: "10px 12px",
                     outline: "none",
                   }}
@@ -1220,8 +1220,8 @@ function InboxSheet({
                     border: "none",
                     borderRadius: 6,
                     color: "#000",
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 12,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-sm)",
                     fontWeight: 700,
                     cursor: draft.trim() ? "pointer" : "default",
                   }}
@@ -1254,8 +1254,8 @@ function InboxSheet({
                 <div
                   style={{
                     color: "var(--fg3)",
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 13,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-sm)",
                     padding: "24px 0",
                     textAlign: "center",
                   }}
@@ -1275,12 +1275,12 @@ function InboxSheet({
                         borderBottom: "1px solid var(--card-2)",
                       }}
                     >
-                      <div style={{ fontSize: 17 }}>{m.icon}</div>
+                      <div style={{ fontSize: "var(--fs-base)" }}>{m.icon}</div>
                       <div style={{ flex: 1 }}>
                         <div
                           style={{
-                            fontFamily: "'Inter','Syne',sans-serif",
-                            fontSize: 13,
+                            fontFamily: "var(--font-body)",
+                            fontSize: "var(--fs-sm)",
                             color: "#ddd",
                             lineHeight: 1.5,
                           }}
@@ -1298,8 +1298,8 @@ function InboxSheet({
                                 background: "none",
                                 border: "1px solid var(--line-2)",
                                 color: "var(--fg2)",
-                                fontSize: 10,
-                                fontFamily: "'DM Mono',monospace",
+                                fontSize: "var(--fs-2xs)",
+                                fontFamily: "var(--font-mono)",
                                 padding: "4px 9px",
                                 borderRadius: 5,
                                 cursor: "pointer",

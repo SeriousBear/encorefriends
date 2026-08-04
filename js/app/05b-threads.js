@@ -32,8 +32,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
         <div style={{ padding: "10px 18px 22px" }}>
           <div
             style={{
-              fontFamily: "'Bebas Neue',sans-serif",
-              fontSize: 22,
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--fs-2xl)",
               letterSpacing: 1,
               marginBottom: 10,
             }}
@@ -42,8 +42,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
           </div>
           <div
             style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 10,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-2xs)",
               letterSpacing: 2,
               color: "var(--gold)",
               textTransform: "uppercase",
@@ -62,8 +62,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
               border: "1px solid var(--line)",
               borderRadius: 6,
               color: "var(--fg)",
-              fontFamily: "'Inter','Syne',sans-serif",
-              fontSize: 14,
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--fs-md)",
               padding: "10px 12px",
               outline: "none",
               boxSizing: "border-box",
@@ -72,8 +72,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
           />
           <div
             style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 10,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-2xs)",
               letterSpacing: 2,
               color: "var(--gold)",
               textTransform: "uppercase",
@@ -85,8 +85,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
           {follows.length === 0 ? (
             <div
               style={{
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 10,
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--fs-2xs)",
                 color: "var(--fg3)",
                 padding: "8px 0 14px",
               }}
@@ -119,7 +119,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 9,
+                        fontSize: "var(--fs-2xs)",
                         fontWeight: 700,
                         color: "#000",
                         flexShrink: 0,
@@ -130,8 +130,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
                     <span
                       style={{
                         flex: 1,
-                        fontFamily: "'Inter','Syne',sans-serif",
-                        fontSize: 13,
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--fs-sm)",
                       }}
                     >
                       {u2.name}
@@ -145,7 +145,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
                           "1px solid " + (on ? "var(--gold)" : "var(--line-2)"),
                         background: on ? "var(--gold)" : "transparent",
                         color: "#000",
-                        fontSize: 12,
+                        fontSize: "var(--fs-sm)",
                         fontWeight: 700,
                         display: "flex",
                         alignItems: "center",
@@ -170,8 +170,8 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
               border: "none",
               borderRadius: 6,
               color: "#000",
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 12,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-sm)",
               fontWeight: 700,
               letterSpacing: 1,
               cursor: saving ? "default" : "pointer",
@@ -227,8 +227,8 @@ function CDetail({
     border: "1px solid rgba(245,166,35,.3)",
     borderRadius: 6,
     color: "var(--gold)",
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 11,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-xs)",
     letterSpacing: 1,
     cursor: "pointer",
   };
@@ -293,8 +293,8 @@ function CDetail({
           {tasteGoing > 0 && (
             <div
               style={{
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--fs-xs)",
                 color: "var(--gold)",
                 margin: "10px 0 2px",
               }}
@@ -314,8 +314,8 @@ function CDetail({
                 border: "1px solid var(--line-2)",
                 borderRadius: 6,
                 color: "var(--fg2)",
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--fs-xs)",
                 letterSpacing: 1,
                 cursor: "pointer",
               }}
@@ -335,8 +335,8 @@ function CDetail({
                 border: "1px solid " + (c.hidden ? "#3a3a3a" : "var(--line-2)"),
                 borderRadius: 6,
                 color: c.hidden ? "#ddd" : "var(--fg3)",
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 10,
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--fs-2xs)",
                 letterSpacing: 1,
                 cursor: "pointer",
               }}
@@ -462,7 +462,7 @@ function CDetail({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 8,
+                    fontSize: "var(--fs-2xs)",
                     fontWeight: 700,
                     color: "#000",
                   }}
@@ -481,8 +481,8 @@ function CDetail({
                 {u2.notify && !isMe && (
                   <span
                     style={{
-                      fontSize: 8,
-                      fontFamily: "'DM Mono',monospace",
+                      fontSize: "var(--fs-2xs)",
+                      fontFamily: "var(--font-mono)",
                       color: "var(--gold)",
                     }}
                   >

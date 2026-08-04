@@ -137,8 +137,8 @@ function ArtistSearch({ value, onChange, max, placeholder }) {
       {value.length >= max && (
         <div
           style={{
-            fontSize: 10,
-            fontFamily: "'DM Mono',monospace",
+            fontSize: "var(--fs-2xs)",
+            fontFamily: "var(--font-mono)",
             color: "#444",
             marginTop: 4,
           }}
@@ -225,8 +225,8 @@ function PlaceSearch({ onPick, placeholder }) {
               <div style={{ color: "#eee" }}>{p.venue || p.city}</div>
               <div
                 style={{
-                  fontSize: 10,
-                  fontFamily: "'DM Mono',monospace",
+                  fontSize: "var(--fs-2xs)",
+                  fontFamily: "var(--font-mono)",
                   color: "var(--fg2)",
                   marginTop: 2,
                 }}
@@ -291,7 +291,7 @@ function DatePicker({ value, onChange }) {
     background: "none",
     border: "none",
     color: "var(--gold)",
-    fontSize: 20,
+    fontSize: "var(--fs-xl)",
     cursor: "pointer",
     padding: "0 8px",
     lineHeight: 1,
@@ -341,8 +341,8 @@ function DatePicker({ value, onChange }) {
             </button>
             <div
               style={{
-                fontFamily: "'Bebas Neue',sans-serif",
-                fontSize: 17,
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--fs-base)",
                 letterSpacing: 1,
                 color: "#eee",
               }}
@@ -366,8 +366,8 @@ function DatePicker({ value, onChange }) {
                 key={i}
                 style={{
                   textAlign: "center",
-                  fontFamily: "'DM Mono',monospace",
-                  fontSize: 9,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--fs-2xs)",
                   color: "var(--fg4)",
                   padding: "2px 0",
                 }}
@@ -402,8 +402,8 @@ function DatePicker({ value, onChange }) {
                     border: "none",
                     borderRadius: 5,
                     cursor: "pointer",
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 12,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-sm)",
                     background: isSel ? "var(--gold)" : "transparent",
                     color: isSel ? "#000" : "var(--fg2)",
                   }}

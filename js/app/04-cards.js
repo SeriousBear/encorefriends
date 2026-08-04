@@ -29,83 +29,23 @@ function CCard({
     <div className={"card " + cc} onClick={() => onOpen(c)}>
       <div className="cbar" style={{ background: uColor(u) }} />
       <div className="cbody">
-        <div
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            display: "flex",
-            gap: 5,
-            zIndex: 2,
-          }}
-        >
+        <div className="card-badges">
           {c.hidden && c.owner_id === curUser.id && (
             <div
+              className="card-badge quiet"
               title="Going quietly — only you can see this show"
-              style={{
-                padding: "2px 7px",
-                background: "rgba(255,255,255,.05)",
-                border: "1px solid var(--line-2)",
-                borderRadius: 3,
-                fontSize: 9,
-                lineHeight: 1.4,
-              }}
             >
               🤫
             </div>
           )}
-          {isNew && (
-            <div
-              style={{
-                padding: "2px 7px",
-                background: "rgba(245,166,35,.15)",
-                border: "1px solid rgba(245,166,35,.4)",
-                borderRadius: 3,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 8,
-                fontWeight: 700,
-                letterSpacing: 1,
-                color: "var(--gold)",
-                textTransform: "uppercase",
-              }}
-            >
-              NEW
-            </div>
-          )}
-          {c.is_festival && (
-            <div
-              style={{
-                padding: "2px 7px",
-                background: "rgba(155,107,245,.12)",
-                border: "1px solid rgba(155,107,245,.35)",
-                borderRadius: 3,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 8,
-                fontWeight: 700,
-                letterSpacing: 1,
-                color: "#9B6BF5",
-                textTransform: "uppercase",
-              }}
-            >
-              FEST
-            </div>
-          )}
+          {isNew && <div className="card-badge new">NEW</div>}
+          {c.is_festival && <div className="card-badge fest">FEST</div>}
           {onDelete && (
             <button
+              className="card-badge del"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(c.id);
-              }}
-              style={{
-                padding: "2px 7px",
-                background: "transparent",
-                border: "1px solid var(--line-2)",
-                borderRadius: 3,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 9,
-                color: "#444",
-                cursor: "pointer",
-                lineHeight: 1,
               }}
               title="Remove this show"
             >
@@ -221,88 +161,24 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>
-          <div
-            style={{
-              fontFamily: "'Bebas Neue',sans-serif",
-              fontSize: 22,
-              letterSpacing: 1,
-              marginBottom: 2,
-            }}
-          >
-            Share {c.artist}
-          </div>
-          <div
-            style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 10,
-              color: "var(--fg3)",
-              marginBottom: 12,
-            }}
-          >
-            Sends the show as a message.
-          </div>
+          <div className="share-title">Share {c.artist}</div>
+          <div className="share-meta">Sends the show as a message.</div>
           {friends.length === 0 ? (
-            <div
-              style={{
-                color: "var(--fg3)",
-                fontFamily: "'Inter','Syne',sans-serif",
-                fontSize: 13,
-                padding: "18px 0",
-                textAlign: "center",
-              }}
-            >
+            <div className="share-empty">
               Follow some people first — then you can share shows with them.
             </div>
           ) : (
             friends.map((u2) => (
               <div
                 key={u2.id}
+                className="share-row"
                 onClick={() => onSend(u2.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "10px 6px",
-                  borderBottom: "1px solid var(--card-2)",
-                  cursor: "pointer",
-                  borderRadius: 6,
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = "rgba(245,166,35,.05)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = "";
-                }}
               >
-                <div
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    background: u2.color,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "#000",
-                  }}
-                >
+                <div className="share-av" style={{ background: u2.color }}>
                   {u2.name.slice(0, 2).toUpperCase()}
                 </div>
-                <div style={{ fontFamily: "'Inter','Syne',sans-serif", fontSize: 14 }}>
-                  {u2.name}
-                </div>
-                <div
-                  style={{
-                    marginLeft: "auto",
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 10,
-                    color: "var(--gold)",
-                  }}
-                >
-                  Send ▸
-                </div>
+                <div className="share-name">{u2.name}</div>
+                <div className="share-send">Send ▸</div>
               </div>
             ))
           )}

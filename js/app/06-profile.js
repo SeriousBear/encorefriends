@@ -23,8 +23,8 @@ function GenreSearch({ onGenreClick }) {
           border: "1px solid var(--line)",
           borderRadius: 6,
           color: "var(--fg)",
-          fontFamily: "'DM Mono',monospace",
-          fontSize: 12,
+          fontFamily: "var(--font-mono)",
+          fontSize: "var(--fs-sm)",
           padding: "10px 12px",
           outline: "none",
           boxSizing: "border-box",
@@ -56,8 +56,8 @@ function GenreSearch({ onGenreClick }) {
               }}
               style={{
                 padding: "9px 12px",
-                fontFamily: "'Inter','Syne',sans-serif",
-                fontSize: 13,
+                fontFamily: "var(--font-body)",
+                fontSize: "var(--fs-sm)",
                 cursor: "pointer",
                 display: "flex",
                 justifyContent: "space-between",
@@ -74,8 +74,8 @@ function GenreSearch({ onGenreClick }) {
               <span>{g}</span>
               <span
                 style={{
-                  fontFamily: "'DM Mono',monospace",
-                  fontSize: 9,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--fs-2xs)",
                   color: "var(--fg4)",
                   textTransform: "uppercase",
                   letterSpacing: 1,
@@ -324,8 +324,8 @@ function ProfilePage({
                 <span>{c.artist}</span>
                 <span
                   style={{
-                    fontSize: 9,
-                    fontFamily: "'DM Mono',monospace",
+                    fontSize: "var(--fs-2xs)",
+                    fontFamily: "var(--font-mono)",
                     color: "var(--fg2)",
                     marginLeft: "auto",
                   }}
@@ -438,8 +438,8 @@ function ProfilePage({
                     style={{
                       padding: "5px 12px",
                       borderRadius: 14,
-                      fontFamily: "'Inter','Syne',sans-serif",
-                      fontSize: 10,
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--fs-2xs)",
                       fontWeight: 700,
                       textTransform: "uppercase",
                       cursor: "pointer",
@@ -459,8 +459,8 @@ function ProfilePage({
                     style={{
                       padding: "5px 12px",
                       borderRadius: 14,
-                      fontFamily: "'Inter','Syne',sans-serif",
-                      fontSize: 10,
+                      fontFamily: "var(--font-body)",
+                      fontSize: "var(--fs-2xs)",
                       fontWeight: 700,
                       textTransform: "uppercase",
                       cursor: "pointer",
@@ -484,8 +484,8 @@ function ProfilePage({
                     textAlign: "center",
                     padding: "32px 0",
                     color: "#333",
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 11,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-xs)",
                   }}
                 >
                   {connModal === "followers"
@@ -742,8 +742,8 @@ function GenrePage({
                     background: "var(--card)",
                     border: "1px solid #222",
                     color: "var(--fg)",
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 12,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-sm)",
                     fontWeight: 600,
                     cursor: "pointer",
                     transition: "all .15s",
@@ -768,7 +768,7 @@ function GenrePage({
           <div className="genre-sec-hdr">Upcoming Shows</div>
           {upcomingShows.length === 0 ? (
             <div className="empty" style={{ padding: "30px 0" }}>
-              <div className="empty-i" style={{ fontSize: 24 }}>
+              <div className="empty-i" style={{ fontSize: "var(--fs-3xl)" }}>
                 🎵
               </div>
               <div className="empty-s">
@@ -841,8 +841,8 @@ function GenrePage({
                     <div className="cfoot">
                       <span
                         style={{
-                          fontSize: 9,
-                          fontFamily: "'DM Mono',monospace",
+                          fontSize: "var(--fs-2xs)",
+                          fontFamily: "var(--font-mono)",
                           color: "var(--fg4)",
                         }}
                       >
@@ -855,8 +855,8 @@ function GenrePage({
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           style={{
-                            fontSize: 8,
-                            fontFamily: "'DM Mono',monospace",
+                            fontSize: "var(--fs-2xs)",
+                            fontFamily: "var(--font-mono)",
                             color: "var(--gold)",
                             textDecoration: "none",
                           }}
@@ -877,8 +877,8 @@ function GenrePage({
           <div className="genre-sec-hdr">People into {genre}</div>
           <div
             style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 10,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-2xs)",
               color: "var(--fg4)",
               margin: "-6px 0 12px",
             }}

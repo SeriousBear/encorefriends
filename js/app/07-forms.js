@@ -71,8 +71,8 @@ function TagSearch({ value, onChange, suggestions, max, placeholder }) {
       {value.length >= max && (
         <div
           style={{
-            fontSize: 10,
-            fontFamily: "'DM Mono',monospace",
+            fontSize: "var(--fs-2xs)",
+            fontFamily: "var(--font-mono)",
             color: "#444",
             marginTop: 4,
           }}
@@ -171,8 +171,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
               <span
                 style={{
                   padding: "10px 8px 10px 12px",
-                  fontFamily: "'DM Mono',monospace",
-                  fontSize: 13,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--fs-sm)",
                   color: "#444",
                   flexShrink: 0,
                 }}
@@ -186,8 +186,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
                   border: "none",
                   color: "var(--fg)",
                   padding: "10px 12px 10px 0",
-                  fontFamily: "'Inter','Syne',sans-serif",
-                  fontSize: 13,
+                  fontFamily: "var(--font-body)",
+                  fontSize: "var(--fs-sm)",
                   outline: "none",
                 }}
                 value={draft.handle}
@@ -285,8 +285,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
           >
             <div
               style={{
-                fontFamily: "'Inter','Syne',sans-serif",
-                fontSize: 14,
+                fontFamily: "var(--font-body)",
+                fontSize: "var(--fs-md)",
                 fontWeight: 700,
               }}
             >
@@ -294,8 +294,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
             </div>
             <div
               style={{
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 10,
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--fs-2xs)",
                 fontWeight: 700,
                 letterSpacing: 1,
                 padding: "3px 10px",
@@ -311,8 +311,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
           </div>
           <div
             style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 10,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-2xs)",
               color: "var(--fg3)",
               marginTop: 8,
               lineHeight: 1.6,
@@ -459,8 +459,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono',monospace",
-            fontSize: 10,
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--fs-2xs)",
             color: "var(--fg3)",
             lineHeight: 1.6,
             marginBottom: 10,
@@ -479,8 +479,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
               color: "#ff6b6b",
               padding: "9px 14px",
               borderRadius: 6,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-xs)",
               cursor: "pointer",
             }}
           >
@@ -499,8 +499,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
                 color: "#ff6b6b",
                 padding: "9px 14px",
                 borderRadius: 6,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--fs-xs)",
                 cursor: "pointer",
               }}
             >
@@ -514,8 +514,8 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
                 color: "var(--fg2)",
                 padding: "9px 14px",
                 borderRadius: 6,
-                fontFamily: "'DM Mono',monospace",
-                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--fs-xs)",
                 cursor: "pointer",
               }}
             >
@@ -572,8 +572,8 @@ function SearchPage({
         <div style={{ marginBottom: 18 }}>
           <div
             style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 10,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-2xs)",
               letterSpacing: 2,
               color: "var(--gold)",
               textTransform: "uppercase",
@@ -627,7 +627,7 @@ function SearchPage({
               border: "none",
               color: "var(--fg4)",
               cursor: "pointer",
-              fontSize: 14,
+              fontSize: "var(--fs-md)",
             }}
             onClick={() => setQ("")}
           >
@@ -741,7 +741,7 @@ function LoginPage({ onBack }) {
       <div style={{ marginBottom: 40 }}>
         <div
           style={{
-            fontFamily: "'Bebas Neue',sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 48,
             letterSpacing: 8,
             color: "var(--gold)",
@@ -752,8 +752,8 @@ function LoginPage({ onBack }) {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono',monospace",
-            fontSize: 10,
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--fs-2xs)",
             letterSpacing: 4,
             color: "#444",
             textTransform: "uppercase",
@@ -774,7 +774,7 @@ function LoginPage({ onBack }) {
       >
         <div
           style={{
-            fontFamily: "'Bebas Neue',sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 26,
             letterSpacing: 2,
             marginBottom: 8,
@@ -784,8 +784,8 @@ function LoginPage({ onBack }) {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono',monospace",
-            fontSize: 11,
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--fs-xs)",
             color: "var(--fg4)",
             marginBottom: 32,
             lineHeight: 1.6,
@@ -801,8 +801,8 @@ function LoginPage({ onBack }) {
             color: fg,
             border: border || "none",
             borderRadius: 6,
-            fontFamily: "'Inter','Syne',sans-serif",
-            fontSize: 14,
+            fontFamily: "var(--font-body)",
+            fontSize: "var(--fs-md)",
             fontWeight: 700,
             cursor: loading ? "not-allowed" : "pointer",
             display: "flex",
@@ -878,9 +878,9 @@ function LoginPage({ onBack }) {
         {error && (
           <div
             style={{
-              fontSize: 11,
+              fontSize: "var(--fs-xs)",
               color: "#FF5555",
-              fontFamily: "'DM Mono',monospace",
+              fontFamily: "var(--font-mono)",
               marginBottom: 12,
             }}
           >
@@ -902,8 +902,8 @@ function LoginPage({ onBack }) {
               style={{
                 background: "none",
                 border: "none",
-                fontSize: 11,
-                fontFamily: "'DM Mono',monospace",
+                fontSize: "var(--fs-xs)",
+                fontFamily: "var(--font-mono)",
                 color: "var(--fg3)",
                 cursor: "pointer",
                 letterSpacing: 0.5,
@@ -915,8 +915,8 @@ function LoginPage({ onBack }) {
           <a
             href="index.html"
             style={{
-              fontSize: 11,
-              fontFamily: "'DM Mono',monospace",
+              fontSize: "var(--fs-xs)",
+              fontFamily: "var(--font-mono)",
               color: "#444",
               textDecoration: "none",
               letterSpacing: 0.5,
@@ -929,8 +929,8 @@ function LoginPage({ onBack }) {
       <div
         style={{
           marginTop: 24,
-          fontSize: 10,
-          fontFamily: "'DM Mono',monospace",
+          fontSize: "var(--fs-2xs)",
+          fontFamily: "var(--font-mono)",
           color: "var(--line-2)",
           letterSpacing: 0.5,
         }}

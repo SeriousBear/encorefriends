@@ -168,20 +168,20 @@ function AdminPage({ onBack }) {
     padding: 16,
   };
   const sectionTitle = {
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 11,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-xs)",
     letterSpacing: 2,
     textTransform: "uppercase",
     color: "var(--gold)",
     margin: "26px 0 12px",
   };
-  const mono = { fontFamily: "'DM Mono',monospace" };
+  const mono = { fontFamily: "var(--font-mono)" };
   const pill = (state) => ({
     display: "inline-flex",
     alignItems: "center",
     gap: 6,
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 12,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-sm)",
     color: state === "ok" ? "#5cc46a" : state === "…" ? "var(--fg2)" : "#e0674f",
   });
 
@@ -189,7 +189,7 @@ function AdminPage({ onBack }) {
     <div style={card}>
       <div
         style={{
-          fontFamily: "'Bebas Neue',sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: 34,
           color: "#fff",
           lineHeight: 1,
@@ -200,7 +200,7 @@ function AdminPage({ onBack }) {
       <div
         style={{
           ...mono,
-          fontSize: 10,
+          fontSize: "var(--fs-2xs)",
           letterSpacing: 1.5,
           textTransform: "uppercase",
           color: "var(--fg2)",
@@ -210,7 +210,7 @@ function AdminPage({ onBack }) {
         {label}
       </div>
       {sub && (
-        <div style={{ ...mono, fontSize: 10, color: "var(--fg4)", marginTop: 2 }}>
+        <div style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg4)", marginTop: 2 }}>
           {sub}
         </div>
       )}
@@ -238,7 +238,7 @@ function AdminPage({ onBack }) {
         >
           <h1
             style={{
-              fontFamily: "'Bebas Neue',sans-serif",
+              fontFamily: "var(--font-display)",
               fontSize: 34,
               color: "#fff",
               letterSpacing: 1,
@@ -322,7 +322,7 @@ function AdminPage({ onBack }) {
             <div style={sectionTitle}>How shows get added</div>
             <div style={card}>
               {growth.sources.length === 0 ? (
-                <div style={{ ...mono, fontSize: 11, color: "var(--fg4)" }}>—</div>
+                <div style={{ ...mono, fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>—</div>
               ) : (
                 (() => {
                   const total =
@@ -337,7 +337,7 @@ function AdminPage({ onBack }) {
                         padding: "4px 0",
                       }}
                     >
-                      <div style={{ width: 96, ...mono, fontSize: 11, color: "var(--fg2)" }}>
+                      <div style={{ width: 96, ...mono, fontSize: "var(--fs-xs)", color: "var(--fg2)" }}>
                         {s}
                       </div>
                       <div
@@ -360,7 +360,7 @@ function AdminPage({ onBack }) {
                       <div
                         style={{
                           ...mono,
-                          fontSize: 11,
+                          fontSize: "var(--fs-xs)",
                           color: "var(--fg3)",
                           width: 40,
                           textAlign: "right",
@@ -411,7 +411,7 @@ function AdminPage({ onBack }) {
                   <div key={k}>
                     <span
                       style={{
-                        fontFamily: "'Bebas Neue',sans-serif",
+                        fontFamily: "var(--font-display)",
                         fontSize: 26,
                         color: c,
                       }}
@@ -421,7 +421,7 @@ function AdminPage({ onBack }) {
                     <span
                       style={{
                         ...mono,
-                        fontSize: 10,
+                        fontSize: "var(--fs-2xs)",
                         color: "var(--fg2)",
                         marginLeft: 6,
                       }}
@@ -434,14 +434,14 @@ function AdminPage({ onBack }) {
               {fwd.failures.length > 0 && (
                 <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 10 }}>
                   <div
-                    style={{ ...mono, fontSize: 10, color: "var(--fg2)", marginBottom: 6 }}
+                    style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg2)", marginBottom: 6 }}
                   >
                     RECENT FAILURES
                   </div>
                   {fwd.failures.slice(0, 8).map((f, i) => (
                     <div key={i} style={{ padding: "3px 0" }}>
                       <div
-                        style={{ ...mono, fontSize: 11, color: "var(--fg2)" }}
+                        style={{ ...mono, fontSize: "var(--fs-xs)", color: "var(--fg2)" }}
                       >
                         <span
                           style={{
@@ -459,7 +459,7 @@ function AdminPage({ onBack }) {
                         <div
                           style={{
                             ...mono,
-                            fontSize: 10,
+                            fontSize: "var(--fs-2xs)",
                             color: "var(--fg2)",
                             paddingLeft: 14,
                           }}
@@ -477,7 +477,7 @@ function AdminPage({ onBack }) {
             <div style={sectionTitle}>Bug reports ({bugs.length})</div>
             <div style={card}>
               {bugs.length === 0 ? (
-                <div style={{ ...mono, color: "var(--fg4)", fontSize: 12 }}>
+                <div style={{ ...mono, color: "var(--fg4)", fontSize: "var(--fs-sm)" }}>
                   None yet.
                 </div>
               ) : (
@@ -491,14 +491,14 @@ function AdminPage({ onBack }) {
                   >
                     <div
                       style={{
-                        fontFamily: "'Inter','Syne',sans-serif",
-                        fontSize: 13,
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--fs-sm)",
                         color: "#ddd",
                       }}
                     >
                       {b.message}
                     </div>
-                    <div style={{ ...mono, fontSize: 10, color: "var(--fg4)", marginTop: 3 }}>
+                    <div style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg4)", marginTop: 3 }}>
                       {timeAgo(b.created_at)}
                       {b.context && b.context.view
                         ? " · view:" + b.context.view
@@ -530,12 +530,12 @@ function AdminPage({ onBack }) {
               ].map(([label, list]) => (
                 <div key={label} style={card}>
                   <div
-                    style={{ ...mono, fontSize: 10, color: "var(--fg2)", marginBottom: 8 }}
+                    style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg2)", marginBottom: 8 }}
                   >
                     {label.toUpperCase()}
                   </div>
                   {list.length === 0 ? (
-                    <div style={{ ...mono, fontSize: 11, color: "var(--fg4)" }}>—</div>
+                    <div style={{ ...mono, fontSize: "var(--fs-xs)", color: "var(--fg4)" }}>—</div>
                   ) : (
                     list.map(([name, n]) => (
                       <div
@@ -543,8 +543,8 @@ function AdminPage({ onBack }) {
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
-                          fontFamily: "'Inter','Syne',sans-serif",
-                          fontSize: 12.5,
+                          fontFamily: "var(--font-body)",
+                          fontSize: 13.5,
                           color: "var(--fg2)",
                           padding: "2px 0",
                         }}
@@ -590,21 +590,21 @@ function AdminPage({ onBack }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        fontFamily: "'Inter','Syne',sans-serif",
-                        fontSize: 13,
+                        fontFamily: "var(--font-body)",
+                        fontSize: "var(--fs-sm)",
                         color: "#ddd",
                       }}
                     >
                       {u.name || "—"}{" "}
                       <span style={{ color: "var(--fg3)" }}>@{u.handle}</span>
                       {!u.onboarded && (
-                        <span style={{ color: "#e0a13f", fontSize: 10 }}>
+                        <span style={{ color: "#e0a13f", fontSize: "var(--fs-2xs)" }}>
                           {" "}
                           (not onboarded)
                         </span>
                       )}
                     </div>
-                    <div style={{ ...mono, fontSize: 10, color: "var(--fg4)" }}>
+                    <div style={{ ...mono, fontSize: "var(--fs-2xs)", color: "var(--fg4)" }}>
                       {u.location || "no location"} · joined{" "}
                       {timeAgo(u.created_at)}
                     </div>

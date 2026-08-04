@@ -41,11 +41,23 @@
   --font-mono:    'DM Mono', monospace;        /* labels, meta */
   --font-serif:   'Playfair Display', serif;   /* marketing italic accent */
 
-  /* ---- Fluid type scale (min @360px → max @1280px) ---- */
+  /* ---- Fluid type scale (marketing / body copy) ---- */
   --fs-meta:    clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);   /* 13→14 */
   --fs-body:    clamp(1rem, 0.96rem + 0.28vw, 1.125rem);        /* 16→18 */
   --fs-body-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem);    /* 18→21 */
   --lh-body:    1.6;
+
+  /* ---- Fixed UI type scale (dense app chrome — labels, meta, controls) ----
+     Ad-hoc sizes snap to the nearest step; use these instead of raw px. */
+  --fs-2xs:  10px;   /* tiny labels, badges, counts */
+  --fs-xs:   11px;   /* small labels */
+  --fs-sm:   13px;   /* meta text */
+  --fs-md:   14px;   /* secondary UI text */
+  --fs-base: 16px;   /* inputs, primary UI text */
+  --fs-lg:   18px;
+  --fs-xl:   20px;
+  --fs-2xl:  22px;
+  --fs-3xl:  24px;
 
   /* ---- Radius / spacing ---- */
   --radius:    10px;

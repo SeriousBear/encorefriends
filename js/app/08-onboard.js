@@ -92,8 +92,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
     borderRadius: "50%",
     background: "var(--gold)",
     color: "#000",
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 12,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-sm)",
     fontWeight: 700,
     marginRight: 10,
     flexShrink: 0,
@@ -101,23 +101,23 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
   const stepHead = {
     display: "flex",
     alignItems: "center",
-    fontFamily: "'Bebas Neue',sans-serif",
-    fontSize: 19,
+    fontFamily: "var(--font-display)",
+    fontSize: "var(--fs-lg)",
     letterSpacing: 0.5,
     color: "#eee",
     marginBottom: 10,
   };
   const body = {
-    fontFamily: "'Inter','Syne',sans-serif",
-    fontSize: 13,
+    fontFamily: "var(--font-body)",
+    fontSize: "var(--fs-sm)",
     lineHeight: 1.55,
     color: "var(--fg2)",
     margin: "0 0 12px 34px",
   };
   const ghost = {
     display: "inline-block",
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 11,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-xs)",
     letterSpacing: 1,
     textTransform: "uppercase",
     color: "var(--gold)",
@@ -136,8 +136,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
   };
   const codeBox = {
     flex: 1,
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 12,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-sm)",
     background: "#000",
     border: "1px solid var(--line)",
     borderRadius: 6,
@@ -168,8 +168,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
         >
           <div
             style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 10,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-2xs)",
               letterSpacing: 3,
               textTransform: "uppercase",
               color: "var(--gold)",
@@ -183,8 +183,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
               background: "none",
               border: "none",
               color: "var(--fg3)",
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-xs)",
               cursor: "pointer",
             }}
           >
@@ -194,7 +194,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
 
         <h1
           style={{
-            fontFamily: "'Bebas Neue',sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 38,
             letterSpacing: 1,
             color: "#fff",
@@ -206,8 +206,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
         </h1>
         <p
           style={{
-            fontFamily: "'Inter','Syne',sans-serif",
-            fontSize: 14,
+            fontFamily: "var(--font-body)",
+            fontSize: "var(--fs-md)",
             color: "#999",
             margin: "0 0 24px",
             lineHeight: 1.5,
@@ -257,8 +257,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
                 background: "var(--panel)",
                 border: "1px solid var(--line)",
                 borderRadius: 8,
-                fontFamily: "'Inter','Syne',sans-serif",
-                fontSize: 12.5,
+                fontFamily: "var(--font-body)",
+                fontSize: 13.5,
                 color: "var(--fg2)",
                 lineHeight: 1.5,
               }}
@@ -295,8 +295,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             style={{
               marginLeft: 34,
               marginTop: 6,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-xs)",
               color: "var(--fg3)",
               lineHeight: 1.5,
             }}
@@ -309,8 +309,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             style={{
               marginLeft: 34,
               marginTop: 14,
-              fontFamily: "'Inter','Syne',sans-serif",
-              fontSize: 13,
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--fs-sm)",
               lineHeight: 1.5,
             }}
           >
@@ -340,7 +340,7 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
                 <b
                   style={{
                     color: "var(--gold)",
-                    fontFamily: "'DM Mono',monospace",
+                    fontFamily: "var(--font-mono)",
                   }}
                 >
                   {confirmCode}
@@ -399,8 +399,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             style={{
               marginLeft: 34,
               marginTop: 6,
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--fs-xs)",
               color: "var(--fg3)",
               lineHeight: 1.5,
             }}
@@ -420,8 +420,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             borderRadius: 10,
             padding: 16,
             textAlign: "center",
-            fontFamily: "'Inter','Syne',sans-serif",
-            fontSize: 13,
+            fontFamily: "var(--font-body)",
+            fontSize: "var(--fs-sm)",
             color: verified ? "#9fd9a0" : "var(--fg2)",
             margin: "4px 0 20px",
           }}
@@ -548,8 +548,8 @@ function Onboarding({ session, profile, onComplete }) {
   };
 
   const lbl = {
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 10,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-2xs)",
     letterSpacing: 3,
     textTransform: "uppercase",
     color: "var(--gold)",
@@ -562,15 +562,15 @@ function Onboarding({ session, profile, onComplete }) {
     border: "1px solid var(--line)",
     borderRadius: 6,
     color: "var(--fg)",
-    fontFamily: "'Inter','Syne',sans-serif",
-    fontSize: 15,
+    fontFamily: "var(--font-body)",
+    fontSize: "var(--fs-md)",
     padding: "12px 13px",
     outline: "none",
     boxSizing: "border-box",
   };
   const help = {
-    fontFamily: "'DM Mono',monospace",
-    fontSize: 10,
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--fs-2xs)",
     color: "var(--fg4)",
     marginTop: 6,
     lineHeight: 1.5,
@@ -599,7 +599,7 @@ function Onboarding({ session, profile, onComplete }) {
       <div style={{ textAlign: "center", marginBottom: 26 }}>
         <div
           style={{
-            fontFamily: "'Bebas Neue',sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 40,
             letterSpacing: 7,
             color: "var(--gold)",
@@ -609,8 +609,8 @@ function Onboarding({ session, profile, onComplete }) {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono',monospace",
-            fontSize: 10,
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--fs-2xs)",
             letterSpacing: 3,
             color: "#444",
             textTransform: "uppercase",
@@ -658,8 +658,8 @@ function Onboarding({ session, profile, onComplete }) {
           <div>
             <div
               style={{
-                fontFamily: "'Bebas Neue',sans-serif",
-                fontSize: 24,
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--fs-3xl)",
                 letterSpacing: 1,
                 marginBottom: 4,
               }}
@@ -691,8 +691,8 @@ function Onboarding({ session, profile, onComplete }) {
                     top: "50%",
                     transform: "translateY(-50%)",
                     color: "var(--fg4)",
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 15,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-md)",
                   }}
                 >
                   @
@@ -727,8 +727,8 @@ function Onboarding({ session, profile, onComplete }) {
                 color: step1Valid ? "#000" : "var(--fg4)",
                 border: "none",
                 borderRadius: 6,
-                fontFamily: "'Inter','Syne',sans-serif",
-                fontSize: 14,
+                fontFamily: "var(--font-body)",
+                fontSize: "var(--fs-md)",
                 fontWeight: 700,
                 cursor: step1Valid ? "pointer" : "not-allowed",
               }}
@@ -743,8 +743,8 @@ function Onboarding({ session, profile, onComplete }) {
           <div>
             <div
               style={{
-                fontFamily: "'Bebas Neue',sans-serif",
-                fontSize: 24,
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--fs-3xl)",
                 letterSpacing: 1,
                 marginBottom: 4,
               }}
@@ -803,8 +803,8 @@ function Onboarding({ session, profile, onComplete }) {
           <div>
             <div
               style={{
-                fontFamily: "'Bebas Neue',sans-serif",
-                fontSize: 24,
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--fs-3xl)",
                 letterSpacing: 1,
                 marginBottom: 4,
               }}
@@ -860,8 +860,8 @@ function Onboarding({ session, profile, onComplete }) {
               >
                 <div
                   style={{
-                    fontFamily: "'Inter','Syne',sans-serif",
-                    fontSize: 14,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--fs-md)",
                     fontWeight: 700,
                   }}
                 >
@@ -869,8 +869,8 @@ function Onboarding({ session, profile, onComplete }) {
                 </div>
                 <div
                   style={{
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 10,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--fs-2xs)",
                     fontWeight: 700,
                     letterSpacing: 1,
                     padding: "3px 10px",
@@ -924,8 +924,8 @@ const btnBack = {
   color: "var(--fg2)",
   border: "1px solid #262626",
   borderRadius: 6,
-  fontFamily: "'Inter','Syne',sans-serif",
-  fontSize: 13,
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--fs-sm)",
   fontWeight: 600,
   cursor: "pointer",
 };
@@ -936,8 +936,8 @@ const btnNext = {
   color: "#000",
   border: "none",
   borderRadius: 6,
-  fontFamily: "'Inter','Syne',sans-serif",
-  fontSize: 14,
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--fs-md)",
   fontWeight: 700,
   cursor: "pointer",
 };
