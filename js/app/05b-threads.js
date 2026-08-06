@@ -21,12 +21,18 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
     setSaving(true);
     await onCreate(show, name, picked);
   };
+  const sw = useSwipeDismiss(onClose);
   return (
-    <div className="mwrap" onClick={onClose} style={{ zIndex: 700 }}>
+    <div
+      className="mwrap"
+      onClick={onClose}
+      style={{ ...sw.backdropStyle, zIndex: 700 }}
+    >
       <div
         className="sheet"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 440 }}
+        style={{ ...sw.sheetStyle, maxWidth: 440 }}
+        {...sw.handlers}
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>
@@ -231,9 +237,15 @@ function CDetail({
   const dateStr = isFestival
     ? fmt(c.date).full + " – " + fmt(c.end_date).full
     : d.dow + ", " + d.full;
+  const sw = useSwipeDismiss(onClose);
   return (
-    <div className="mwrap" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <div className="mwrap" onClick={onClose} style={sw.backdropStyle}>
+      <div
+        className="sheet"
+        onClick={(e) => e.stopPropagation()}
+        style={sw.sheetStyle}
+        {...sw.handlers}
+      >
         <div className="sheet-bar" style={{ background: uColor(u) }} />
         <div className="sheet-handle" />
         <div className="sheet-body">

@@ -518,3 +518,17 @@
   .agenda-cd{flex:0 0 auto;font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:1px;text-transform:uppercase;color:var(--fg4)}
   .agenda-cd.now{color:var(--urg)}
   .agenda-cd.soon{color:var(--gold)}
+
+  /* ── Native touch polish ── */
+  *{-webkit-tap-highlight-color:transparent}
+  button,a,input,select,textarea,label,.tk,.card,.agenda-row,.chip{touch-action:manipulation}
+  button:not(:disabled):active{transform:scale(.96)}
+  .tk:active,.card:active{transform:scale(.985)}
+  .agenda-row:active{transform:scale(.99);transition:transform .1s;background:rgba(255,255,255,.03)}
+  .mwrap,.sheet,.prof-page{overscroll-behavior:contain}
+
+  /* ── Pull-to-refresh ── */
+  .ptr{position:absolute;left:0;right:0;top:-46px;height:46px;display:flex;align-items:center;justify-content:center;color:var(--fg3);pointer-events:none}
+  .ptr svg{width:22px;height:22px}
+  .ptr.spin svg{animation:ptr-spin .7s linear infinite}
+  @keyframes ptr-spin{to{transform:rotate(360deg)}}

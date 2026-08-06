@@ -228,12 +228,14 @@ function InboxSheet({
     cursor: "pointer",
   });
 
+  const sw = useSwipeDismiss(onClose);
   return (
-    <div className="mwrap" onClick={onClose}>
+    <div className="mwrap" onClick={onClose} style={sw.backdropStyle}>
       <div
         className="sheet"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 460 }}
+        style={{ ...sw.sheetStyle, maxWidth: 460 }}
+        {...sw.handlers}
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>

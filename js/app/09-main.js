@@ -111,6 +111,9 @@ function App() {
   const [selMode, setSelMode] = useState(false); // feed multi-select remove mode
   const [selIds, setSelIds] = useState([]); // ids selected for removal
   const [feedView, setFeedView] = useState("list"); // "list" | "calendar"
+  const [pullY, setPullY] = useState(0); // pull-to-refresh drag distance
+  const [refreshing, setRefreshing] = useState(false);
+  const ptrRef = useRef({ y: 0, active: false });
   const [detail, setDetail] = useState(null);
   const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported|ios-install
   const [installPrompt, setInstallPrompt] = useState(null); // deferred beforeinstallprompt
@@ -883,6 +886,40 @@ function App() {
     toast(n + " show" + (n > 1 ? "s" : "") + " removed.");
   };
 
+  // ── Pull-to-refresh (feed) ── drag down at the top to reload shows.
+  const onFeedTouchStart = (e) => {
+    if (window.scrollY <= 0 && !refreshing)
+      ptrRef.current = { y: e.touches[0].clientY, active: true };
+  };
+  const onFeedTouchMove = (e) => {
+    if (!ptrRef.current.active || refreshing) return;
+    if (window.scrollY > 0) {
+      ptrRef.current.active = false;
+      if (pullY) setPullY(0);
+      return;
+    }
+    const d = e.touches[0].clientY - ptrRef.current.y;
+    if (d > 0) setPullY(Math.min(d * 0.5, 80));
+    else if (pullY) setPullY(0);
+  };
+  const onFeedTouchEnd = async () => {
+    if (!ptrRef.current.active) return;
+    ptrRef.current.active = false;
+    if (pullY > 55) {
+      setRefreshing(true);
+      setPullY(46);
+      try {
+        await reloadConcerts();
+      } catch (e) {
+        /* ignore */
+      }
+      setRefreshing(false);
+      setPullY(0);
+    } else {
+      setPullY(0);
+    }
+  };
+
   const toggleAttendee = async (cid, uid) => {
     if (!requireAuth()) return;
     const c = liveConcerts.find((c) => c.id === cid);
@@ -1512,7 +1549,36 @@ function App() {
             />
           )}
           {view === "feed" && (
-            <main className="main">
+            <main
+              className="main"
+              onTouchStart={onFeedTouchStart}
+              onTouchMove={onFeedTouchMove}
+              onTouchEnd={onFeedTouchEnd}
+              style={{
+                position: "relative",
+                transform:
+                  pullY || refreshing
+                    ? "translateY(" + (refreshing ? 46 : pullY) + "px)"
+                    : undefined,
+                transition: ptrRef.current.active
+                  ? "none"
+                  : "transform .25s cubic-bezier(.2,.8,.2,1)",
+              }}
+            >
+              <div
+                className={"ptr" + (refreshing ? " spin" : "")}
+                style={{
+                  opacity: refreshing ? 1 : Math.min(pullY / 55, 1),
+                  transform: refreshing
+                    ? undefined
+                    : "rotate(" + Math.round(pullY * 4) + "deg)",
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                  <path d="M21 3v6h-6" />
+                </svg>
+              </div>
               {notif && <div className="toast-ok">🔔 {notif}</div>}
               {errMsg && <div className="toast-err">⚠ {errMsg}</div>}
               {!isGuest && pushState === "ios-install" && !pushHidden && (

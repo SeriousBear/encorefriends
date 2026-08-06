@@ -559,9 +559,15 @@ function ArtistSheet({ artistName, concerts, onClose, onOpenConcert }) {
       c.artist.toLowerCase().includes(slug) ||
       slug.includes(c.artist.toLowerCase().split(" ")[0]),
   );
+  const sw = useSwipeDismiss(onClose);
   return (
-    <div className="mwrap" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <div className="mwrap" onClick={onClose} style={sw.backdropStyle}>
+      <div
+        className="sheet"
+        onClick={(e) => e.stopPropagation()}
+        style={sw.sheetStyle}
+        {...sw.handlers}
+      >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div className="sheet-handle" />
         <div className="sheet-body">

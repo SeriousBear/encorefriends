@@ -2,6 +2,54 @@
 // ★ marquee artist ★, venue, who-else-is-going avatars, and a countdown stub
 // whose color escalates as the show nears (grey → gold → red), with a pulsing
 // "tonight" peak. Tap opens the detail sheet (where going/hide/genre live).
+// Interactive swipe-to-dismiss for bottom sheets. Attach the returned handlers +
+// sheetStyle to the `.sheet` element and backdropStyle to the `.mwrap` backdrop.
+// The sheet tracks the thumb 1:1 (only while scrolled to top, so it never fights
+// content scroll), the backdrop fades in proportion, and on release it either
+// completes the dismiss (past ~32% of height or a fast flick) or springs back.
+function useSwipeDismiss(onClose) {
+  const [dy, setDy] = useState(0);
+  const st = useRef({ y: 0, t: 0, dragging: false, h: 600 });
+  const onTouchStart = (e) => {
+    st.current = {
+      y: e.touches[0].clientY,
+      t: Date.now(),
+      dragging: true,
+      h: e.currentTarget.offsetHeight || 600,
+    };
+  };
+  const onTouchMove = (e) => {
+    if (!st.current.dragging) return;
+    const d = e.touches[0].clientY - st.current.y;
+    // Only drag downward, and only when the sheet is scrolled to its top —
+    // otherwise let the content scroll normally.
+    if (d > 0 && e.currentTarget.scrollTop <= 0) setDy(d);
+    else if (dy !== 0) setDy(0);
+  };
+  const onTouchEnd = () => {
+    const { h, t } = st.current;
+    st.current.dragging = false;
+    const v = dy / Math.max(Date.now() - t, 1); // px/ms
+    if (dy > h * 0.32 || v > 0.6) {
+      setDy(h); // slide fully out, then close
+      setTimeout(onClose, 160);
+    } else {
+      setDy(0); // spring back
+    }
+  };
+  const opacity = st.current.h ? Math.max(0, 1 - dy / st.current.h) : 1;
+  return {
+    backdropStyle: { background: "rgba(0,0,0," + (0.75 * opacity).toFixed(3) + ")" },
+    sheetStyle: {
+      transform: dy ? "translateY(" + dy + "px)" : undefined,
+      transition: st.current.dragging
+        ? "none"
+        : "transform .22s cubic-bezier(.2,.8,.2,1)",
+    },
+    handlers: { onTouchStart, onTouchMove, onTouchEnd },
+  };
+}
+
 function CCard({
   c,
   users,
@@ -145,12 +193,18 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
       ((curUser.following || []).includes(u.id) ||
         (u.following || []).includes(curUser.id)),
   );
+  const sw = useSwipeDismiss(onClose);
   return (
-    <div className="mwrap" onClick={onClose} style={{ zIndex: 700 }}>
+    <div
+      className="mwrap"
+      onClick={onClose}
+      style={{ ...sw.backdropStyle, zIndex: 700 }}
+    >
       <div
         className="sheet"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 420 }}
+        style={{ ...sw.sheetStyle, maxWidth: 420 }}
+        {...sw.handlers}
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>
