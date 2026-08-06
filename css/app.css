@@ -502,3 +502,19 @@
   .add-act.primary .add-ic{background:var(--gold);color:#1a1204}
   .add-n{display:block;font-family:var(--font-body);font-size:var(--fs-md);font-weight:600;color:var(--fg)}
   .add-d{display:block;font-family:var(--font-mono);font-size:var(--fs-2xs);color:var(--fg3);margin-top:1px}
+
+  /* ── Feed list⇄calendar toggle + agenda view ── */
+  .feed-toggle{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;margin-bottom:16px;max-width:260px}
+  .feed-toggle button{flex:1;background:none;border:none;cursor:pointer;font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:1px;text-transform:uppercase;color:var(--fg3);padding:7px 0;border-radius:6px}
+  .feed-toggle button.on{background:var(--gold);color:#1a1204;font-weight:500}
+  .agenda-row{display:flex;align-items:center;gap:14px;padding:12px 6px;border-top:1px solid var(--line);cursor:pointer}
+  .agenda-row:hover{background:rgba(255,255,255,.02)}
+  .agenda-date{flex:0 0 44px;text-align:center;line-height:1}
+  .agenda-date .ad-dy{font-family:var(--font-display);font-size:var(--fs-xl);color:var(--gold);display:block}
+  .agenda-date .ad-dw{font-family:var(--font-mono);font-size:var(--fs-2xs);color:var(--fg3);text-transform:uppercase}
+  .agenda-info{flex:1;min-width:0}
+  .agenda-artist{font-family:var(--font-body);font-size:var(--fs-md);font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .agenda-venue{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--fg3);margin-top:2px}
+  .agenda-cd{flex:0 0 auto;font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:1px;text-transform:uppercase;color:var(--fg4)}
+  .agenda-cd.now{color:var(--urg)}
+  .agenda-cd.soon{color:var(--gold)}

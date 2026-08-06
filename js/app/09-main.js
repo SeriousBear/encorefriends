@@ -110,6 +110,7 @@ function App() {
   const [showPast, setShowPast] = useState(false); // collapse past shows
   const [selMode, setSelMode] = useState(false); // feed multi-select remove mode
   const [selIds, setSelIds] = useState([]); // ids selected for removal
+  const [feedView, setFeedView] = useState("list"); // "list" | "calendar"
   const [detail, setDetail] = useState(null);
   const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported|ios-install
   const [installPrompt, setInstallPrompt] = useState(null); // deferred beforeinstallprompt
@@ -1735,6 +1736,22 @@ function App() {
                 )}
               </div>
               {liveConcerts.length > 0 && (
+                <div className="feed-toggle">
+                  <button
+                    className={feedView === "list" ? "on" : ""}
+                    onClick={() => setFeedView("list")}
+                  >
+                    List
+                  </button>
+                  <button
+                    className={feedView === "calendar" ? "on" : ""}
+                    onClick={() => setFeedView("calendar")}
+                  >
+                    Calendar
+                  </button>
+                </div>
+              )}
+              {liveConcerts.length > 0 && feedView === "list" && (
                 <div className="legend">
                   <div className="leg">
                     <div className="led" style={{ background: "#FF5050" }} />
@@ -1769,21 +1786,59 @@ function App() {
                   {Object.values(grouped).map(({ l, items }) => (
                     <div key={l} className="sec">
                       <div className="sec-hdr">{l}</div>
-                      <div className="grid">
-                        {items.map((c) => (
-                          <CCard
-                            key={c.id}
-                            c={c}
-                            users={users}
-                            curUser={curUser}
-                            onOpen={selMode ? () => {} : setDetail}
-                            onViewProfile={viewProfile}
-                            selecting={selMode && c.owner_id === curUser.id}
-                            selected={selIds.includes(c.id)}
-                            onSelect={toggleSel}
-                          />
-                        ))}
-                      </div>
+                      {feedView === "calendar" ? (
+                        <div className="agenda">
+                          {items.map((c) => {
+                            const dd = fmt(c.date);
+                            const dyy = daysUntil(c.date);
+                            const cdl =
+                              dyy === 0
+                                ? "Tonight"
+                                : dyy === 1
+                                  ? "Tomorrow"
+                                  : dyy + "d";
+                            const cdc =
+                              dyy <= 7 ? "now" : dyy <= 30 ? "soon" : "later";
+                            return (
+                              <div
+                                key={c.id}
+                                className="agenda-row"
+                                onClick={() => setDetail(c)}
+                              >
+                                <div className="agenda-date">
+                                  <span className="ad-dy">{dd.day}</span>
+                                  <span className="ad-dw">{dd.dow}</span>
+                                </div>
+                                <div className="agenda-info">
+                                  <div className="agenda-artist">{c.artist}</div>
+                                  <div className="agenda-venue">
+                                    {c.venue}
+                                    {c.venue && c.city ? " · " : ""}
+                                    {c.city}
+                                  </div>
+                                </div>
+                                <div className={"agenda-cd " + cdc}>{cdl}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="grid">
+                          {items.map((c) => (
+                            <CCard
+                              key={c.id}
+                              c={c}
+                              users={users}
+                              curUser={curUser}
+                              onOpen={selMode ? () => {} : setDetail}
+                              onViewProfile={viewProfile}
+                              selecting={selMode && c.owner_id === curUser.id}
+                              selected={selIds.includes(c.id)}
+                              onSelect={toggleSel}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                   {Object.keys(grouped).length === 0 && pastF.length > 0 && (
