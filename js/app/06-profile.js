@@ -437,7 +437,7 @@ function ProfilePage({
             className="sheet"
             onClick={(e) => e.stopPropagation()}
             style={connSw.sheetStyle}
-            {...connSw.handlers}
+            ref={connSw.ref}
           >
             <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div className="sheet-handle" />
@@ -576,7 +576,7 @@ function ArtistSheet({ artistName, concerts, onClose, onOpenConcert }) {
         className="sheet"
         onClick={(e) => e.stopPropagation()}
         style={sw.sheetStyle}
-        {...sw.handlers}
+        ref={sw.ref}
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div className="sheet-handle" />

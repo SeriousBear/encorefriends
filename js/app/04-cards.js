@@ -9,38 +9,72 @@
 // completes the dismiss (past ~32% of height or a fast flick) or springs back.
 function useSwipeDismiss(onClose) {
   const [dy, setDy] = useState(0);
-  const st = useRef({ y: 0, t: 0, dragging: false, h: 600 });
-  const onTouchStart = (e) => {
-    st.current = {
-      y: e.touches[0].clientY,
-      t: Date.now(),
-      dragging: true,
-      h: e.currentTarget.offsetHeight || 600,
+  const st = useRef({ y: 0, t: 0, dragging: false, h: 600, dy: 0 });
+  const elRef = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  // A stable callback ref. React's onTouchMove is passive (can't preventDefault),
+  // so we bind our OWN non-passive listeners to the sheet element. On a downward
+  // drag while scrolled to the top we preventDefault — which stops the native iOS
+  // rubber-band that otherwise exposes a grey gap above the top bar. This works on
+  // every mobile browser, not just ones that honor overscroll-behavior.
+  const cbRef = useRef(null);
+  if (!cbRef.current) {
+    cbRef.current = (el) => {
+      if (elRef.current && elRef.current._swClean) {
+        elRef.current._swClean();
+        elRef.current._swClean = null;
+      }
+      elRef.current = el;
+      if (!el) return;
+      const s = st.current;
+      const onStart = (e) => {
+        s.y = e.touches[0].clientY;
+        s.t = Date.now();
+        s.h = el.offsetHeight || 600;
+        s.dragging = true;
+      };
+      const onMove = (e) => {
+        if (!s.dragging) return;
+        const d = e.touches[0].clientY - s.y;
+        if (d > 0 && el.scrollTop <= 0) {
+          e.preventDefault(); // take over the gesture — no native scroll/bounce
+          s.dy = d;
+          setDy(d);
+        } else if (s.dy !== 0) {
+          s.dy = 0;
+          setDy(0);
+        }
+      };
+      const onEnd = () => {
+        if (!s.dragging) return;
+        s.dragging = false;
+        const v = s.dy / Math.max(Date.now() - s.t, 1); // px/ms
+        if (s.dy > s.h * 0.32 || v > 0.6) {
+          s.dy = s.h;
+          setDy(s.h);
+          setTimeout(() => closeRef.current(), 180);
+        } else {
+          s.dy = 0;
+          setDy(0);
+        }
+      };
+      el.addEventListener("touchstart", onStart, { passive: true });
+      el.addEventListener("touchmove", onMove, { passive: false });
+      el.addEventListener("touchend", onEnd, { passive: true });
+      el.addEventListener("touchcancel", onEnd, { passive: true });
+      el._swClean = () => {
+        el.removeEventListener("touchstart", onStart);
+        el.removeEventListener("touchmove", onMove);
+        el.removeEventListener("touchend", onEnd);
+        el.removeEventListener("touchcancel", onEnd);
+      };
     };
-  };
-  const onTouchMove = (e) => {
-    if (!st.current.dragging) return;
-    const d = e.touches[0].clientY - st.current.y;
-    // Only drag downward, and only when the sheet is scrolled to its top —
-    // otherwise let the content scroll normally.
-    if (d > 0 && e.currentTarget.scrollTop <= 0) setDy(d);
-    else if (dy !== 0) setDy(0);
-  };
-  const onTouchEnd = () => {
-    const { h, t } = st.current;
-    st.current.dragging = false;
-    const v = dy / Math.max(Date.now() - t, 1); // px/ms
-    if (dy > h * 0.32 || v > 0.6) {
-      setDy(h); // slide fully out, then close
-      setTimeout(onClose, 160);
-    } else {
-      setDy(0); // spring back
-    }
-  };
-  // Backdrop only lightens SLIGHTLY as you drag (0.75 → ~0.43), so the feed
-  // behind stays dimmed and the sheet reads as the focus the whole way down.
+  }
+  // Backdrop only lightens SLIGHTLY as you drag (0.75 → ~0.43).
   const fade = st.current.h ? Math.min(dy / st.current.h, 1) : 0;
   return {
+    ref: cbRef.current,
     backdropStyle: { background: "rgba(0,0,0," + (0.75 - 0.32 * fade).toFixed(3) + ")" },
     sheetStyle: {
       transform: dy ? "translateY(" + dy + "px)" : undefined,
@@ -48,7 +82,6 @@ function useSwipeDismiss(onClose) {
         ? "none"
         : "transform .22s cubic-bezier(.2,.8,.2,1)",
     },
-    handlers: { onTouchStart, onTouchMove, onTouchEnd },
   };
 }
 
@@ -206,7 +239,7 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
         className="sheet"
         onClick={(e) => e.stopPropagation()}
         style={{ ...sw.sheetStyle, maxWidth: 420 }}
-        {...sw.handlers}
+        ref={sw.ref}
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>

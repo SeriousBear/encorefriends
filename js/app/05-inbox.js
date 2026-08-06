@@ -235,7 +235,7 @@ function InboxSheet({
         className="sheet"
         onClick={(e) => e.stopPropagation()}
         style={{ ...sw.sheetStyle, maxWidth: 460 }}
-        {...sw.handlers}
+        ref={sw.ref}
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>

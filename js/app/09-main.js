@@ -1973,7 +1973,7 @@ function App() {
             className="add-sheet"
             onClick={(e) => e.stopPropagation()}
             style={addSw.sheetStyle}
-            {...addSw.handlers}
+            ref={addSw.ref}
           >
             <div className="add-handle" />
             <div className="add-title">Add to your tour</div>
@@ -2088,7 +2088,7 @@ function App() {
             className="sheet"
             onClick={(e) => e.stopPropagation()}
             style={{ ...bugSw.sheetStyle, maxWidth: 460 }}
-            {...bugSw.handlers}
+            ref={bugSw.ref}
           >
             <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div style={{ padding: "10px 18px 22px" }}>
@@ -2170,7 +2170,7 @@ function App() {
             className="sheet"
             onClick={(e) => e.stopPropagation()}
             style={manualSw.sheetStyle}
-            {...manualSw.handlers}
+            ref={manualSw.ref}
           >
             <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div className="sheet-handle" />

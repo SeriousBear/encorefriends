@@ -32,7 +32,7 @@ function CrewCreate({ show, curUser, users, onClose, onCreate }) {
         className="sheet"
         onClick={(e) => e.stopPropagation()}
         style={{ ...sw.sheetStyle, maxWidth: 440 }}
-        {...sw.handlers}
+        ref={sw.ref}
       >
         <div className="sheet-bar" style={{ background: "var(--gold)" }} />
         <div style={{ padding: "10px 18px 22px" }}>
@@ -244,7 +244,7 @@ function CDetail({
         className="sheet"
         onClick={(e) => e.stopPropagation()}
         style={sw.sheetStyle}
-        {...sw.handlers}
+        ref={sw.ref}
       >
         <div className="sheet-bar" style={{ background: uColor(u) }} />
         <div className="sheet-handle" />
