@@ -114,6 +114,10 @@ function App() {
   const [pullY, setPullY] = useState(0); // pull-to-refresh drag distance
   const [refreshing, setRefreshing] = useState(false);
   const ptrRef = useRef({ y: 0, active: false });
+  // Swipe-to-dismiss for the inline sheets (rendered conditionally below).
+  const addSw = useSwipeDismiss(() => setShowAdd(false));
+  const bugSw = useSwipeDismiss(() => setShowBug(false));
+  const manualSw = useSwipeDismiss(() => setShowAddC(false));
   const [detail, setDetail] = useState(null);
   const [pushState, setPushState] = useState("loading"); // loading|prompt|granted|denied|unsupported|ios-install
   const [installPrompt, setInstallPrompt] = useState(null); // deferred beforeinstallprompt
@@ -1960,8 +1964,17 @@ function App() {
 
       {/* ➕ CREATE ACTION SHEET */}
       {showAdd && (
-        <div className="mwrap" onClick={() => setShowAdd(false)}>
-          <div className="add-sheet" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="mwrap"
+          onClick={() => setShowAdd(false)}
+          style={addSw.backdropStyle}
+        >
+          <div
+            className="add-sheet"
+            onClick={(e) => e.stopPropagation()}
+            style={addSw.sheetStyle}
+            {...addSw.handlers}
+          >
             <div className="add-handle" />
             <div className="add-title">Add to your tour</div>
             {FORWARDING_ENABLED && (
@@ -2066,11 +2079,16 @@ function App() {
 
       {/* BUG REPORT */}
       {showBug && (
-        <div className="mwrap" onClick={() => setShowBug(false)}>
+        <div
+          className="mwrap"
+          onClick={() => setShowBug(false)}
+          style={bugSw.backdropStyle}
+        >
           <div
             className="sheet"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 460 }}
+            style={{ ...bugSw.sheetStyle, maxWidth: 460 }}
+            {...bugSw.handlers}
           >
             <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div style={{ padding: "10px 18px 22px" }}>
@@ -2143,8 +2161,17 @@ function App() {
 
       {/* ADD CONCERT SHEET */}
       {showAddC && (
-        <div className="mwrap" onClick={() => setShowAddC(false)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="mwrap"
+          onClick={() => setShowAddC(false)}
+          style={manualSw.backdropStyle}
+        >
+          <div
+            className="sheet"
+            onClick={(e) => e.stopPropagation()}
+            style={manualSw.sheetStyle}
+            {...manualSw.handlers}
+          >
             <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div className="sheet-handle" />
             <div className="sheet-body">

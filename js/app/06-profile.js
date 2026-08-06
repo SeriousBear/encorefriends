@@ -110,6 +110,7 @@ function ProfilePage({
 }) {
   const [tab, setTab] = useState("upcoming");
   const [connModal, setConnModal] = useState(null); // null | "followers" | "following"
+  const connSw = useSwipeDismiss(() => setConnModal(null));
   const isSelf = user.id === curUser.id;
   const isFollowing = curUser.following.includes(user.id);
   // Shows this user attends, split by date (festivals count as upcoming
@@ -427,8 +428,17 @@ function ProfilePage({
 
       {/* ── FOLLOWERS / FOLLOWING MODAL ── */}
       {connModal && (
-        <div className="mwrap" onClick={() => setConnModal(null)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="mwrap"
+          onClick={() => setConnModal(null)}
+          style={connSw.backdropStyle}
+        >
+          <div
+            className="sheet"
+            onClick={(e) => e.stopPropagation()}
+            style={connSw.sheetStyle}
+            {...connSw.handlers}
+          >
             <div className="sheet-bar" style={{ background: "var(--gold)" }} />
             <div className="sheet-handle" />
             <div className="sheet-body">

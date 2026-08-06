@@ -525,7 +525,10 @@
   button:not(:disabled):active{transform:scale(.96)}
   .tk:active,.card:active{transform:scale(.985)}
   .agenda-row:active{transform:scale(.99);transition:transform .1s;background:rgba(255,255,255,.03)}
-  .mwrap,.sheet,.prof-page{overscroll-behavior:contain}
+  html,body{overscroll-behavior-y:contain}
+  /* none (not contain) so iOS can't rubber-band the sheet and expose a grey gap
+     above the top bar while swiping to dismiss. */
+  .mwrap,.sheet,.add-sheet,.prof-page,.sheet-body{overscroll-behavior:none}
 
   /* ── Pull-to-refresh ── */
   .ptr{position:absolute;left:0;right:0;top:-46px;height:46px;display:flex;align-items:center;justify-content:center;color:var(--fg3);pointer-events:none}

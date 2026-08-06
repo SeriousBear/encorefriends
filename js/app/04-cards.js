@@ -37,9 +37,11 @@ function useSwipeDismiss(onClose) {
       setDy(0); // spring back
     }
   };
-  const opacity = st.current.h ? Math.max(0, 1 - dy / st.current.h) : 1;
+  // Backdrop only lightens SLIGHTLY as you drag (0.75 → ~0.43), so the feed
+  // behind stays dimmed and the sheet reads as the focus the whole way down.
+  const fade = st.current.h ? Math.min(dy / st.current.h, 1) : 0;
   return {
-    backdropStyle: { background: "rgba(0,0,0," + (0.75 * opacity).toFixed(3) + ")" },
+    backdropStyle: { background: "rgba(0,0,0," + (0.75 - 0.32 * fade).toFixed(3) + ")" },
     sheetStyle: {
       transform: dy ? "translateY(" + dy + "px)" : undefined,
       transition: st.current.dragging
