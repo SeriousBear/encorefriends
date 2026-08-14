@@ -56,6 +56,22 @@
         <link rel="stylesheet" href="css/tokens.css" />
         <link rel="stylesheet" href="css/app.css" />
 
+        <!-- ── Vibe theme — applies the saved accent before render (no flash) ── -->
+        <script>
+          (function () {
+            var V = { edm: null, house: ["#FF9138"], techno: ["#5FE0FF"], bass: ["#B6FF3C"], trance: ["#9B8CFF"], indie: ["#FF6B5A"] };
+            window.ENCORE_VIBES = V;
+            function rgba(hex, a) { var n = parseInt(hex.slice(1), 16); return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")"; }
+            window.applyVibe = function (k) {
+              var d = document.documentElement, p = V[k];
+              if (!p) { ["--gold", "--gold-dim", "--gold-border"].forEach(function (v) { d.style.removeProperty(v); }); }
+              else { d.style.setProperty("--gold", p[0]); d.style.setProperty("--gold-dim", rgba(p[0], 0.12)); d.style.setProperty("--gold-border", rgba(p[0], 0.26)); }
+              try { localStorage.setItem("encore_vibe", k || "edm"); } catch (e) {}
+            };
+            try { var s = localStorage.getItem("encore_vibe"); if (s && s !== "edm") window.applyVibe(s); } catch (e) {}
+          })();
+        </script>
+
         <!-- ── Supabase + React + Babel (CDN) — order matters ── -->
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -109,6 +125,7 @@
         <script type="text/babel" src="js/app/01-config.js"></script>
         <script type="text/babel" src="js/app/02-genres.js"></script>
         <script type="text/babel" src="js/app/03-helpers.js"></script>
+        <script type="text/babel" src="js/app/03b-pwa.js"></script>
         <script type="text/babel" src="js/app/04-cards.js"></script>
         <script type="text/babel" src="js/app/05-inbox.js"></script>
         <script type="text/babel" src="js/app/05b-threads.js"></script>

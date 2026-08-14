@@ -92,6 +92,42 @@ function GenreSearch({ onGenreClick }) {
   );
 }
 
+// Vibe theme picker — recolors the app accent (persisted in localStorage,
+// applied by window.applyVibe, defined in app.html so it runs before render).
+// Cosmetic + self-only.
+function VibePicker() {
+  const vibes = [
+    ["edm", "EDM"], ["house", "House"], ["techno", "Techno"],
+    ["bass", "Bass"], ["trance", "Trance"], ["indie", "Indie"],
+  ];
+  const [sel, setSel] = useState(() => {
+    try {
+      return localStorage.getItem("encore_vibe") || "edm";
+    } catch (e) {
+      return "edm";
+    }
+  });
+  return (
+    <div className="vibe-pick">
+      <div className="vibe-pick-lbl">Vibe</div>
+      <div className="vibe-pick-row">
+        {vibes.map(([k, l]) => (
+          <button
+            key={k}
+            className={"vibe-chip" + (sel === k ? " on" : "")}
+            onClick={() => {
+              if (window.applyVibe) window.applyVibe(k);
+              setSel(k);
+            }}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ProfilePage({
   user,
   curUser,
@@ -210,6 +246,7 @@ function ProfilePage({
           ))}
         </div>
         {isSelf && <GenreSearch onGenreClick={onGenreClick} />}
+        {isSelf && <VibePicker />}
         {(user.artists || []).length > 0 && (
           <div>
             <div className="prof-subsec">Favorite Artists</div>

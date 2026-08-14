@@ -148,8 +148,8 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           }}
         >
           {isMobile
-            ? "Forward any ticket email to your private Encore address and it shows up here — no setup needed, right from the Gmail app."
-            : "Set this up once and your concerts add themselves — every time you buy a ticket, it just shows up. Takes about a minute, and you'll never tap \"add\" again."}
+            ? "Forward any ticket email to your private Encore address and it shows up here — no setup needed, right from the Gmail app. Only the shows you've actually booked, never a \"maybe.\""
+            : "Set this up once and your concerts add themselves — every time you buy a ticket, it just shows up. Takes about a minute, you'll never tap \"add\" again, and your list stays real: only shows you actually bought."}
         </p>
 
         <div className="mc-card">

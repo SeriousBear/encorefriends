@@ -29,6 +29,7 @@ Two rules keep it working:
 | 01 | `01-config.js` | keys, Supabase client, platform detection, RESELLERS/STREAMS/SOURCES/MONTHS |
 | 02 | `02-genres.js` | `GENRE_TAXONOMY`, genre helpers, `matchInfo` |
 | 03 | `03-helpers.js` | date/format/vendor helpers, avatar colors |
+| 03b | `03b-pwa.js` | platform-aware "add to home screen" nudge (vanilla) |
 | 04 | `04-cards.js` | `CCard`, `SharePicker` |
 | 05 | `05-inbox.js` | `InboxSheet` (one large, cohesive component — see note) |
 | 05b | `05b-threads.js` | `CrewCreate`, `CDetail` |

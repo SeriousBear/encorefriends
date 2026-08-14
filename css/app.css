@@ -535,3 +535,25 @@
   .ptr svg{width:22px;height:22px}
   .ptr.spin svg{animation:ptr-spin .7s linear infinite}
   @keyframes ptr-spin{to{transform:rotate(360deg)}}
+
+/* ── PWA install nudge (built by js/app/03b-pwa.js) ── */
+.pwa-nudge{position:fixed;left:12px;right:12px;bottom:84px;z-index:1200;display:flex;align-items:center;gap:10px;
+  max-width:520px;margin:0 auto;background:var(--card-2);border:1px solid var(--gold-border);border-radius:var(--radius-lg);
+  padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.5);transform:translateY(160%);opacity:0;
+  transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .32s}
+.pwa-nudge.in{transform:none;opacity:1}
+.pwa-ic{font-size:20px;flex:none}
+.pwa-msg{flex:1;font-size:var(--fs-sm);color:var(--fg);line-height:1.4}
+.pwa-go{flex:none;background:var(--gold);color:#000;border:0;border-radius:8px;padding:8px 14px;font-weight:700;font-size:var(--fs-xs);cursor:pointer}
+.pwa-x{flex:none;background:none;border:0;color:var(--fg3);font-size:15px;cursor:pointer;padding:4px;line-height:1}
+@media(min-width:900px){.pwa-nudge{bottom:20px;left:auto;right:20px;margin:0}}
+
+/* ── Vibe theme picker (profile) ── */
+.vibe-pick{margin:14px 0 4px}
+.vibe-pick-lbl{font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:2px;text-transform:uppercase;color:var(--fg3);margin-bottom:8px}
+.vibe-pick-row{display:flex;gap:8px;flex-wrap:wrap}
+.vibe-chip{font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.5px;text-transform:uppercase;
+  padding:7px 13px;border-radius:20px;border:1px solid var(--line-2);color:var(--fg2);background:transparent;cursor:pointer;
+  transition:border-color .2s,color .2s,background .2s}
+.vibe-chip:hover{border-color:var(--gold);color:var(--fg)}
+.vibe-chip.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}

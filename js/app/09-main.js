@@ -1839,11 +1839,11 @@ function App() {
               )}
               {liveConcerts.length === 0 ? (
                 <div className="empty">
-                  <div className="empty-i">🎵</div>
-                  <div className="empty-t">No Shows Yet</div>
+                  <div className="empty-i">🎫</div>
+                  <div className="empty-t">Your real shows, not a wishlist</div>
                   <div className="empty-s">
-                    Add a show manually, or forward a ticket to track it
-                    automatically.
+                    Forward a ticket and it lands here automatically — only the
+                    shows you've actually got tickets to. Or add one by hand.
                   </div>
                 </div>
               ) : filtered.length === 0 ? (
