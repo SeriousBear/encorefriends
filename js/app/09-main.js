@@ -1845,6 +1845,14 @@ function App() {
                     Forward a ticket and it lands here automatically — only the
                     shows you've actually got tickets to. Or add one by hand.
                   </div>
+                  <button
+                    className="empty-cta"
+                    onClick={() =>
+                      isGuest ? setShowAuth(true) : setShowAdd(true)
+                    }
+                  >
+                    Add your first show
+                  </button>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="empty">

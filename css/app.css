@@ -322,7 +322,10 @@
   /* DESKTOP */
   @media(min-width:700px){
     .fbar{display:none}
-    .app{flex-direction:row;flex-wrap:wrap}
+    /* keep the shell a normal column so the document scrolls; the sidebar +
+       main sit in a row inside .body. (row-wrap here bounded content height
+       and broke desktop body scroll.) */
+    .app{flex-direction:column}
     .hdr{width:100%}
     .body{display:flex;flex:1;width:100%}
     .sidebar{width:210px;min-width:210px;border-right:1px solid #1a1a1a;padding:18px 12px;position:sticky;top:65px;height:calc(100vh - 65px);overflow-y:auto;display:flex;flex-direction:column;gap:7px}
@@ -557,3 +560,14 @@
   transition:border-color .2s,color .2s,background .2s}
 .vibe-chip:hover{border-color:var(--gold);color:var(--fg)}
 .vibe-chip.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+
+/* ── Actionable empty-state CTA ── */
+.empty-cta{margin-top:16px;background:var(--gold);color:#000;border:0;border-radius:8px;padding:11px 20px;font-weight:700;font-size:var(--fs-md);cursor:pointer}
+.empty-cta:hover{filter:brightness(1.06)}
+
+/* ── Help & FAQ sheet (js/app/06c-self.js) ── */
+.help-title{font-family:var(--font-display);font-size:var(--fs-2xl);letter-spacing:.5px;color:var(--fg);margin:2px 0 10px}
+.help-item{border-top:1px solid var(--line)}
+.help-q{width:100%;text-align:left;background:none;border:0;cursor:pointer;color:var(--fg);font-family:var(--font-body);font-size:var(--fs-md);font-weight:600;padding:14px 0;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.help-pl{color:var(--gold);font-size:var(--fs-xl);flex:none;line-height:1}
+.help-a{color:var(--fg2);font-size:var(--fs-sm);line-height:1.5;padding:0 0 14px}

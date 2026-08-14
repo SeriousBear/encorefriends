@@ -35,6 +35,7 @@ Two rules keep it working:
 | 05b | `05b-threads.js` | `CrewCreate`, `CDetail` |
 | 06 | `06-profile.js` | `GenreSearch`, `ProfilePage`, `ArtistSheet`, `GenrePage` |
 | 06b | `06b-tour.js` | `TourPage` — personal stats / genre passport / bucket list / paths crossed |
+| 06c | `06c-self.js` | `VibePicker`, `InviteButton`, `HelpButton`/`HelpSheet` — self-profile controls |
 | 07 | `07-forms.js` | `TagSearch`, `EditProfilePage`, `SearchPage`, `LoginPage` |
 | 07b | `07b-pickers.js` | `ArtistSearch`, `PlaceSearch`, `DatePicker` |
 | 08 | `08-onboard.js` | `MailConnect`, `Onboarding` |

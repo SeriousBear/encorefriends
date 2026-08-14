@@ -92,41 +92,8 @@ function GenreSearch({ onGenreClick }) {
   );
 }
 
-// Vibe theme picker — recolors the app accent (persisted in localStorage,
-// applied by window.applyVibe, defined in app.html so it runs before render).
-// Cosmetic + self-only.
-function VibePicker() {
-  const vibes = [
-    ["edm", "EDM"], ["house", "House"], ["techno", "Techno"],
-    ["bass", "Bass"], ["trance", "Trance"], ["indie", "Indie"],
-  ];
-  const [sel, setSel] = useState(() => {
-    try {
-      return localStorage.getItem("encore_vibe") || "edm";
-    } catch (e) {
-      return "edm";
-    }
-  });
-  return (
-    <div className="vibe-pick">
-      <div className="vibe-pick-lbl">Vibe</div>
-      <div className="vibe-pick-row">
-        {vibes.map(([k, l]) => (
-          <button
-            key={k}
-            className={"vibe-chip" + (sel === k ? " on" : "")}
-            onClick={() => {
-              if (window.applyVibe) window.applyVibe(k);
-              setSel(k);
-            }}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+// VibePicker, InviteButton, HelpButton/HelpSheet moved to 06c-self.js (kept
+// 06-profile.js under the ~1,000-line ceiling). Referenced below at call time.
 
 function ProfilePage({
   user,
@@ -220,6 +187,8 @@ function ProfilePage({
             Edit Profile
           </button>
         )}
+        {isSelf && <InviteButton user={user} />}
+        {isSelf && <HelpButton />}
       </div>
       <div className="prof-hero">
         <div className="prof-top">
