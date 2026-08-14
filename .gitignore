@@ -9,3 +9,6 @@ package-lock.json
 
 # Design mockups / previews — local only, not part of the site
 design/
+
+# local pre-port backups
+*.bak-prev
