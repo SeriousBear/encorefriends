@@ -1609,8 +1609,8 @@ function App() {
                 ).length >= 3 && (
                   <div
                     style={{
-                      background: "rgba(245,166,35,.05)",
-                      border: "1px solid rgba(245,166,35,.25)",
+                      background: "color-mix(in srgb,var(--gold) 5%,transparent)",
+                      border: "1px solid color-mix(in srgb,var(--gold) 25%,transparent)",
                       borderRadius: 10,
                       padding: "13px 15px",
                       marginBottom: 14,

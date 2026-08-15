@@ -750,10 +750,10 @@ function Onboarding({ session, profile, onComplete }) {
               style={{
                 marginTop: 24,
                 padding: "14px 15px",
-                background: discoverable ? "rgba(245,166,35,.06)" : "var(--panel)",
+                background: discoverable ? "color-mix(in srgb,var(--gold) 6%,transparent)" : "var(--panel)",
                 border:
                   "1px solid " +
-                  (discoverable ? "rgba(245,166,35,.35)" : "var(--line)"),
+                  (discoverable ? "color-mix(in srgb,var(--gold) 35%,transparent)" : "var(--line)"),
                 borderRadius: 8,
                 cursor: "pointer",
                 transition: "all .15s",
@@ -787,7 +787,7 @@ function Onboarding({ session, profile, onComplete }) {
                     color: discoverable ? "var(--gold)" : "var(--fg4)",
                     border:
                       "1px solid " +
-                      (discoverable ? "rgba(245,166,35,.4)" : "var(--line-2)"),
+                      (discoverable ? "color-mix(in srgb,var(--gold) 40%,transparent)" : "var(--line-2)"),
                   }}
                 >
                   {discoverable ? "ON" : "OFF"}

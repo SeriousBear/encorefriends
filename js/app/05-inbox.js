@@ -220,8 +220,8 @@ function InboxSheet({
   const chip = (on) => ({
     padding: "4px 10px",
     borderRadius: 12,
-    background: on ? "rgba(245,166,35,.1)" : "transparent",
-    border: "1px solid " + (on ? "rgba(245,166,35,.4)" : "#222"),
+    background: on ? "color-mix(in srgb,var(--gold) 10%,transparent)" : "transparent",
+    border: "1px solid " + (on ? "color-mix(in srgb,var(--gold) 40%,transparent)" : "#222"),
     color: on ? "var(--gold)" : "var(--fg3)",
     fontFamily: "var(--font-mono)",
     fontSize: "var(--fs-2xs)",
@@ -510,7 +510,7 @@ function InboxSheet({
                               marginTop: 10,
                               padding: "10px 0",
                               background:
-                                n === 0 ? "rgba(245,166,35,.2)" : "var(--gold)",
+                                n === 0 ? "color-mix(in srgb,var(--gold) 20%,transparent)" : "var(--gold)",
                               border: "none",
                               borderRadius: 6,
                               color: "#000",
@@ -576,8 +576,8 @@ function InboxSheet({
                             width: 34,
                             height: 34,
                             borderRadius: 8,
-                            background: "rgba(245,166,35,.08)",
-                            border: "1px solid rgba(245,166,35,.3)",
+                            background: "color-mix(in srgb,var(--gold) 8%,transparent)",
+                            border: "1px solid color-mix(in srgb,var(--gold) 30%,transparent)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -858,8 +858,8 @@ function InboxSheet({
                   style={{
                     padding: "8px 10px",
                     marginBottom: 10,
-                    background: "rgba(245,166,35,.05)",
-                    border: "1px solid rgba(245,166,35,.2)",
+                    background: "color-mix(in srgb,var(--gold) 5%,transparent)",
+                    border: "1px solid color-mix(in srgb,var(--gold) 20%,transparent)",
                     borderRadius: 6,
                     fontFamily: "var(--font-mono)",
                     fontSize: "var(--fs-2xs)",
@@ -917,11 +917,11 @@ function InboxSheet({
                           padding: "8px 12px",
                           borderRadius: 10,
                           background: mine
-                            ? "rgba(245,166,35,.12)"
+                            ? "color-mix(in srgb,var(--gold) 12%,transparent)"
                             : "#161616",
                           border:
                             "1px solid " +
-                            (mine ? "rgba(245,166,35,.3)" : "#222"),
+                            (mine ? "color-mix(in srgb,var(--gold) 30%,transparent)" : "#222"),
                           fontFamily: "var(--font-body)",
                           fontSize: "var(--fs-sm)",
                           color: "var(--fg)",
@@ -998,7 +998,7 @@ function InboxSheet({
                     padding: "0 16px",
                     background: draft.trim()
                       ? "var(--gold)"
-                      : "rgba(245,166,35,.2)",
+                      : "color-mix(in srgb,var(--gold) 20%,transparent)",
                     border: "none",
                     borderRadius: 6,
                     color: "#000",
@@ -1149,11 +1149,11 @@ function InboxSheet({
                           padding: "8px 12px",
                           borderRadius: 10,
                           background: mine
-                            ? "rgba(245,166,35,.12)"
+                            ? "color-mix(in srgb,var(--gold) 12%,transparent)"
                             : "#161616",
                           border:
                             "1px solid " +
-                            (mine ? "rgba(245,166,35,.3)" : "#222"),
+                            (mine ? "color-mix(in srgb,var(--gold) 30%,transparent)" : "#222"),
                           fontFamily: "var(--font-body)",
                           fontSize: "var(--fs-sm)",
                           color: "var(--fg)",
@@ -1214,7 +1214,7 @@ function InboxSheet({
                     padding: "0 16px",
                     background: draft.trim()
                       ? "var(--gold)"
-                      : "rgba(245,166,35,.2)",
+                      : "color-mix(in srgb,var(--gold) 20%,transparent)",
                     border: "none",
                     borderRadius: 6,
                     color: "#000",
@@ -1249,16 +1249,12 @@ function InboxSheet({
                 ))}
               </div>
               {filteredNotifs.length === 0 ? (
-                <div
-                  style={{
-                    color: "var(--fg3)",
-                    fontFamily: "var(--font-body)",
-                    fontSize: "var(--fs-sm)",
-                    padding: "24px 0",
-                    textAlign: "center",
-                  }}
-                >
-                  Nothing yet.
+                <div className="nrow-empty">
+                  <div className="nrow-empty-ic">🔔</div>
+                  <div>
+                    No activity yet — follow friends to see their shows land
+                    here.
+                  </div>
                 </div>
               ) : (
                 filteredNotifs.map((n) => {
@@ -1266,48 +1262,19 @@ function InboxSheet({
                   return (
                     <div
                       key={n.id}
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        padding: "12px 0",
-                        borderBottom: "1px solid var(--card-2)",
-                      }}
+                      className={"nrow" + (n.read ? "" : " unread")}
                     >
-                      <div style={{ fontSize: "var(--fs-base)" }}>{m.icon}</div>
-                      <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            fontFamily: "var(--font-body)",
-                            fontSize: "var(--fs-sm)",
-                            color: "#ddd",
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {m.text}
-                        </div>
-                        <div style={{ fontFamily: "var(--font-mono)", fontSize: "var(--fs-2xs)", color: "var(--fg3)", marginTop: 3 }}>
-                          {timeAgo(n.created_at)}
-                        </div>
+                      <div className="nrow-ic">{m.icon}</div>
+                      <div className="nrow-main">
+                        <div className="nrow-txt">{m.text}</div>
+                        <div className="nrow-time">{timeAgo(n.created_at)}</div>
                         {m.action === "no_show" && (
-                          <div style={{ marginTop: 6 }}>
-                            <button
-                              onClick={onReportBug}
-                              style={{
-                                background: "none",
-                                border: "1px solid var(--line-2)",
-                                color: "var(--fg2)",
-                                fontSize: "var(--fs-2xs)",
-                                fontFamily: "var(--font-mono)",
-                                padding: "4px 9px",
-                                borderRadius: 5,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Report
-                            </button>
-                          </div>
+                          <button className="nrow-report" onClick={onReportBug}>
+                            Report
+                          </button>
                         )}
                       </div>
+                      {!n.read && <span className="nrow-dot" />}
                     </div>
                   );
                 })

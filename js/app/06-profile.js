@@ -65,7 +65,7 @@ function GenreSearch({ onGenreClick }) {
                 borderBottom: "1px solid #1a1a1a",
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.background = "rgba(245,166,35,.07)";
+                e.currentTarget.style.background = "color-mix(in srgb,var(--gold) 7%,transparent)";
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.background = "";
@@ -179,7 +179,7 @@ function ProfilePage({
             className="prof-follow-btn pf-follow"
             style={{
               background: "transparent",
-              border: "1px solid rgba(245,166,35,.3)",
+              border: "1px solid color-mix(in srgb,var(--gold) 30%,transparent)",
               color: "var(--gold)",
             }}
             onClick={onEdit}
@@ -474,7 +474,7 @@ function ProfilePage({
                       background:
                         connModal === "followers"
                           ? "var(--gold)"
-                          : "rgba(245,166,35,.1)",
+                          : "color-mix(in srgb,var(--gold) 10%,transparent)",
                       color: connModal === "followers" ? "#000" : "var(--gold)",
                     }}
                     onClick={() => setConnModal("followers")}
@@ -495,7 +495,7 @@ function ProfilePage({
                       background:
                         connModal === "following"
                           ? "var(--gold)"
-                          : "rgba(245,166,35,.1)",
+                          : "color-mix(in srgb,var(--gold) 10%,transparent)",
                       color: connModal === "following" ? "#000" : "var(--gold)",
                     }}
                     onClick={() => setConnModal("following")}
@@ -610,7 +610,7 @@ function ArtistSheet({ artistName, concerts, onClose, onOpenConcert }) {
                         u === "urgent"
                           ? "rgba(255,80,80,.3)"
                           : u === "soon"
-                            ? "rgba(245,166,35,.25)"
+                            ? "color-mix(in srgb,var(--gold) 25%,transparent)"
                             : "var(--line)",
                     }}
                   >
@@ -745,8 +745,8 @@ function GenrePage({
                 style={
                   s === genre
                     ? {
-                        background: "rgba(245,166,35,.12)",
-                        borderColor: "rgba(245,166,35,.4)",
+                        background: "color-mix(in srgb,var(--gold) 12%,transparent)",
+                        borderColor: "color-mix(in srgb,var(--gold) 40%,transparent)",
                         color: "var(--gold)",
                       }
                     : undefined
@@ -954,9 +954,9 @@ function GenrePage({
                           className="uc-genre"
                           style={{
                             background:
-                              g === genre ? "rgba(245,166,35,.1)" : "",
+                              g === genre ? "color-mix(in srgb,var(--gold) 10%,transparent)" : "",
                             borderColor:
-                              g === genre ? "rgba(245,166,35,.3)" : "",
+                              g === genre ? "color-mix(in srgb,var(--gold) 30%,transparent)" : "",
                             color: g === genre ? "var(--gold)" : "",
                           }}
                         >

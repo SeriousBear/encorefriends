@@ -266,10 +266,10 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
           onClick={() => set("discoverable", !draft.discoverable)}
           style={{
             padding: "14px 15px",
-            background: draft.discoverable ? "rgba(245,166,35,.06)" : "var(--panel)",
+            background: draft.discoverable ? "color-mix(in srgb,var(--gold) 6%,transparent)" : "var(--panel)",
             border:
               "1px solid " +
-              (draft.discoverable ? "rgba(245,166,35,.35)" : "var(--line)"),
+              (draft.discoverable ? "color-mix(in srgb,var(--gold) 35%,transparent)" : "var(--line)"),
             borderRadius: 8,
             cursor: "pointer",
             transition: "all .15s",
@@ -303,7 +303,7 @@ function EditProfilePage({ user, onBack, onSave, onClearShows, showCount }) {
                 color: draft.discoverable ? "var(--gold)" : "var(--fg4)",
                 border:
                   "1px solid " +
-                  (draft.discoverable ? "rgba(245,166,35,.4)" : "var(--line-2)"),
+                  (draft.discoverable ? "color-mix(in srgb,var(--gold) 40%,transparent)" : "var(--line-2)"),
               }}
             >
               {draft.discoverable ? "ON" : "OFF"}
