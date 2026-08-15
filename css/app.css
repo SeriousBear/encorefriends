@@ -326,6 +326,12 @@
        main sit in a row inside .body. (row-wrap here bounded content height
        and broke desktop body scroll.) */
     .app{flex-direction:column}
+    /* Profile/genre/edit use an internal overflow-y:auto scroller that needs a
+       definite-height parent — which the document-scroll shell doesn't give.
+       Let them flow in the document too (consistent with the feed), and unstick
+       their sub-headers so they don't collide with the app header. */
+    .prof-page,.genre-page,.edit-page{overflow:visible}
+    .prof-hdr,.prof-tabs{position:static}
     .hdr{width:100%}
     .body{display:flex;flex:1;width:100%}
     .sidebar{width:210px;min-width:210px;border-right:1px solid #1a1a1a;padding:18px 12px;position:sticky;top:65px;height:calc(100vh - 65px);overflow-y:auto;display:flex;flex-direction:column;gap:7px}
