@@ -90,12 +90,22 @@ export default async (req) => {
       })
     : "";
 
-  // ── 1. Followers ──────────────────────────────────────────────────────────
-  const { data: followers } = await sb
+  // ── 1. Followers (honor each follower's per-friend "notify" preference) ────
+  let followers, ferr;
+  ({ data: followers, error: ferr } = await sb
     .from("follows")
-    .select("follower_id")
-    .eq("following_id", ownerId);
-  const followerIds = (followers || []).map((f) => f.follower_id);
+    .select("follower_id, notify")
+    .eq("following_id", ownerId));
+  if (ferr) {
+    // `notify` column not migrated yet — fall back to notifying all followers
+    ({ data: followers } = await sb
+      .from("follows")
+      .select("follower_id")
+      .eq("following_id", ownerId));
+  }
+  const followerIds = (followers || [])
+    .filter((f) => f.notify !== false)
+    .map((f) => f.follower_id);
 
   let sent = 0;
   if (followerIds.length) {

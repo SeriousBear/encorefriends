@@ -68,6 +68,31 @@ function App() {
         supabase.from("follows").select("follower_id, following_id"),
       ]);
       if (cancelled || !profs) return;
+      // per-friend "notify me about their shows" prefs (persisted per device)
+      let notifyOn = new Set();
+      try {
+        notifyOn = new Set(
+          JSON.parse(
+            localStorage.getItem(
+              "encore_notify_on_" + (session?.user?.id || "anon"),
+            ) || "[]",
+          ),
+        );
+      } catch (e) {}
+      // DB is the source of truth when the `notify` column exists; the
+      // localStorage set above is the offline / pre-migration fallback.
+      if (session?.user?.id) {
+        try {
+          const { data: np, error: npErr } = await supabase
+            .from("follows")
+            .select("following_id, notify")
+            .eq("follower_id", session.user.id);
+          if (!npErr && np)
+            notifyOn = new Set(
+              np.filter((r) => r.notify !== false).map((r) => r.following_id),
+            );
+        } catch (e) {}
+      }
       const followMap = {};
       (fols || []).forEach((f) => {
         if (!followMap[f.follower_id]) followMap[f.follower_id] = [];
@@ -89,6 +114,7 @@ function App() {
           totalShows: pr.total_shows || 0,
           social: pr.social || {},
           following: followMap[pr.id] || [],
+          notify: notifyOn.has(pr.id),
           past: [],
           ratings: {},
         })),
@@ -996,10 +1022,31 @@ function App() {
   const toggleNotif = (e, uid) => {
     e?.stopPropagation();
     const u2 = users.find((u) => u.id === uid);
+    const next = !u2?.notify;
     setUsers((p) =>
-      p.map((u) => (u.id === uid ? { ...u, notify: !u.notify } : u)),
+      p.map((u) => (u.id === uid ? { ...u, notify: next } : u)),
     );
-    if (!u2.notify) toast("Notifications on for " + u2.name);
+    // persist so the choice survives a refresh (stored per device)
+    try {
+      const key = "encore_notify_on_" + (session?.user?.id || "anon");
+      const s = new Set(JSON.parse(localStorage.getItem(key) || "[]"));
+      next ? s.add(uid) : s.delete(uid);
+      localStorage.setItem(key, JSON.stringify([...s]));
+    } catch (e2) {}
+    // sync to the follow edge so it persists across devices and the server can
+    // honor it when sending pushes (no-op until the migration is run)
+    if (session?.user?.id) {
+      supabase
+        .from("follows")
+        .update({ notify: next })
+        .eq("follower_id", session.user.id)
+        .eq("following_id", uid)
+        .then(
+          () => {},
+          () => {},
+        );
+    }
+    toast(next ? "Notifications on for " + u2.name : "Muted " + u2.name);
   };
   const viewProfile = (uid) => {
     setProfileId(uid);
