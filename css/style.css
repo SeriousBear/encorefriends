@@ -146,16 +146,12 @@ section{position:relative;z-index:1}
 .rz-chip.v{color:#1a1205;background:var(--gold);font-weight:700;transition:background .4s}
 
 /* THE SET (pinned) */
-.drop{height:170vh;position:relative}
-.drop-stage{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.house{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,transparent,rgba(3,3,7,.96));opacity:clamp(0,calc(1 - var(--lp,0)*4),1);pointer-events:none;z-index:2}
-.hush{position:absolute;font-family:var(--font-mono);font-size:12px;letter-spacing:6px;text-transform:uppercase;color:var(--fg3);z-index:3;opacity:clamp(0,calc(1 - var(--lp,0)*4),1)}
-.drop-hed{font-family:var(--font-display);font-size:clamp(52px,12vw,150px);line-height:.9;letter-spacing:2px;z-index:3;opacity:clamp(0,calc((var(--lp,0) - .04)*7),1);transform:scale(calc(.92 + clamp(0,calc((var(--lp,0) - .04)*7),1)*.08))}
+.drop{padding:130px 0 120px;text-align:center}
+.drop-hed{font-family:var(--font-display);font-size:clamp(52px,12vw,140px);line-height:.9;letter-spacing:2px}
 .drop-hed .gold{color:var(--gold)}
-.drop-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-top:14px;z-index:3;opacity:clamp(0,calc((var(--lp,0) - .12)*7),1)}
-.setlist{list-style:none;margin:44px auto 0;max-width:760px;width:100%;z-index:3;padding:0 20px}
-.setlist li{display:flex;align-items:center;gap:18px;padding:16px 4px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;
-  opacity:clamp(0,calc((var(--lp,0) - (.2 + var(--i)*.07))*9),1);transform:translateY(calc((1 - clamp(0,calc((var(--lp,0) - (.2 + var(--i)*.07))*9),1))*20px))}
+.drop-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-top:14px}
+.setlist{list-style:none;margin:44px auto 0;max-width:760px;width:100%;padding:0 20px}
+.setlist li{display:flex;align-items:center;gap:18px;padding:16px 4px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
 .setlist .num{font-family:var(--font-mono);font-size:12px;color:var(--gold);width:34px;flex:none}
 .setlist .ico{font-size:22px;width:30px;flex:none;text-align:center}
 .setlist .t{font-family:var(--font-display);font-size:26px;letter-spacing:.5px;flex:none;min-width:210px}

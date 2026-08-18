@@ -129,9 +129,6 @@
     root.style.setProperty('--g-mag',(peak(p,0.42,0.24)*0.75).toFixed(3));
     root.style.setProperty('--g-cyan',(peak(p,0.44,0.22)*0.6).toFixed(3));
     nav.classList.toggle('scrolled',y>60);
-    var r=drop.getBoundingClientRect(), span=drop.offsetHeight-vh, start=vh*0.8;
-    // begin the reveal while the section is still approaching (not only once pinned)
-    drop.querySelector('.drop-stage').style.setProperty('--lp',clamp01((start - r.top)/((span>0?span:1)+start)).toFixed(4));
     root.style.setProperty('--beam',clamp01(peak(p,0.42,0.26)*1.15).toFixed(3));
   }
   window.addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(frame);}},{passive:true});
