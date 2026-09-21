@@ -11,7 +11,6 @@
   function clamp01(v){return v<0?0:(v>1?1:v);}
 
   ['l0','l1','l2'].forEach(function(id,i){setTimeout(function(){var e=document.getElementById(id);if(e)e.classList.add('show');},180+i*150);});
-  setTimeout(function(){var h=document.getElementById('hed');if(h&&!reduce)h.classList.add('beat');},950);
 
   // ---- VIBE SWITCHER ----
   var genres=[
