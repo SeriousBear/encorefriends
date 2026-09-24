@@ -8,6 +8,7 @@ import {
   tokenFromAddress,
   extractParseResult,
   buildConcertRow,
+  sanitizeTicketUrl,
 } from "../netlify/functions/parse-helpers.mjs";
 import {
   canonicalizeGenres,
@@ -191,5 +192,46 @@ describe("PARSE_SYSTEM prompt integrity", () => {
   });
   it("forward domain is production", () => {
     expect(FORWARD_DOMAIN).toBe("encorefriends.com");
+  });
+});
+
+describe("sanitizeTicketUrl", () => {
+  it("rebuilds a real RA event link and strips tracking", () => {
+    expect(sanitizeTicketUrl("https://ra.co/events/2145678?utm=email")).toBe(
+      "https://ra.co/events/2145678",
+    );
+  });
+  it("rejects RA guide / homepage links", () => {
+    expect(sanitizeTicketUrl("https://ra.co/guide/us/losangeles")).toBe("");
+    expect(sanitizeTicketUrl("https://ra.co")).toBe("");
+  });
+  it("canonicalizes DICE and Eventbrite event links", () => {
+    expect(sanitizeTicketUrl("https://dice.fm/event/abc-def?x=1")).toBe(
+      "https://dice.fm/event/abc-def",
+    );
+    expect(
+      sanitizeTicketUrl("https://www.eventbrite.com/e/some-event-123?aff=x"),
+    ).toBe("https://www.eventbrite.com/e/some-event-123");
+  });
+  it("keeps a deep link for vendors without a known event shape", () => {
+    expect(sanitizeTicketUrl("https://www.ticketmaster.com/event/abc123")).toBe(
+      "https://www.ticketmaster.com/event/abc123",
+    );
+  });
+  it("rejects homepages, non-https, and unknown/phishing domains", () => {
+    expect(sanitizeTicketUrl("https://www.ticketmaster.com/")).toBe("");
+    expect(sanitizeTicketUrl("http://ra.co/events/1")).toBe("");
+    expect(sanitizeTicketUrl("https://ra-co.evil.com/events/1")).toBe("");
+    expect(sanitizeTicketUrl("https://bit.ly/xyz")).toBe("");
+    expect(sanitizeTicketUrl("")).toBe("");
+  });
+  it("buildConcertRow sanitizes the ticket_url", () => {
+    const row = buildConcertRow({
+      artist: "X",
+      date: "2026-01-01",
+      source: "RA",
+      ticket_url: "https://ra.co/guide/us",
+    });
+    expect(row.ticket_url).toBe("");
   });
 });

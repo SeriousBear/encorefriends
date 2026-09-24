@@ -210,7 +210,10 @@ function CDetail({
   myGroups,
   onStartGroup,
   onOpenCrew,
+  onSetLink,
 }) {
+  const [linkDraft, setLinkDraft] = useState("");
+  const [linkErr, setLinkErr] = useState("");
   const u = getUrgency(c.date),
     dy = daysUntil(c.date),
     d = fmt(c.date);
@@ -389,6 +392,34 @@ function CDetail({
                 {vendorLabel(c) ? "Via " + vendorLabel(c) : "Ticket link unavailable"}
               </span>
               <span className="sh-buy-src">no direct link</span>
+            </div>
+          )}
+          {c.owner_id === curUser.id && !primaryUrl(c) && onSetLink && (
+            <div className="sh-linkfix">
+              <input
+                className="sh-linkinput"
+                placeholder="Paste the event page link (RA, DICE, Ticketmaster…)"
+                value={linkDraft}
+                onChange={(e) => {
+                  setLinkDraft(e.target.value);
+                  setLinkErr("");
+                }}
+              />
+              <button
+                className="btn-sm btn-amber"
+                onClick={() => {
+                  const r = sanitizeTicketUrl(linkDraft);
+                  if (!r.ok) {
+                    setLinkErr(r.error);
+                    return;
+                  }
+                  onSetLink(c.id, r.url);
+                  setLinkDraft("");
+                }}
+              >
+                Save link
+              </button>
+              {linkErr && <div className="sh-linkerr">{linkErr}</div>}
             </div>
           )}
           {showR && (

@@ -46,7 +46,7 @@ Return ONLY a valid JSON object of this exact shape:
 - date: start date — REQUIRED for a show to appear in "shows".
 - end_date: end date — equals date for single-day shows.
 - source: ticketing platform (Ticketmaster, SeatGeek, RA, DICE, See Tickets, etc.).
-- ticket_url: the direct link for THIS show copied exactly from the email, or "" if none.
+- ticket_url: the DIRECT event/order page link for THIS show, copied exactly from the email (e.g. a .../events/123 page). Use "" if the email only has a homepage, a guide/listing, a promo, an unsubscribe, or a click-tracking/redirect link — never use those.
 - is_festival: true if multi-day festival.
 - genres: 1-3 genres describing the artist/festival, chosen ONLY from the GENRE LIST below — copy the strings EXACTLY as written. Use your own knowledge of the artist. Prefer the most specific subgenre you are confident about (e.g. "Riddim" over "Dubstep", "Melodic Techno" over "Techno"); fall back to a broad genre when unsure. Always give your best guess — use [] only if you have absolutely no idea.
 
@@ -96,6 +96,46 @@ export function extractParseResult(text) {
   }
 }
 
+// Allowlisted ticketing hosts. Hosts in EVENT_HOSTS must point at a real event
+// page (rebuilt clean); other allowlisted hosts just need a non-root path.
+// Anything off-allowlist, non-https, or a bare homepage/guide link becomes "".
+// This is the server-side twin of sanitizeTicketUrl in js/app/03-helpers.js.
+const TICKET_HOSTS = [
+  "ticketmaster.com", "livenation.com", "axs.com", "dice.fm", "ra.co",
+  "residentadvisor.net", "seetickets.us", "seetickets.com", "seatgeek.com",
+  "eventbrite.com", "etix.com", "tixr.com", "vividseats.com", "stubhub.com",
+  "tickpick.com", "showclix.com", "frontgatetickets.com", "universe.com",
+  "bandsintown.com", "ticketweb.com", "eventim.com", "cashortrade.org",
+];
+const EVENT_HOSTS = {
+  "ra.co": { rx: /\/events\/(\d+)/i, url: (m) => "https://ra.co/events/" + m },
+  "residentadvisor.net": { rx: /\/events\/(\d+)/i, url: (m) => "https://ra.co/events/" + m },
+  "axs.com": { rx: /\/events\/(\d+)/i, url: (m) => "https://www.axs.com/events/" + m },
+  "dice.fm": { rx: /\/event\/([\w-]+)/i, url: (m) => "https://dice.fm/event/" + m },
+  "eventbrite.com": { rx: /\/e\/([\w-]+)/i, url: (m) => "https://www.eventbrite.com/e/" + m },
+};
+export function sanitizeTicketUrl(raw) {
+  if (!raw || typeof raw !== "string") return "";
+  const u = raw.trim();
+  if (!/^https:\/\//i.test(u)) return ""; // https only
+  let host, path;
+  try {
+    const o = new URL(u);
+    host = o.hostname.replace(/^www\./, "").toLowerCase();
+    path = o.pathname;
+  } catch (e) {
+    return "";
+  }
+  const base = TICKET_HOSTS.find((d) => host === d || host.endsWith("." + d));
+  if (!base) return ""; // not a known ticket site
+  const ev = EVENT_HOSTS[base];
+  if (ev) {
+    const m = u.match(ev.rx);
+    return m ? ev.url(m[1]) : ""; // require (and clean) a real event page
+  }
+  return path && path !== "/" ? u : ""; // other vendors: reject bare homepage
+}
+
 // Shape one parsed show into the row we upsert into `concerts`.
 // Returns null when the show must be skipped (no artist or no date).
 export function buildConcertRow(c, userId, now = new Date()) {
@@ -108,7 +148,7 @@ export function buildConcertRow(c, userId, now = new Date()) {
     date: c.date,
     end_date: c.end_date || c.date,
     source: c.source || "Email",
-    ticket_url: c.ticket_url || "",
+    ticket_url: sanitizeTicketUrl(c.ticket_url),
     is_festival: !!c.is_festival,
     genres: canonicalizeGenres(c.genres),
     scanned_at: now.toISOString(),

@@ -184,6 +184,46 @@ const vendorLabel = (c) => {
   if (c.source && !["direct", "unknown", ""].includes(s)) return c.source;
   return null;
 };
+// Validate + clean a user-pasted ticket link. Locked to known ticket domains
+// (anti-phishing); for vendors with a known event shape (RA, DICE, AXS,
+// Eventbrite) require the real event page and rebuild it clean. Returns
+// { ok:true, url } or { ok:false, error }.
+function sanitizeTicketUrl(raw) {
+  const u = String(raw || "").trim();
+  if (!u) return { ok: false, error: "Paste a link first." };
+  if (!/^https:\/\//i.test(u))
+    return { ok: false, error: "Link must start with https://" };
+  let host, path;
+  try {
+    const o = new URL(u);
+    host = o.hostname.replace(/^www\./, "").toLowerCase();
+    path = o.pathname;
+  } catch (e) {
+    return { ok: false, error: "That doesn't look like a valid link." };
+  }
+  const v = TICKET_VENDORS.find((vv) =>
+    vv.domains.some((d) => host === d || host.endsWith("." + d)),
+  );
+  if (!v)
+    return {
+      ok: false,
+      error:
+        "Use a link from a known ticket site (Ticketmaster, RA, DICE, SeatGeek, Eventbrite…).",
+    };
+  if (v.eventRx) {
+    const m = u.match(v.eventRx);
+    return m
+      ? { ok: true, url: v.eventUrl(m[1]) }
+      : {
+          ok: false,
+          error: "Paste the event page link from " + v.name + " — not the homepage.",
+        };
+  }
+  if (!path || path === "/")
+    return { ok: false, error: "Paste the event page link, not the homepage." };
+  return { ok: true, url: u };
+}
+
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
 // ── STYLES ──────────────────────────────────────────────────────────────────

@@ -182,6 +182,7 @@ function App() {
     city: "",
     date: "",
     source: "Ticketmaster",
+    link: "",
   });
   const [notif, setNotif] = useState(null);
   const [errMsg, setErrMsg] = useState(null);
@@ -1048,6 +1049,22 @@ function App() {
     }
     toast(next ? "Notifications on for " + u2.name : "Muted " + u2.name);
   };
+  // Owner sets/fixes a show's ticket link (already validated to a known ticket
+  // domain by the caller). Optimistic update + persist.
+  const setTicketLink = async (id, url) => {
+    setLiveConcerts((p) =>
+      p.map((c) => (c.id === id ? { ...c, ticket_url: url } : c)),
+    );
+    setDetail((d) => (d && d.id === id ? { ...d, ticket_url: url } : d));
+    if (session?.user?.id) {
+      const { error } = await supabase
+        .from("concerts")
+        .update({ ticket_url: url })
+        .eq("id", id)
+        .eq("owner_id", session.user.id);
+      toast(error ? "Couldn't save link." : "Ticket link saved ✓", !!error);
+    }
+  };
   const viewProfile = (uid) => {
     setProfileId(uid);
     setView("profile");
@@ -1175,6 +1192,15 @@ function App() {
     if (!requireAuth()) return;
     if (!nc.artist.trim() || !nc.date) return;
     if (!session?.user?.id) return;
+    let linkUrl = "";
+    if (nc.link && nc.link.trim()) {
+      const r = sanitizeTicketUrl(nc.link);
+      if (!r.ok) {
+        toast(r.error, true);
+        return;
+      }
+      linkUrl = r.url;
+    }
     const { data, error } = await supabase
       .from("concerts")
       .insert({
@@ -1185,7 +1211,7 @@ function App() {
         date: nc.date,
         end_date: nc.date,
         source: nc.source || "Other",
-        ticket_url: "",
+        ticket_url: linkUrl,
         is_festival: false,
         genres: [],
       })
@@ -1206,6 +1232,7 @@ function App() {
       city: "",
       date: "",
       source: "Ticketmaster",
+      link: "",
     });
     setShowAddC(false);
     toast(nc.artist.trim() + " added!");
@@ -2297,6 +2324,15 @@ function App() {
                   ))}
                 </select>
               </div>
+              <div className="form-row" style={{ marginTop: 11 }}>
+                <div className="form-lbl">Ticket link (optional)</div>
+                <input
+                  className="form-inp"
+                  placeholder="https://… event page (RA, DICE, Ticketmaster…)"
+                  value={nc.link}
+                  onChange={(e) => setNc((p) => ({ ...p, link: e.target.value }))}
+                />
+              </div>
               <button className="form-btn" onClick={addManually}>
                 Add Concert
               </button>
@@ -2324,6 +2360,7 @@ function App() {
           onShare={(cc) => setShareShow(cc)}
           onToggleHidden={toggleHidden}
           onDelete={deleteConcert}
+          onSetLink={setTicketLink}
           myGroups={crews.filter(
             (t) =>
               t.show_artist === detail.artist &&
