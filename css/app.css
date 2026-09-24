@@ -592,3 +592,21 @@
 .nrow-dot{position:absolute;top:15px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--gold)}
 .nrow-empty{text-align:center;color:var(--fg3);font-family:var(--font-body);font-size:var(--fs-sm);padding:28px 14px;line-height:1.5}
 .nrow-empty-ic{font-size:26px;margin-bottom:8px;opacity:.7}
+
+/* ── Forwarding setup: progress tracker + troubleshooting (js/app/08-onboard.js) ── */
+.mc-track{display:flex;gap:8px;margin:0 0 22px;flex-wrap:wrap}
+.mc-tk{flex:1;min-width:118px;display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:.5px;text-transform:uppercase;color:var(--fg3)}
+.mc-tk-n{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;background:var(--line-2);color:var(--fg2)}
+.mc-tk.now{border-color:var(--gold-border);color:var(--fg)}
+.mc-tk.now .mc-tk-n{background:var(--gold);color:#000}
+.mc-tk.done{border-color:color-mix(in srgb,#5cc46a 40%,transparent);color:#9fd9a0}
+.mc-tk.done .mc-tk-n{background:#5cc46a;color:#00230a;font-size:0}
+.mc-tk.done .mc-tk-n::before{content:"✓";font-size:11px}
+.mc-trouble{margin:0 0 18px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:0 14px}
+.mc-trouble summary{cursor:pointer;padding:12px 0;font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.5px;text-transform:uppercase;color:var(--gold);list-style:none}
+.mc-trouble summary::-webkit-details-marker{display:none}
+.mc-trouble summary::before{content:"?  ";opacity:.7}
+.mc-trouble-b{padding:0 0 12px}
+.mc-trouble-b p{font-family:var(--font-body);font-size:var(--fs-sm);color:var(--fg2);line-height:1.55;margin:0 0 10px}
+.mc-trouble-b p:last-child{margin-bottom:0}
+.mc-trouble-b b{color:var(--fg)}

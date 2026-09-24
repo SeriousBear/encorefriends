@@ -93,6 +93,10 @@ const HELP_FAQS = [
     "Forward any ticket confirmation to your private Encore address. It reads the artist, venue and date and files the show for you automatically.",
   ],
   [
+    "Gmail won't save forwarding / says “invalid forwarding address”?",
+    "That means Gmail hasn't verified your Encore address yet. In setup, tap “Finish verifying in Gmail” first, then set Gmail to “Forward a copy” and Save. Still stuck? In Gmail, switch Forwarding to Disable → Save, then back to Forward a copy → Save again — that makes Gmail re-check the verified address.",
+  ],
+  [
     "Which ticket platforms work?",
     "Any ticket email — Ticketmaster, SeatGeek, DICE, AXS, StubHub, Eventbrite and more.",
   ],

@@ -152,6 +152,20 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
             : "Set this up once and your concerts add themselves — every time you buy a ticket, it just shows up. Takes about a minute, you'll never tap \"add\" again, and your list stays real: only shows you actually bought."}
         </p>
 
+        {!isMobile && (
+          <div className="mc-track" aria-label="Setup progress">
+            <div className={"mc-tk" + (confirmLink || confirmCode || verified ? " done" : " now")}>
+              <span className="mc-tk-n">1</span> Add address
+            </div>
+            <div className={"mc-tk" + (verified ? " done" : confirmLink || confirmCode ? " now" : "")}>
+              <span className="mc-tk-n">2</span> Verify
+            </div>
+            <div className={"mc-tk" + (verified ? " now" : "")}>
+              <span className="mc-tk-n">3</span> Turn on forwarding
+            </div>
+          </div>
+        )}
+
         <div className="mc-card">
           <div className="mc-step">
             <span className="mc-num">1</span> Copy your private Encore address
@@ -346,6 +360,30 @@ function MailConnect({ session, profile, onTokenReady, onClose }) {
           </div>
             </div>
           </>
+        )}
+
+        {!isMobile && (
+          <details className="mc-trouble">
+            <summary>Having trouble?</summary>
+            <div className="mc-trouble-b">
+              <p>
+                <b>Gmail says "Invalid forwarding address"?</b> It isn't verified
+                yet. Do the <b>Verify</b> step above first (tap "Finish verifying
+                in Gmail"), then set Gmail to "Forward a copy" and Save.
+              </p>
+              <p>
+                <b>Still won't save?</b> In Gmail's Forwarding settings, choose{" "}
+                <b>Disable forwarding</b> → Save, then switch back to{" "}
+                <b>Forward a copy</b> → Save again. That makes Gmail re-check the
+                now-verified address.
+              </p>
+              <p>
+                <b>No "Finish verifying" button after a minute?</b> Check your
+                spam folder for Gmail's confirmation, or remove and re-add the
+                address above.
+              </p>
+            </div>
+          </details>
         )}
 
         <div
