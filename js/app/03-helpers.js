@@ -161,8 +161,19 @@ const primaryUrl = (c) => {
   if (!captured || !/^https?:\/\//i.test(captured)) return null;
   if (c.is_festival) return captured; // festival's own site, validated on save
   const v = findVendor(c.source);
-  if (v && !v.domains.some((d) => captured.includes(d))) return null;
-  return captured;
+  if (v) {
+    // When the vendor has a known event-URL shape (RA, AXS, DICE, Eventbrite…),
+    // ONLY trust a link that actually points at an event page — and rebuild it
+    // clean. An on-domain but non-event link (guide/homepage/tracking redirect,
+    // e.g. ra.co/guide/…) is rejected so we never dump people on a homepage.
+    if (v.eventRx) {
+      const m = captured.match(v.eventRx);
+      return m ? v.eventUrl(m[1]) : null;
+    }
+    // Vendors with no known event shape: accept only if it's on their domain.
+    return v.domains.some((d) => captured.includes(d)) ? captured : null;
+  }
+  return captured; // unknown vendor — use the exact link the email provided
 };
 
 // Label for the buy button; null when the source is unknown/generic.
