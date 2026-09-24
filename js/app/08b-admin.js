@@ -31,6 +31,8 @@ function AdminPage({ onBack }) {
     series: [],
     sources: [],
   });
+  const [badLinks, setBadLinks] = useState([]);
+  const [owners, setOwners] = useState({});
 
   const load = async () => {
     setLoading(true);
@@ -43,7 +45,9 @@ function AdminPage({ onBack }) {
           "id,name,handle,location,total_shows,created_at,onboarded,last_active,forward_verified",
         )
         .order("created_at", { ascending: false }),
-      supabase.from("concerts").select("artist,venue,date,source"),
+      supabase
+        .from("concerts")
+        .select("id,artist,venue,date,source,ticket_url,owner_id"),
       supabase.from("follows").select("follower_id", { count: "exact", head: true }),
       supabase
         .from("bug_reports")
@@ -67,6 +71,28 @@ function AdminPage({ onBack }) {
       upcoming: cons.filter((c) => c.date >= today).length,
       follows: fol.count || 0,
     });
+
+    // Owner lookup for the ticket-link list.
+    const omap = {};
+    profs.forEach((p) => {
+      omap[p.id] = p;
+    });
+    setOwners(omap);
+
+    // Ticket links that need attention: UPCOMING shows where we can't resolve a
+    // trustworthy direct purchase link. "wrong" = a link was captured but it
+    // doesn't point at a real event page (e.g. an RA guide/homepage, like
+    // SAMHAIN); "missing" = no link at all. Past shows are ignored — no one
+    // needs to buy a ticket to a show that already happened.
+    const needing = cons
+      .filter((c) => c.date >= today && !primaryUrl(c))
+      .map((c) => ({ ...c, status: c.ticket_url ? "wrong" : "missing" }))
+      .sort((a, b) => {
+        if (a.status !== b.status) return a.status === "wrong" ? -1 : 1;
+        return (a.date || "").localeCompare(b.date || "");
+      });
+    setBadLinks(needing);
+
     const t = {
       saved: 0,
       no_show: 0,
@@ -152,6 +178,9 @@ function AdminPage({ onBack }) {
     await supabase.from("profiles").delete().eq("id", u.id);
     setUsers((p) => p.filter((x) => x.id !== u.id));
   };
+
+  const onLinkFixed = (id) =>
+    setBadLinks((p) => p.filter((x) => x.id !== id));
 
   const shownUsers = users.filter((u) => {
     const q = uq.trim().toLowerCase();
@@ -373,6 +402,34 @@ function AdminPage({ onBack }) {
                 {health.places}
               </span>
               <span style={pill("ok")}>● Supabase: ok</span>
+            </div>
+
+            {/* TICKET LINKS TO FIX */}
+            <div className="adm-sec">
+              Ticket links to fix ({badLinks.length})
+            </div>
+            <div className="adm-card">
+              {badLinks.length === 0 ? (
+                <div className="mono" style={{ color: "var(--fg4)", fontSize: "var(--fs-sm)" }}>
+                  All upcoming shows have a valid direct link. 🎉
+                </div>
+              ) : (
+                badLinks
+                  .slice(0, 60)
+                  .map((c) => (
+                    <LinkFixRow
+                      key={c.id}
+                      c={c}
+                      owner={owners[c.owner_id]}
+                      onFixed={onLinkFixed}
+                    />
+                  ))
+              )}
+              {badLinks.length > 60 && (
+                <div className="mono" style={{ color: "var(--fg4)", fontSize: "var(--fs-2xs)", marginTop: 8 }}>
+                  +{badLinks.length - 60} more — fix these first.
+                </div>
+              )}
             </div>
 
             {/* FORWARDING */}
@@ -608,6 +665,120 @@ function AdminPage({ onBack }) {
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── ONE ROW OF THE "TICKET LINKS TO FIX" LIST ────────────────────────────────
+// An upcoming show whose direct purchase link can't be resolved. Admin can paste
+// the correct link (validated + cleaned by sanitizeTicketUrl — same anti-phishing
+// guard used elsewhere) and save it to that user's concert row, or open a
+// pre-filled web search (free) to hunt down the real event page first.
+function LinkFixRow({ c, owner, onFixed }) {
+  const [draft, setDraft] = useState("");
+  const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const r = sanitizeTicketUrl(draft);
+    if (!r.ok) {
+      setErr(r.error);
+      return;
+    }
+    setErr("");
+    setSaving(true);
+    const { error } = await supabase
+      .from("concerts")
+      .update({ ticket_url: r.url })
+      .eq("id", c.id);
+    setSaving(false);
+    if (error) {
+      // Most likely an RLS gap — admins need the update policy from sql/admin.sql.
+      setErr("Couldn't save (" + error.message + ")");
+      return;
+    }
+    onFixed(c.id);
+  };
+
+  const who = owner ? owner.name || "@" + owner.handle : "unknown user";
+  const searchUrl =
+    "https://www.google.com/search?q=" +
+    encodeURIComponent(
+      [c.artist, c.venue, fmt(c.date).full, "tickets"].filter(Boolean).join(" "),
+    );
+
+  return (
+    <div
+      style={{
+        padding: "12px 0",
+        borderBottom: "1px solid var(--card-2)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+        <span
+          className="mono"
+          style={{
+            fontSize: "var(--fs-2xs)",
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            color: c.status === "wrong" ? "#e0674f" : "#e0a13f",
+          }}
+        >
+          {c.status === "wrong" ? "wrong link" : "no link"}
+        </span>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: "var(--fs-sm)", color: "#ddd" }}>
+          {c.artist}
+        </span>
+        <span className="mono" style={{ fontSize: "var(--fs-2xs)", color: "var(--fg4)" }}>
+          {[c.venue, fmt(c.date).full].filter(Boolean).join(" · ")} · {who}
+          {c.source ? " · via " + c.source : ""}
+        </span>
+      </div>
+
+      {c.status === "wrong" && c.ticket_url && (
+        <div
+          className="mono"
+          style={{
+            fontSize: "var(--fs-2xs)",
+            color: "var(--fg4)",
+            marginTop: 3,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={c.ticket_url}
+        >
+          ↳ currently: {c.ticket_url}
+        </div>
+      )}
+
+      <div className="sh-linkfix">
+        <input
+          className="sh-linkinput"
+          placeholder="Paste the correct event-page link…"
+          value={draft}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            if (err) setErr("");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+          }}
+        />
+        <button className="btn-sm btn-amber" onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <a
+          className="btn-sm"
+          href={searchUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "var(--fg2)", textDecoration: "none" }}
+        >
+          Search ↗
+        </a>
+        {err && <div className="sh-linkerr">{err}</div>}
       </div>
     </div>
   );
