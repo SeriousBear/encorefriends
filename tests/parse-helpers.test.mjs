@@ -213,9 +213,16 @@ describe("sanitizeTicketUrl", () => {
       sanitizeTicketUrl("https://www.eventbrite.com/e/some-event-123?aff=x"),
     ).toBe("https://www.eventbrite.com/e/some-event-123");
   });
+  it("canonicalizes a Ticketmaster event link with a slug before /event/", () => {
+    expect(
+      sanitizeTicketUrl(
+        "https://www.ticketmaster.com/gwar-new-york-city-new-york-12-10-2026/event/00006491EEBB49A8",
+      ),
+    ).toBe("https://www.ticketmaster.com/event/00006491EEBB49A8");
+  });
   it("keeps a deep link for vendors without a known event shape", () => {
-    expect(sanitizeTicketUrl("https://www.ticketmaster.com/event/abc123")).toBe(
-      "https://www.ticketmaster.com/event/abc123",
+    expect(sanitizeTicketUrl("https://seatgeek.com/gwar-tickets/12345")).toBe(
+      "https://seatgeek.com/gwar-tickets/12345",
     );
   });
   it("rejects homepages, non-https, and unknown/phishing domains", () => {

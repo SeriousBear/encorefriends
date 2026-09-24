@@ -108,6 +108,7 @@ const TICKET_HOSTS = [
   "bandsintown.com", "ticketweb.com", "eventim.com", "cashortrade.org",
 ];
 const EVENT_HOSTS = {
+  "ticketmaster.com": { rx: /\/(?:[\w-]+\/)?event\/([A-Za-z0-9]+)/i, url: (m) => "https://www.ticketmaster.com/event/" + m },
   "ra.co": { rx: /\/events\/(\d+)/i, url: (m) => "https://ra.co/events/" + m },
   "residentadvisor.net": { rx: /\/events\/(\d+)/i, url: (m) => "https://ra.co/events/" + m },
   "axs.com": { rx: /\/events\/(\d+)/i, url: (m) => "https://www.axs.com/events/" + m },

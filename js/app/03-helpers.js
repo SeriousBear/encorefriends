@@ -116,7 +116,7 @@ const uColor = (u) =>
 //   2. the label on the button,
 //   3. an extra Gmail search pass so that platform's emails get scanned.
 const TICKET_VENDORS = [
-  { name: "Ticketmaster", aliases: ["ticketmaster", "tm"], domains: ["ticketmaster.com"], eventRx: /ticketmaster\.com\/event\/([A-Za-z0-9]+)/i, eventUrl: (id) => "https://www.ticketmaster.com/event/" + id },
+  { name: "Ticketmaster", aliases: ["ticketmaster", "tm"], domains: ["ticketmaster.com"], eventRx: /ticketmaster\.com\/(?:[\w-]+\/)?event\/([A-Za-z0-9]+)/i, eventUrl: (id) => "https://www.ticketmaster.com/event/" + id },
   { name: "Live Nation", aliases: ["live nation", "livenation"], domains: ["livenation.com"] },
   { name: "SeatGeek", aliases: ["seatgeek"], domains: ["seatgeek.com"] },
   { name: "AXS", aliases: ["axs"], domains: ["axs.com"], eventRx: /axs\.com\/events\/(\d+)/i, eventUrl: (id) => "https://www.axs.com/events/" + id },
