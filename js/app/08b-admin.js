@@ -20,6 +20,7 @@ function AdminPage({ onBack }) {
     rate_limited: 0,
     confirm: 0,
     failures: [],
+    saved_recent: [],
   });
   const [taste, setTaste] = useState({ artists: [], venues: [] });
   const [health, setHealth] = useState({ spotify: "…", places: "…" });
@@ -56,7 +57,7 @@ function AdminPage({ onBack }) {
         .limit(25),
       supabase
         .from("forward_events")
-        .select("result,subject,detail,created_at")
+        .select("result,subject,detail,created_at,user_id")
         .gte("created_at", weekAgo)
         .order("created_at", { ascending: false })
         .limit(1000),
@@ -102,10 +103,12 @@ function AdminPage({ onBack }) {
       rate_limited: 0,
       confirm: 0,
       failures: [],
+      saved_recent: [],
     };
     (fe.data || []).forEach((e) => {
       if (t[e.result] != null) t[e.result]++;
       if (e.result === "no_show" || e.result === "error") t.failures.push(e);
+      if (e.result === "saved") t.saved_recent.push(e);
     });
     setFwd(t);
     setBugs(be.data || []);
@@ -513,6 +516,41 @@ function AdminPage({ onBack }) {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+              {fwd.saved_recent.length > 0 && (
+                <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 10, marginTop: 10 }}>
+                  <div
+                    className="mono" style={{fontSize: "var(--fs-2xs)", color: "var(--fg2)", marginBottom: 6 }}
+                  >
+                    RECENTLY SAVED — which email created which show
+                  </div>
+                  {fwd.saved_recent.slice(0, 15).map((e, i) => {
+                    const who = owners[e.user_id];
+                    return (
+                      <div key={i} style={{ padding: "3px 0" }}>
+                        <div className="mono" style={{fontSize: "var(--fs-xs)", color: "var(--fg2)" }}>
+                          <span style={{ color: "#5cc46a" }}>[saved]</span>{" "}
+                          {e.subject || "(no subject)"}{" "}
+                          <span style={{ color: "var(--fg4)" }}>
+                            · {who ? "@" + who.handle : "?"} · {timeAgo(e.created_at)}
+                          </span>
+                        </div>
+                        {e.detail && (
+                          <div
+                            style={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "var(--fs-2xs)",
+                              color: "var(--fg4)",
+                              paddingLeft: 14,
+                            }}
+                          >
+                            ↳ {e.detail}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

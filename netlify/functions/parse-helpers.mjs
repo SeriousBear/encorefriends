@@ -20,9 +20,11 @@ WHAT TO EXTRACT — treat any of these as a show the user is going to:
    - day-of / upcoming-show REMINDERS ("7:00 PM today:", "Your event is tomorrow", "See you tonight", "Reminder: doors at 8")
    - venue-change / reschedule / "moved" / date-change notices for a show they already hold
    - ticket TRANSFERS accepted or sent to the user, and "your tickets are ready / available to download / view your tickets" emails
-   Because the user chose to forward it, lean toward is_ticket=true for a real music event even if this specific email is not the original receipt.
+   Because the user chose to forward it, lean toward is_ticket=true when the email shows they ACTUALLY HOLD or ATTEND the ticket — even if this specific email is not the original receipt.
 
-   DO NOT INCLUDE: newsletters, "On sale now", "Tickets available", "Just announced", advertisements, presale/on-sale invites, refund/CANCELLATION notices, waitlist emails.
+   CRITICAL — "holds a ticket" vs "is being told about a show" are different. Only the first is a show. An email that merely INFORMS, ADVERTISES, or RECOMMENDS a show is NOT a purchase and must be rejected, even though the user forwarded it and even if it names a real artist, venue, and date. Require positive evidence that the user holds/attends: an order or confirmation number, "your tickets", a payment, an accepted transfer, or a day-of reminder that presupposes a ticket they already have. If the email only announces, promotes, or suggests a show — with no sign the user bought or holds a ticket — return is_ticket=false.
+
+   DO NOT INCLUDE: newsletters and venue/promoter roundups; "On sale now", "Tickets available", "Just announced", presale/on-sale invites; artist alerts, tour announcements, "playing near you", "on tour", "you might like", recommendations, "we think you'd love"; advertisements; refund/CANCELLATION notices; waitlist emails.
 
 2. MUSIC EVENTS ONLY:
    Concerts, DJ sets, festivals, club nights, raves, after-parties, music tours.
@@ -35,7 +37,7 @@ WHAT TO EXTRACT — treat any of these as a show the user is going to:
 Return ONLY a valid JSON object of this exact shape:
 {"is_ticket": boolean, "shows": [ ... ], "reason": string}
 
-- is_ticket: true if this email concerns a real live MUSIC event the user holds/attends a ticket for — a confirmation, reminder, change notice, or transfer (concert, festival, DJ set, club night, tour) — even if you could not extract clean details. false for EVERYTHING else: retail orders, food/travel receipts, newsletters, promos, on-sale announcements, cancellations, and non-music events (sports, comedy, theater).
+- is_ticket: true if this email concerns a real live MUSIC event the user holds/attends a ticket for — a confirmation, reminder, change notice, or transfer (concert, festival, DJ set, club night, tour) — even if you could not extract clean details. false for EVERYTHING else: retail orders, food/travel receipts, newsletters, promos, on-sale announcements, artist alerts / tour announcements / "playing near you" / recommendations, cancellations, and non-music events (sports, comedy, theater). A real artist + venue + date is NOT enough on its own — there must be a sign the user holds or attends the ticket.
 - reason: a SHORT (max ~120 chars) plain-language explanation of your decision — what kind of email this is and why you did or didn't treat it as a show. Example: "Day-of reminder for a concert" or "On-sale promo, not a purchase".
 - shows: an array of the qualifying music shows. Each show object:
 {"artist": string, "venue": string, "city": string, "date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD", "source": string, "ticket_url": string, "is_festival": boolean, "genres": string[]}

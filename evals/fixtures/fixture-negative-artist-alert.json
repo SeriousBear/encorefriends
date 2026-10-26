@@ -1,0 +1,10 @@
+{
+  "platform": "negative",
+  "description": "SYNTHETIC — artist alert / 'playing near you'. Names a real artist, venue and date, but the user holds NO ticket. Must be rejected (the Marc Ribot false-add case).",
+  "email": {
+    "subject": "Marc Ribot is playing near you",
+    "from": "Bandsintown <noreply@bandsintown.com>",
+    "body": "Good news — an artist you follow has a show near you!\n\nMarc Ribot\nThe Chapel, San Francisco, CA\nFriday, November 20, 2026\n\nYou're getting this because you follow Marc Ribot on Bandsintown.\n\nSet a reminder or find tickets: https://www.bandsintown.com/e/1234567\n\nManage your alerts | Unsubscribe"
+  },
+  "expected": { "is_ticket": false, "shows": [] }
+}

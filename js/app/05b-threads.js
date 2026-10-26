@@ -369,7 +369,7 @@ function CDetail({
           )}
           {c.owner_id === curUser.id && onDelete && (
             <button className="detail-remove" onClick={() => onDelete(c.id)}>
-              Remove this show
+              {c.scanned_at ? "I didn’t buy this — remove" : "Remove this show"}
             </button>
           )}
           {curUser.id && onStartGroup && (
