@@ -184,6 +184,17 @@ const vendorLabel = (c) => {
   if (c.source && !["direct", "unknown", ""].includes(s)) return c.source;
   return null;
 };
+// Google Maps link for a show's location. Keyless — the Maps "search" URL
+// opens the native Maps app on phones and maps.google.com on desktop. Returns
+// null when there's nothing to map.
+const mapsUrl = (c) => {
+  const q = [c.venue, c.city].filter(Boolean).join(", ").trim();
+  return q
+    ? "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(q)
+    : null;
+};
+
 // Validate + clean a user-pasted ticket link. Locked to known ticket domains
 // (anti-phishing); for vendors with a known event shape (RA, DICE, AXS,
 // Eventbrite) require the real event page and rebuild it clean. Returns

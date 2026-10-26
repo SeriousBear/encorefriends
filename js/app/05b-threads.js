@@ -253,7 +253,24 @@ function CDetail({
         <div className="sheet-handle" />
         <div className="sheet-body">
           <div className="sh-artist">{c.artist}</div>
-          <div className="sh-venue">{c.venue}</div>
+          {c.venue &&
+            (mapsUrl(c) ? (
+              <a
+                className="sh-venue sh-venue-link"
+                href={mapsUrl(c)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open in Google Maps"
+              >
+                {c.venue}
+                <span className="sh-venue-pin" aria-hidden="true">
+                  {" "}
+                  ↗
+                </span>
+              </a>
+            ) : (
+              <div className="sh-venue">{c.venue}</div>
+            ))}
           <div className="sh-date">
             {c.city} · {dateStr}
           </div>

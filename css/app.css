@@ -110,6 +110,10 @@
   .sh-artist{font-family:var(--font-display);font-size:var(--fs-2xl);letter-spacing:2px;margin-bottom:2px}
   .sh-venue{font-size:var(--fs-xs);color:var(--fg4);font-family:var(--font-mono);margin-bottom:1px}
   .sh-date{font-size:var(--fs-xs);color:var(--fg2);font-family:var(--font-mono);margin-bottom:10px}
+  .sh-venue-link{display:inline-block;text-decoration:none;cursor:pointer;transition:color .15s}
+  .sh-venue.sh-venue-link{color:var(--fg2)}
+  .sh-venue-link:hover{color:var(--gold)}
+  .sh-venue-pin{color:var(--gold);font-size:.9em}
   .sh-daybdg{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:1px;padding:3px 8px;border-radius:3px;margin-bottom:14px;text-transform:uppercase}
   .bdg-u{background:rgba(255,80,80,.14);color:#FF5555;border:1px solid rgba(255,80,80,.22)}
   .bdg-s{background:color-mix(in srgb,var(--gold) 11%,transparent);color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 18%,transparent)}

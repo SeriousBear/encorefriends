@@ -190,6 +190,21 @@ function PlaceSearch({ onPick, placeholder }) {
     setOpen(false);
   };
 
+  // Fallback for venues OpenStreetMap doesn't know: take exactly what the user
+  // typed. If they wrote "Venue, City", split on the last comma so the city
+  // field fills too; otherwise it's all venue and they can add the city below.
+  const pickTyped = () => {
+    const term = q.trim();
+    let venue = term,
+      city = "";
+    const ci = term.lastIndexOf(",");
+    if (ci > 0) {
+      venue = term.slice(0, ci).trim();
+      city = term.slice(ci + 1).trim();
+    }
+    pick({ venue, city });
+  };
+
   return (
     <div className="tag-search-wrap">
       <input
@@ -208,11 +223,6 @@ function PlaceSearch({ onPick, placeholder }) {
           {loading && results.length === 0 && (
             <div className="tag-opt" style={{ color: "var(--fg4)" }}>
               Searching…
-            </div>
-          )}
-          {!loading && results.length === 0 && (
-            <div className="tag-opt" style={{ color: "var(--fg4)" }}>
-              No matches — just type it in below.
             </div>
           )}
           {results.map((p, i) => (
@@ -235,6 +245,32 @@ function PlaceSearch({ onPick, placeholder }) {
               </div>
             </div>
           ))}
+          {!loading && (
+            <div
+              className="tag-opt"
+              onMouseDown={pickTyped}
+              style={{
+                display: "block",
+                borderTop: results.length
+                  ? "1px solid var(--card-2)"
+                  : "none",
+              }}
+            >
+              <div style={{ color: "var(--gold)" }}>Use “{q.trim()}”</div>
+              <div
+                style={{
+                  fontSize: "var(--fs-2xs)",
+                  fontFamily: "var(--font-mono)",
+                  color: "var(--fg2)",
+                  marginTop: 2,
+                }}
+              >
+                {results.length
+                  ? "Not listed? Enter it exactly as typed"
+                  : "No match — enter it exactly as typed"}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
