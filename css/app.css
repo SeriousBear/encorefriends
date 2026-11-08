@@ -620,3 +620,16 @@
 .sh-linkinput{flex:1;min-width:180px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--fg);font-family:var(--font-body);font-size:var(--fs-sm);padding:9px 11px;outline:none}
 .sh-linkinput:focus{border-color:var(--gold-border)}
 .sh-linkerr{flex-basis:100%;color:var(--urg);font-family:var(--font-mono);font-size:var(--fs-2xs)}
+
+/* ── "Double-check against the event page" verify box ── */
+.sh-verify{margin-top:10px}
+.sh-verify-btn{background:transparent;border:1px solid var(--line-2);border-radius:8px;color:var(--fg2);font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:.5px;padding:8px 12px;cursor:pointer;transition:border-color .15s,color .15s}
+.sh-verify-btn:hover:not(:disabled){border-color:var(--gold-border);color:var(--fg)}
+.sh-verify-btn:disabled{opacity:.6;cursor:default}
+.sh-verify-ok{margin-top:8px;color:#5cc46a;font-family:var(--font-mono);font-size:var(--fs-xs)}
+.sh-verify-err{margin-top:8px;color:var(--fg3);font-family:var(--font-mono);font-size:var(--fs-xs)}
+.sh-verify-diff{margin-top:8px;padding:10px 12px;border:1px solid rgba(255,90,77,.25);background:rgba(255,90,77,.06);border-radius:8px}
+.sh-verify-head{color:var(--urg);font-family:var(--font-mono);font-size:var(--fs-xs);margin-bottom:6px}
+.sh-verify-row{color:var(--fg2);font-size:var(--fs-sm);padding:2px 0}
+.sh-verify-f{font-family:var(--font-mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:1px;color:var(--fg4)}
+.sh-verify-apply{margin-top:8px;background:var(--gold);border:none;border-radius:8px;color:#1a1200;font-family:var(--font-mono);font-size:var(--fs-2xs);letter-spacing:.5px;font-weight:600;padding:8px 14px;cursor:pointer}

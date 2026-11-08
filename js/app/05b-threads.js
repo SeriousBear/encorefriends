@@ -211,9 +211,70 @@ function CDetail({
   onStartGroup,
   onOpenCrew,
   onSetLink,
+  onApplyDetails,
 }) {
   const [linkDraft, setLinkDraft] = useState("");
   const [linkErr, setLinkErr] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verify, setVerify] = useState(null); // { date, city, venue, title, mismatches[] } | { error }
+
+  // Read the pasted/attached event page and compare what it advertises against
+  // the saved show. Deterministic server scrape (Open Graph / JSON-LD) — no AI.
+  const runVerify = async (url) => {
+    if (!url) return;
+    setVerifying(true);
+    setVerify(null);
+    try {
+      const r = await fetch(
+        "/.netlify/functions/event-scrape?url=" + encodeURIComponent(url),
+      );
+      const d = await r.json();
+      if (!d.ok) {
+        setVerify({ error: d.error || "couldn’t read the page" });
+        return;
+      }
+      const lc = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const mism = [];
+      if (d.date && d.date !== c.date)
+        mism.push({ field: "date", was: c.date, now: d.date });
+      if (
+        d.city &&
+        c.city &&
+        lc(d.city) &&
+        lc(c.city) &&
+        !lc(c.city).includes(lc(d.city)) &&
+        !lc(d.city).includes(lc(c.city))
+      )
+        mism.push({ field: "city", was: c.city, now: d.city });
+      setVerify({ ...d, mismatches: mism });
+    } catch (e) {
+      setVerify({ error: "network error" });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const applyVerified = () => {
+    if (!verify || !onApplyDetails) return;
+    const p = {};
+    (verify.mismatches || []).forEach((m) => {
+      if (m.field === "date") p.date = m.now;
+      if (m.field === "city") p.city = m.now;
+    });
+    if (verify.city && !c.city) p.city = verify.city; // backfill if missing
+    if (verify.venue && !c.venue) p.venue = verify.venue;
+    if (Object.keys(p).length) onApplyDetails(c.id, p);
+    setVerify(null);
+  };
+
+  // Surface a change the daily watcher already found (stored on the row), so it
+  // shows the moment the owner opens the sheet — no button press needed.
+  useEffect(() => {
+    const pc = c.page_check;
+    if (pc && Array.isArray(pc.diff) && pc.diff.length) {
+      setVerify({ ...(pc.page || {}), mismatches: pc.diff });
+    }
+  }, [c.id]);
   const u = getUrgency(c.date),
     dy = daysUntil(c.date),
     d = fmt(c.date);
@@ -432,11 +493,50 @@ function CDetail({
                   }
                   onSetLink(c.id, r.url);
                   setLinkDraft("");
+                  runVerify(r.url); // double-check the saved link's details
                 }}
               >
                 Save link
               </button>
               {linkErr && <div className="sh-linkerr">{linkErr}</div>}
+            </div>
+          )}
+          {c.owner_id === curUser.id && onApplyDetails && (primaryUrl(c) || verify) && (
+            <div className="sh-verify">
+              {primaryUrl(c) && (
+                <button
+                  className="sh-verify-btn"
+                  disabled={verifying}
+                  onClick={() => runVerify(primaryUrl(c))}
+                >
+                  {verifying ? "Checking the event page…" : "Double-check details against the page"}
+                </button>
+              )}
+              {verify && verify.error && (
+                <div className="sh-verify-err">
+                  Couldn’t read the event page ({verify.error}).
+                </div>
+              )}
+              {verify && !verify.error && (verify.mismatches || []).length === 0 && (
+                <div className="sh-verify-ok">✓ Matches the event page.</div>
+              )}
+              {verify && !verify.error && (verify.mismatches || []).length > 0 && (
+                <div className="sh-verify-diff">
+                  <div className="sh-verify-head">
+                    ⚠ The event page shows different info:
+                  </div>
+                  {verify.mismatches.map((m) => (
+                    <div key={m.field} className="sh-verify-row">
+                      <span className="sh-verify-f">{m.field}</span> — you have{" "}
+                      <b>{m.field === "date" ? fmt(m.was).full : m.was}</b>, page says{" "}
+                      <b>{m.field === "date" ? fmt(m.now).full : m.now}</b>
+                    </div>
+                  ))}
+                  <button className="sh-verify-apply" onClick={applyVerified}>
+                    Apply page details
+                  </button>
+                </div>
+              )}
             </div>
           )}
           {showR && (

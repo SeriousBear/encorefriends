@@ -784,6 +784,16 @@ function App() {
           (d.artist || "an artist you've been chasing") +
           "! 🎉",
       };
+    if (n.type === "show_changed")
+      return {
+        icon: "📝",
+        text:
+          "The event page for " +
+          (d.artist || "a show you're going to") +
+          " shows updated details" +
+          (d.what ? " (" + d.what + ")" : "") +
+          " — open it to review.",
+      };
     return { icon: "🔔", text: "New activity" };
   };
 
@@ -1063,6 +1073,26 @@ function App() {
         .eq("id", id)
         .eq("owner_id", session.user.id);
       toast(error ? "Couldn't save link." : "Ticket link saved ✓", !!error);
+    }
+  };
+  // Owner applies details read off the event page (date/city/venue) after a
+  // verify check flagged a mismatch. Optimistic + persist; a date change pulls
+  // end_date along for non-festival shows.
+  const applyShowDetails = async (id, fields) => {
+    const patch = { ...fields, page_check: null }; // applying clears the change flag
+    if (patch.date) {
+      const row = liveConcerts.find((c) => c.id === id) || detail;
+      if (!row || !row.is_festival) patch.end_date = patch.date;
+    }
+    setLiveConcerts((p) => p.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+    setDetail((d) => (d && d.id === id ? { ...d, ...patch } : d));
+    if (session?.user?.id) {
+      const { error } = await supabase
+        .from("concerts")
+        .update(patch)
+        .eq("id", id)
+        .eq("owner_id", session.user.id);
+      toast(error ? "Couldn't update details." : "Details updated ✓", !!error);
     }
   };
   const viewProfile = (uid) => {
@@ -2361,6 +2391,7 @@ function App() {
           onToggleHidden={toggleHidden}
           onDelete={deleteConcert}
           onSetLink={setTicketLink}
+          onApplyDetails={applyShowDetails}
           myGroups={crews.filter(
             (t) =>
               t.show_artist === detail.artist &&
