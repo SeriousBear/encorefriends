@@ -220,6 +220,16 @@ describe("sanitizeTicketUrl", () => {
       ),
     ).toBe("https://www.ticketmaster.com/event/00006491EEBB49A8");
   });
+  it("canonicalizes a Shotgun event link and strips tracking", () => {
+    expect(
+      sanitizeTicketUrl(
+        "https://shotgun.live/en/events/madnetic-make-a-dance-alex-mc-cracken-victor-florescu?utm=x",
+      ),
+    ).toBe(
+      "https://shotgun.live/en/events/madnetic-make-a-dance-alex-mc-cracken-victor-florescu",
+    );
+    expect(sanitizeTicketUrl("https://shotgun.live/en")).toBe("");
+  });
   it("keeps a deep link for vendors without a known event shape", () => {
     expect(sanitizeTicketUrl("https://seatgeek.com/gwar-tickets/12345")).toBe(
       "https://seatgeek.com/gwar-tickets/12345",

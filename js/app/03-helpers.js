@@ -121,6 +121,7 @@ const TICKET_VENDORS = [
   { name: "SeatGeek", aliases: ["seatgeek"], domains: ["seatgeek.com"] },
   { name: "AXS", aliases: ["axs"], domains: ["axs.com"], eventRx: /axs\.com\/events\/(\d+)/i, eventUrl: (id) => "https://www.axs.com/events/" + id },
   { name: "DICE", aliases: ["dice", "dice.fm"], domains: ["dice.fm"], eventRx: /dice\.fm\/event\/([\w-]+)/i, eventUrl: (id) => "https://dice.fm/event/" + id },
+  { name: "Shotgun", aliases: ["shotgun", "shotgun.live", "shotgun*"], domains: ["shotgun.live"], eventRx: /shotgun\.live\/(?:[a-z]{2}\/)?events\/([\w-]+)/i, eventUrl: (id) => "https://shotgun.live/en/events/" + id },
   { name: "Resident Advisor", aliases: ["resident advisor", "ra", "residentadvisor"], domains: ["ra.co", "residentadvisor.net"], eventRx: /ra\.co\/events\/(\d+)/i, eventUrl: (id) => "https://ra.co/events/" + id },
   { name: "See Tickets", aliases: ["see tickets", "seetickets"], domains: ["seetickets.us", "seetickets.com"] },
   { name: "Eventbrite", aliases: ["eventbrite"], domains: ["eventbrite.com", "eventbritemail.com"], eventRx: /eventbrite\.com\/e\/([\w-]+)/i, eventUrl: (id) => "https://www.eventbrite.com/e/" + id },

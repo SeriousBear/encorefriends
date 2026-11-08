@@ -173,6 +173,7 @@ const SOURCES = [
   "StubHub",
   "AXS",
   "DICE",
+  "Shotgun",
   "TickPick",
   "Direct",
   "Other",

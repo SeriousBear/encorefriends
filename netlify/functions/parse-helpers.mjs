@@ -24,6 +24,8 @@ WHAT TO EXTRACT — treat any of these as a show the user is going to:
 
    CRITICAL — "holds a ticket" vs "is being told about a show" are different. Only the first is a show. An email that merely INFORMS, ADVERTISES, or RECOMMENDS a show is NOT a purchase and must be rejected, even though the user forwarded it and even if it names a real artist, venue, and date. Require positive evidence that the user holds/attends: an order or confirmation number, "your tickets", a payment, an accepted transfer, or a day-of reminder that presupposes a ticket they already have. If the email only announces, promotes, or suggests a show — with no sign the user bought or holds a ticket — return is_ticket=false.
 
+   PAYMENT-PROCESSOR RECEIPTS (Venmo, PayPal, Cash App, Square, Zelle, Stripe) are a show ONLY when the merchant/recipient is clearly a music event, venue, promoter, festival, club, or ticket seller — the MERCHANT NAME is the signal (e.g. "SHOTGUN* MAGNETIC", a club or promoter name, a festival). If the merchant is a person, or anything non-music (food, retail, rideshare, rent, splitting a bill), it is NOT a show → is_ticket=false. Never treat the fact that it is a Venmo/PayPal receipt as evidence by itself.
+
    DO NOT INCLUDE: newsletters and venue/promoter roundups; "On sale now", "Tickets available", "Just announced", presale/on-sale invites; artist alerts, tour announcements, "playing near you", "on tour", "you might like", recommendations, "we think you'd love"; advertisements; refund/CANCELLATION notices; waitlist emails.
 
 2. MUSIC EVENTS ONLY:
@@ -45,7 +47,7 @@ Return ONLY a valid JSON object of this exact shape:
 - artist: performer/band/DJ name. For festivals, use the festival name.
 - venue: the venue name from the email. If shown as "TBA"/missing, scan the body for an explicit address or "LOCATION:" line and use that.
 - city: "City, State" — taken ONLY from a location/address/city explicitly written in this email. If only an address is given, use its city/state. NEVER guess the city. If none is stated, use "".
-- date: start date — REQUIRED for a show to appear in "shows".
+- date: the EVENT's start date — REQUIRED for a show to appear in "shows". Use the event date stated in the email. If the email gives NO event date (e.g. a payment-processor receipt that shows only a transaction/payment date), use that transaction/payment date as the show date — it is the best available. NEVER fall back to TODAY'S DATE for the event date unless the email itself refers to the event as happening today/tonight. Do not confuse the purchase/transaction date with the event date when BOTH are present — prefer the stated event date.
 - end_date: end date — equals date for single-day shows.
 - source: ticketing platform (Ticketmaster, SeatGeek, RA, DICE, See Tickets, etc.).
 - ticket_url: the DIRECT event/order page link for THIS show, copied exactly from the email (e.g. a .../events/123 page). Use "" if the email only has a homepage, a guide/listing, a promo, an unsubscribe, or a click-tracking/redirect link — never use those.
@@ -103,6 +105,7 @@ export function extractParseResult(text) {
 // Anything off-allowlist, non-https, or a bare homepage/guide link becomes "".
 // This is the server-side twin of sanitizeTicketUrl in js/app/03-helpers.js.
 const TICKET_HOSTS = [
+  "shotgun.live",
   "ticketmaster.com", "livenation.com", "axs.com", "dice.fm", "ra.co",
   "residentadvisor.net", "seetickets.us", "seetickets.com", "seatgeek.com",
   "eventbrite.com", "etix.com", "tixr.com", "vividseats.com", "stubhub.com",
@@ -110,6 +113,7 @@ const TICKET_HOSTS = [
   "bandsintown.com", "ticketweb.com", "eventim.com", "cashortrade.org",
 ];
 const EVENT_HOSTS = {
+  "shotgun.live": { rx: /\/(?:[a-z]{2}\/)?events\/([\w-]+)/i, url: (m) => "https://shotgun.live/en/events/" + m },
   "ticketmaster.com": { rx: /\/(?:[\w-]+\/)?event\/([A-Za-z0-9]+)/i, url: (m) => "https://www.ticketmaster.com/event/" + m },
   "ra.co": { rx: /\/events\/(\d+)/i, url: (m) => "https://ra.co/events/" + m },
   "residentadvisor.net": { rx: /\/events\/(\d+)/i, url: (m) => "https://ra.co/events/" + m },
