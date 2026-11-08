@@ -19,7 +19,17 @@ const CORS = {
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
-const UA = "EncoreFriends/1.0 (+https://encorefriends.com)";
+// A browser-like User-Agent — bot-sensitive ticket sites (Shotgun, etc.)
+// throttle generic agents with a 429. We only ever fetch public event pages.
+const UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+const FETCH_HEADERS = {
+  "User-Agent": UA,
+  Accept: "text/html,application/xhtml+xml",
+  "Accept-Language": "en-US,en;q=0.9",
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const MONTHS = {
   january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7,
@@ -149,13 +159,24 @@ export default async (req) => {
   }
 
   try {
-    const res = await fetch(clean, {
-      headers: { "User-Agent": UA, Accept: "text/html" },
-      redirect: "follow",
-    });
+    let res;
+    // Retry transient throttling (429/503) a couple of times with backoff.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      res = await fetch(clean, { headers: FETCH_HEADERS, redirect: "follow" });
+      if (res.ok || ![429, 503].includes(res.status)) break;
+      await sleep(800 * (attempt + 1));
+    }
     if (!res.ok) {
+      const blocked = [429, 403, 503].includes(res.status);
       return Response.json(
-        { ok: false, error: "page returned " + res.status, url: clean },
+        {
+          ok: false,
+          status: res.status,
+          error: blocked
+            ? "the event page blocked the check (" + res.status + ")"
+            : "page returned " + res.status,
+          url: clean,
+        },
         { status: 502, headers: CORS },
       );
     }

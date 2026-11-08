@@ -21,7 +21,15 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const UA = "EncoreFriends/1.0 (+https://encorefriends.com)";
+// Browser-like UA — bot-sensitive ticket sites throttle generic agents.
+const UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+const FETCH_HEADERS = {
+  "User-Agent": UA,
+  Accept: "text/html,application/xhtml+xml",
+  "Accept-Language": "en-US,en;q=0.9",
+};
 const MAX_PER_RUN = 20; // keep the run well under Netlify's timeout
 const FETCH_TIMEOUT_MS = 6000;
 
@@ -51,7 +59,7 @@ async function fetchPage(url) {
   const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": UA, Accept: "text/html" },
+      headers: FETCH_HEADERS,
       redirect: "follow",
       signal: ctrl.signal,
     });

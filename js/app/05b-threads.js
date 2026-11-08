@@ -217,6 +217,7 @@ function CDetail({
   const [linkErr, setLinkErr] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verify, setVerify] = useState(null); // { date, city, venue, title, mismatches[] } | { error }
+  const [editingDate, setEditingDate] = useState(false);
 
   // Read the pasted/attached event page and compare what it advertises against
   // the saved show. Deterministic server scrape (Open Graph / JSON-LD) — no AI.
@@ -334,7 +335,27 @@ function CDetail({
             ))}
           <div className="sh-date">
             {c.city} · {dateStr}
+            {c.owner_id === curUser.id && onApplyDetails && !isFestival && (
+              <button
+                className="sh-date-edit"
+                onClick={() => setEditingDate((v) => !v)}
+                title="Fix the date"
+              >
+                {editingDate ? "cancel" : "edit"}
+              </button>
+            )}
           </div>
+          {editingDate && c.owner_id === curUser.id && onApplyDetails && (
+            <div style={{ margin: "2px 0 10px" }}>
+              <DatePicker
+                value={c.date}
+                onChange={(dd) => {
+                  if (dd && dd !== c.date) onApplyDetails(c.id, { date: dd });
+                  setEditingDate(false);
+                }}
+              />
+            </div>
+          )}
           {(c.genres || []).length > 0 && (
             <div
               style={{
@@ -514,7 +535,8 @@ function CDetail({
               )}
               {verify && verify.error && (
                 <div className="sh-verify-err">
-                  Couldn’t read the event page ({verify.error}).
+                  ⚠ Couldn’t verify — {verify.error}. You can fix the date
+                  manually with “edit” next to the date above.
                 </div>
               )}
               {verify && !verify.error && (verify.mismatches || []).length === 0 && (
