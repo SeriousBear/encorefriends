@@ -1,10 +1,14 @@
 {
   "platform": "shotgun",
-  "description": "SYNTHETIC — Venmo receipt for a Shotgun music event. Merchant name identifies it as a show; no event date given, so the transaction date is the show date. Must be accepted.",
+  "today": "2026-11-08",
+  "description": "SYNTHETIC — forwarded Venmo receipt for a Shotgun music event. Merchant name identifies it as a show; the only date present is the transaction date (Nov 7), so that must become the show date — NOT today (Nov 8). Guards the payment-processor rule + the no-event-date fallback.",
   "email": {
     "subject": "Receipt from SHOTGUN* MAGNETIC - Purchase Amount: $37.65",
     "from": "Venmo <venmo@email.venmo.com>",
-    "body": "SHOTGUN* MAGNETIC purchase\n\nSaturday, November 7 at 04:41PM PST\n\nFrom Kyle Weber\nTotal: $37.65\n\nVenmo balance  $37.65\nTotal to merchant  $37.65"
+    "body": "SHOTGUN* MAGNETIC purchase\n\nMadnetic — Make a Dance (Alex McCracken, Victor Florescu)\n\nSaturday, November 7 at 04:41PM PST\n\nFrom Kyle Weber\nTotal: $37.65\n\nVenmo balance  $37.65\nTotal to merchant  $37.65"
   },
-  "expected": { "is_ticket": true, "shows": [{ "date": "2026-11-07" }] }
+  "expected": {
+    "is_ticket": true,
+    "shows": [{ "artist": "Madnetic", "date": "2026-11-07" }]
+  }
 }

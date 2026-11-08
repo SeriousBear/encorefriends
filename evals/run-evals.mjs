@@ -52,7 +52,9 @@ const artistMatch = (a, b) => {
   return x === y || (x && y && (x.includes(y) || y.includes(x)));
 };
 
-async function callModel(email, today) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function callModel(email, today, attempt = 0) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -77,6 +79,20 @@ async function callModel(email, today) {
       ],
     }),
   });
+  // Surface real API failures instead of letting them degrade to a silent
+  // is_ticket=false (which would falsely "pass" every negative fixture).
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    // Rate limit (429) / service overload (529, 503) are transient — back off
+    // and retry a few times before giving up.
+    if ([429, 503, 529].includes(res.status) && attempt < 4) {
+      const wait = 1500 * 2 ** attempt;
+      console.log("     … " + res.status + " from API — retrying in " + wait + "ms");
+      await sleep(wait);
+      return callModel(email, today, attempt + 1);
+    }
+    throw new Error("API " + res.status + ": " + body.slice(0, 180));
+  }
   const data = await res.json();
   return (data.content || [])
     .filter((b) => b.type === "text")
@@ -120,18 +136,34 @@ const byPlatform = {};
 let passed = 0;
 console.log((DRY ? "DRY RUN (harness self-test, no API calls)" : "Model: " + MODEL) + "\n");
 
+let apiErrors = 0;
 for (const f of files) {
   const fx = JSON.parse(readFileSync(join(dir, f), "utf8"));
-  const raw = DRY
-    ? JSON.stringify(fx.expected)
-    : await callModel(fx.email, fx.today);
+  const p = fx.platform || "other";
+  byPlatform[p] = byPlatform[p] || { pass: 0, total: 0 };
+  byPlatform[p].total++;
+
+  let raw;
+  if (DRY) {
+    raw = JSON.stringify(fx.expected);
+  } else {
+    try {
+      raw = await callModel(fx.email, fx.today);
+    } catch (e) {
+      // A transport/API failure is NOT a parser result — report it distinctly
+      // so it can't masquerade as a is_ticket=false "pass" on negatives.
+      apiErrors++;
+      console.log("⚠️  " + f + "  (" + p + ")  — API ERROR: " + e.message);
+      await sleep(500);
+      continue;
+    }
+    await sleep(400); // gentle pacing so a burst doesn't trip rate limits
+  }
+
   const got = extractParseResult(raw);
   const { fails, warns } = scoreFixture(fx.expected, got);
   const ok = fails.length === 0;
   if (ok) passed++;
-  const p = fx.platform || "other";
-  byPlatform[p] = byPlatform[p] || { pass: 0, total: 0 };
-  byPlatform[p].total++;
   if (ok) byPlatform[p].pass++;
   console.log((ok ? "✅" : "❌") + " " + f + "  (" + p + ")");
   fails.forEach((x) => console.log("     FAIL " + x));
@@ -141,6 +173,12 @@ for (const f of files) {
 console.log("\n── Scorecard ──");
 for (const [p, s] of Object.entries(byPlatform))
   console.log("  " + p.padEnd(16) + s.pass + "/" + s.total);
-console.log("  " + "TOTAL".padEnd(16) + passed + "/" + files.length + "\n");
+console.log("  " + "TOTAL".padEnd(16) + passed + "/" + files.length);
+if (apiErrors > 0)
+  console.log(
+    "\n⚠️  " + apiErrors + " fixture(s) hit an API error (rate limit / overload / key) and were NOT scored.\n" +
+    "   This is NOT a parser result — rerun (optionally wait a minute) before trusting the score.",
+  );
+console.log("");
 
-if (STRICT && passed < files.length) process.exit(1);
+if (STRICT && (passed < files.length || apiErrors > 0)) process.exit(1);
