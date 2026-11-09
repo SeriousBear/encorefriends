@@ -190,26 +190,31 @@ export default async (req) => {
   let isTicket = false;
   let reason = "";
   try {
-    const ai = await fetch(
-      (process.env.URL || "") + "/.netlify/functions/claude",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5",
-          max_tokens: 4000,
-          // buildParseSystem() stamps today's date so relative reminder dates
-          // ("7:00 PM today") resolve to a real YYYY-MM-DD.
-          system: buildParseSystem(),
-          messages: [
-            {
-              role: "user",
-              content: (subject ? "Subject: " + subject + "\n\n" : "") + body,
-            },
-          ],
-        }),
+    // Call Anthropic directly from this server-side function. (Previously this
+    // went through /.netlify/functions/claude, which was a PUBLIC endpoint that
+    // forwarded to Anthropic with the API key — an open proxy anyone could hit
+    // to spend credits. That proxy is now removed.)
+    const ai = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
       },
-    );
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5",
+        max_tokens: 4000,
+        // buildParseSystem() stamps today's date so relative reminder dates
+        // ("7:00 PM today") resolve to a real YYYY-MM-DD.
+        system: buildParseSystem(),
+        messages: [
+          {
+            role: "user",
+            content: (subject ? "Subject: " + subject + "\n\n" : "") + body,
+          },
+        ],
+      }),
+    });
     const d = await ai.json();
     const t = (d.content || [])
       .filter((b) => b.type === "text")
