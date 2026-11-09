@@ -33,6 +33,19 @@ const FETCH_HEADERS = {
 const MAX_PER_RUN = 20; // keep the run well under Netlify's timeout
 const FETCH_TIMEOUT_MS = 6000;
 
+// Vendors that block automated reads from servers (429 + reCAPTCHA). No point
+// fetching these daily — manual edit is the path. Keep in sync with the
+// blocksScrape flag in js/app/03-helpers.js.
+const BLOCKED_HOSTS = ["shotgun.live"];
+const isBlockedHost = (url) => {
+  try {
+    const h = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+    return BLOCKED_HOSTS.some((d) => h === d || h.endsWith("." + d));
+  } catch (e) {
+    return false;
+  }
+};
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const lc = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
@@ -95,7 +108,7 @@ export default async () => {
 
   for (const c of rows || []) {
     const url = sanitizeTicketUrl(c.ticket_url);
-    if (!url) continue;
+    if (!url || isBlockedHost(url)) continue; // skip vendors that block scraping
 
     const page = await fetchPage(url);
     await sleep(150); // gentle on vendor sites

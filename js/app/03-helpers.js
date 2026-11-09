@@ -121,7 +121,7 @@ const TICKET_VENDORS = [
   { name: "SeatGeek", aliases: ["seatgeek"], domains: ["seatgeek.com"] },
   { name: "AXS", aliases: ["axs"], domains: ["axs.com"], eventRx: /axs\.com\/events\/(\d+)/i, eventUrl: (id) => "https://www.axs.com/events/" + id },
   { name: "DICE", aliases: ["dice", "dice.fm"], domains: ["dice.fm"], eventRx: /dice\.fm\/event\/([\w-]+)/i, eventUrl: (id) => "https://dice.fm/event/" + id },
-  { name: "Shotgun", aliases: ["shotgun", "shotgun.live", "shotgun*"], domains: ["shotgun.live"], eventRx: /shotgun\.live\/(?:[a-z]{2}\/)?events\/([\w-]+)/i, eventUrl: (id) => "https://shotgun.live/en/events/" + id },
+  { name: "Shotgun", aliases: ["shotgun", "shotgun.live", "shotgun*"], domains: ["shotgun.live"], eventRx: /shotgun\.live\/(?:[a-z]{2}\/)?events\/([\w-]+)/i, eventUrl: (id) => "https://shotgun.live/en/events/" + id, blocksScrape: true },
   { name: "Resident Advisor", aliases: ["resident advisor", "ra", "residentadvisor"], domains: ["ra.co", "residentadvisor.net"], eventRx: /ra\.co\/events\/(\d+)/i, eventUrl: (id) => "https://ra.co/events/" + id },
   { name: "See Tickets", aliases: ["see tickets", "seetickets"], domains: ["seetickets.us", "seetickets.com"] },
   { name: "Eventbrite", aliases: ["eventbrite"], domains: ["eventbrite.com", "eventbritemail.com"], eventRx: /eventbrite\.com\/e\/([\w-]+)/i, eventUrl: (id) => "https://www.eventbrite.com/e/" + id },
@@ -185,6 +185,14 @@ const vendorLabel = (c) => {
   if (c.source && !["direct", "unknown", ""].includes(s)) return c.source;
   return null;
 };
+// True when this show's vendor is known to block automated page reads from
+// servers (e.g. Shotgun → 429 + reCAPTCHA). The app hides the "double-check"
+// action for these and the daily watcher skips them — manual edit is the path.
+const scrapeBlocked = (c) => {
+  const v = findVendor(c.source);
+  return !!(v && v.blocksScrape);
+};
+
 // Google Maps link for a show's location. Keyless — the Maps "search" URL
 // opens the native Maps app on phones and maps.google.com on desktop. Returns
 // null when there's nothing to map.

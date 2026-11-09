@@ -514,7 +514,7 @@ function CDetail({
                   }
                   onSetLink(c.id, r.url);
                   setLinkDraft("");
-                  runVerify(r.url); // double-check the saved link's details
+                  if (!scrapeBlocked(c)) runVerify(r.url); // auto double-check, unless the vendor blocks it
                 }}
               >
                 Save link
@@ -524,7 +524,7 @@ function CDetail({
           )}
           {c.owner_id === curUser.id && onApplyDetails && (primaryUrl(c) || verify) && (
             <div className="sh-verify">
-              {primaryUrl(c) && (
+              {primaryUrl(c) && !scrapeBlocked(c) && (
                 <button
                   className="sh-verify-btn"
                   disabled={verifying}
@@ -532,6 +532,12 @@ function CDetail({
                 >
                   {verifying ? "Checking the event page…" : "Double-check details against the page"}
                 </button>
+              )}
+              {primaryUrl(c) && scrapeBlocked(c) && (
+                <div className="sh-verify-note">
+                  {(vendorLabel(c) || "This vendor")} blocks automated checks — use
+                  “edit” next to the date above to adjust it.
+                </div>
               )}
               {verify && verify.error && (
                 <div className="sh-verify-err">

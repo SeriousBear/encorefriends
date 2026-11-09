@@ -629,6 +629,7 @@
 .sh-verify-ok{margin-top:8px;color:#5cc46a;font-family:var(--font-mono);font-size:var(--fs-xs)}
 .sh-verify-err{margin-top:8px;padding:9px 11px;border:1px solid rgba(224,161,63,.3);background:rgba(224,161,63,.08);border-radius:8px;color:#e0a13f;font-family:var(--font-mono);font-size:var(--fs-xs);line-height:1.4}
 .sh-date-edit{margin-left:8px;background:none;border:none;color:var(--gold);font-family:var(--font-mono);font-size:var(--fs-2xs);text-decoration:underline;cursor:pointer;padding:0}
+.sh-verify-note{color:var(--fg3);font-family:var(--font-mono);font-size:var(--fs-2xs);line-height:1.4}
 .sh-verify-diff{margin-top:8px;padding:10px 12px;border:1px solid rgba(255,90,77,.25);background:rgba(255,90,77,.06);border-radius:8px}
 .sh-verify-head{color:var(--urg);font-family:var(--font-mono);font-size:var(--fs-xs);margin-bottom:6px}
 .sh-verify-row{color:var(--fg2);font-size:var(--fs-sm);padding:2px 0}
