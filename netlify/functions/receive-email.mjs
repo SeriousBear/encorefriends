@@ -202,7 +202,7 @@ export default async (req) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-5-5", // sonnet-4-5 retires 2026-11-30
         max_tokens: 4000,
         // buildParseSystem() stamps today's date so relative reminder dates
         // ("7:00 PM today") resolve to a real YYYY-MM-DD.
