@@ -216,6 +216,23 @@ export default async (req) => {
       }),
     });
     const d = await ai.json();
+    // An HTTP error from Anthropic (bad model, bad/missing key, oversized input,
+    // rate limit) does NOT throw — fetch only rejects on a network failure. Left
+    // unchecked, d.content is undefined, t === "", and the email silently becomes
+    // is_ticket:false → "ignored", so real tickets vanish with no trace. Surface
+    // the real cause as an "error" event (API message + body size) instead.
+    if (!ai.ok || d.type === "error" || !Array.isArray(d.content)) {
+      const apiErr =
+        (d && d.error && d.error.message) || d.type || "http " + ai.status;
+      await logEvent(
+        userId,
+        subject,
+        "error",
+        "api " + ai.status + ": " + String(apiErr).slice(0, 140) +
+          " · body_chars=" + body.length,
+      );
+      return json({ ok: false, reason: "api error", status: ai.status });
+    }
     const t = (d.content || [])
       .filter((b) => b.type === "text")
       .map((b) => b.text)
