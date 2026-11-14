@@ -1619,6 +1619,8 @@ function App() {
               onMessage={openThread}
               onGenreClick={openGenre}
               onArtistClick={openArtist}
+              forwardToken={profile?.forward_token}
+              onForward={() => setMailConnect(true)}
             />
           )}
           {view === "tour" && (
@@ -2108,6 +2110,9 @@ function App() {
                   <span className="add-d">Auto-tracks any show you bought</span>
                 </span>
               </button>
+            )}
+            {FORWARDING_ENABLED && profile?.forward_token && (
+              <ForwardAddr token={profile.forward_token} variant="sheet" />
             )}
             <button
               className="add-act"

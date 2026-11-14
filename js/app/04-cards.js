@@ -270,4 +270,100 @@ function SharePicker({ c, users, curUser, onClose, onSend }) {
   );
 }
 
+// ── FORWARDING ADDRESS (shared: add-sheet + self profile) ────────────────────
+// Shows the logged-in user's private forward address with a one-tap Copy.
+// With no token yet, offers a button that opens the MailConnect setup flow.
+function ForwardAddr({ token, onSetup, variant }) {
+  const [copied, setCopied] = useState(false);
+  if (!FORWARDING_ENABLED) return null;
+  const addr = token ? token + "@" + FORWARD_DOMAIN : "";
+  const copy = () => {
+    try {
+      if (navigator.clipboard && addr) navigator.clipboard.writeText(addr);
+    } catch (e) {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  };
+  const box = {
+    background: "#0c0c0c",
+    border: "1px solid var(--line, #1e1e1e)",
+    borderRadius: 10,
+    padding: "11px 13px",
+    margin: variant === "sheet" ? "2px 0 10px" : "14px 0 2px",
+  };
+  if (!token) {
+    return (
+      <button
+        onClick={onSetup}
+        style={{
+          ...box,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          width: "100%",
+          cursor: "pointer",
+          color: "var(--gold, #F5A623)",
+          fontFamily: "'Syne', system-ui, sans-serif",
+          fontSize: 13,
+          fontWeight: 600,
+        }}
+      >
+        ✉ Set up your forwarding address →
+      </button>
+    );
+  }
+  return (
+    <div style={box}>
+      <div
+        style={{
+          fontFamily: "'DM Mono', monospace",
+          fontSize: 10,
+          letterSpacing: 1.5,
+          textTransform: "uppercase",
+          color: "#7a7a7a",
+          marginBottom: 7,
+        }}
+      >
+        Forward tickets here · auto-adds the show
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span
+          title={addr}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 13,
+            color: "var(--gold, #F5A623)",
+          }}
+        >
+          {addr}
+        </span>
+        <button
+          onClick={copy}
+          style={{
+            flex: "0 0 auto",
+            background: copied ? "var(--gold, #F5A623)" : "transparent",
+            border: "1px solid var(--gold, #F5A623)",
+            color: copied ? "#1a1204" : "var(--gold, #F5A623)",
+            borderRadius: 7,
+            padding: "6px 12px",
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 11,
+            letterSpacing: 0.5,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {copied ? "Copied ✓" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── INBOX (Messages + Activity tabs) ─────────────────────────────────────────

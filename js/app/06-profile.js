@@ -110,6 +110,8 @@ function ProfilePage({
   onMessage,
   onGenreClick,
   onArtistClick,
+  forwardToken,
+  onForward,
 }) {
   const [tab, setTab] = useState("upcoming");
   const [connModal, setConnModal] = useState(null); // null | "followers" | "following"
@@ -216,6 +218,7 @@ function ProfilePage({
         </div>
         {isSelf && <GenreSearch onGenreClick={onGenreClick} />}
         {isSelf && <VibePicker />}
+        {isSelf && <ForwardAddr token={forwardToken} onSetup={onForward} />}
         {(user.artists || []).length > 0 && (
           <div>
             <div className="prof-subsec">Favorite Artists</div>
